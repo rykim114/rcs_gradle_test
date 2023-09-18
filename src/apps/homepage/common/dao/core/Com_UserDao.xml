@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Com_UserDao">
+    
+    <select id="Com_UserDao.getProjList" parameterType="CmResMap" resultType="CmResMap">
+		select company_code
+		     , proj_code
+		     , proj_name
+		     , zip_code
+		     , addr1
+		     , addr2
+		     , tel_no_pre
+		     , tel_no_mid
+		     , tel_no_post
+		     , fax_no_pre
+		     , fax_no_mid
+		     , fax_no_post
+		     , email
+		     , use_yn
+		     , sort_order
+		     , itf_code
+		     , itf_proj
+		  from hp_admin.ha_code_proj hcp
+		 where 1 = 1
+		 <if test="company_code != null and company_code != ''">
+		   and company_code = #{company_code}
+		 </if>
+		 <if test="proj_name != null and proj_name != ''">
+		   and proj_name like '%' || #{proj_name} || '%'
+		 </if>
+		 <if test="itf_code != null and itf_code != ''">
+		   and itf_code = #{itf_code}
+		 </if>
+		 order by sort_order
+    </select>
+</mapper>

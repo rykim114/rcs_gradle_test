@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0301Dao">
+
+	<select id="BI0301Dao.ha_paper_info.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code
+		, 		paper_div
+		,		paper_seq
+		, 		paper_name
+		, 		sign_form_path
+		, 		sign_form_name
+		, 		sign_report_path
+		, 		sign_report_name
+		, 		pre_view_img_path
+		, 		manager_use
+		, 		msg_form_id
+		, 		email_form_id
+		, 		sort
+		, 		remark
+		, 		use_yn
+		, 		row_input_id
+		, 		TO_CHAR(row_input_date, 'YYYY-MM-DD HH24:MI') as row_input_date
+		, 		row_input_ip
+		, 		row_update_id
+		, 		row_update_date
+		, 		row_update_ip
+		from ha_paper_info
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		where		search(#{main_search_key_word}, paper_name,	sign_report_name)
+		</if>		
+		order by 	company_code
+		,			paper_div
+		,			paper_seq
+	</select>
+
+	<select id="BI0301Dao.ha_paper_info.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_paper_info	(
+				company_code
+		, 		paper_div
+		, 		paper_name
+		, 		sign_form_path
+		, 		sign_form_name
+		, 		sign_report_path
+		, 		sign_report_name
+		, 		pre_view_img_path
+		, 		manager_use
+		, 		msg_form_id
+		, 		email_form_id
+		, 		sort
+		, 		remark
+		, 		use_yn
+		, 		row_input_id
+		, 		row_input_date
+		, 		row_input_ip
+		)
+		values	(
+			#{company_code}
+		, 	#{paper_div}
+		, 	#{paper_name}
+		, 	#{sign_form_path}
+		, 	#{sign_form_name}
+		, 	#{sign_report_path}
+		, 	#{sign_report_name}
+		, 	#{pre_view_img_path}
+		, 	#{manager_use}
+		, 	#{msg_form_id}::bigint
+		, 	#{email_form_id}::bigint
+		, 	#{sort}::bigint
+		, 	#{remark}
+		, 	#{use_yn}
+		,	#{userId}
+		,	now()
+		,	#{userIp}		
+		)
+	</select>
+	
+	<select id="BI0301Dao.ha_paper_info.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_paper_info
+		where	company_code	=	#{company_code}
+		and		paper_seq		=	#{paper_seq}::bigint
+	</select>
+	
+	<select id="BI0301Dao.ha_paper_info.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_paper_info
+		set	paper_div			=	#{paper_div}
+		,	paper_name			=	#{paper_name}
+		,	sign_form_path		=	#{sign_form_path}		
+		,	sign_form_name		=	#{sign_form_name}
+		,	sign_report_path	=	#{sign_report_path}
+		,	sign_report_name	=	#{sign_report_name}
+		,	pre_view_img_path	=	#{pre_view_img_path}
+		,	manager_use			=	#{manager_use}
+		,	msg_form_id			=	#{msg_form_id}::bigint
+		,	email_form_id		=	#{email_form_id}::bigint
+		,	sort				=	#{sort}::bigint
+		,	remark				=	#{remark}
+		,	use_yn				=	#{use_yn}			
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	company_code	=	#{company_code}
+		and		paper_seq		=	#{paper_seq}::bigint
+	</select>	
+
+</mapper>

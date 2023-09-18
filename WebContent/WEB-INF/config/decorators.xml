@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<decorators>
+	<!-- Any Ajax urls that are excluded will never be decorated by Sitemesh -->
+	
+	<excludes>
+		<pattern>*ajax.do*</pattern>
+	</excludes>
+	
+	<!-- 
+
+	<decorator name="WebLayout" page="/WEB-INF/view/decorator/shopWebLayout.jsp">
+		<pattern>/APPS/*</pattern>
+		<pattern>/Mighty/*</pattern>
+		<pattern>/Theme/</pattern>
+		<pattern>/main/*</pattern>
+	</decorator>
+	
+	<decorator name="shopWebPopupLayout" page="/WEB-INF/view/decorator/shopWebPopupLayout.jsp">
+		<pattern>/*_pop.do</pattern>
+		<pattern>/*/*_pop.do</pattern>
+	</decorator>	
+	
+	<decorator name="brandWebLayout" page="/WEB-INF/view/decorator/brandWebLayout.jsp">
+		<pattern>/main.do</pattern>
+		<pattern>/hairchart/*</pattern>
+		<pattern>/hairnote/*</pattern>
+		<pattern>/stylechart/*</pattern>
+		<pattern>/stylenote/*</pattern>
+		<pattern>/changehair/*</pattern>
+		<pattern>/mjsenbrand/*</pattern>
+		<pattern>/search.do</pattern>
+		<pattern>/sitemap.do</pattern>
+		<pattern>/mcq.do</pattern>
+		<pattern>/promotion.do</pattern>
+	</decorator>
+	
+	<decorator name="webMailLayout" page="/WEB-INF/view/decorator/shopWebMailLayout.jsp">
+		<pattern>/mail/*.do</pattern>
+	</decorator> -->	
+</decorators>

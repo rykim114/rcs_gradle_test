@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CommDao">
+    <select id="CommDao.getUserMenu.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		  select a.메뉴코드  as menucode
+		       , a.메뉴명  as menuname
+			   , a.상위메뉴코드 as upmenucode
+			   , a.단위구분 as sysgbn
+			   , a.아이콘 as icon
+			   , a.파일경로 as pgmurl
+			   , a.레벨  as lvl
+			   , a.정렬  as sortcode 
+			   , isnull(a.메뉴바오픈여부, 'Y') as menubaryn
+			   , isnull(a.모달창사용여부, 'N') modalyn
+			   , a.사용여부 as useyn
+		    from modu.r114_메뉴 a
+		   where a.메뉴코드 = #{pgm_code}			  	
+		     and a.사용여부 = 'Y'
+	</select>
+    
+    <select id="CommDao.getDBConnectCheck" parameterType="CmResMap" resultType="CmResMap">
+		SELECT NOW()
+    </select>
+ 
+ 	<select id="CommDao.getCommCodeList" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		SELECT A.DETAIL_CODE AS CODE
+				, A.DETAIL_NAME AS LABEL
+		FROM ha_comm_detail A INNER JOIN ha_comm_master B 
+			ON A.COMPANY_CODE = B.COMPANY_CODE 
+			AND A.COMM_CODE = B.COMM_CODE
+		WHERE A.USE_YN = 'Y'
+			AND A.COMPANY_CODE = #{company_code}
+			AND A.COMM_CODE = #{comm_code}
+			<if test="comm_div != null and comm_div != ''">
+			AND B.COMM_DIV = #{comm_div}
+			</if>
+		ORDER BY A.SORT_ORDER
+	</select>
+	
+	<!-- 서버 시간 -->
+	<select id="CommDao.SysDate_Pg.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		SELECT to_char(Now(),'yyyy-MM-dd hh24:mi:ss')
+	</select>
+	
+	<!-- 사용자 메뉴 -->
+	<select id="CommDao.getUserMenuold.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	a.sys_id
+			,	a.pgm_code
+			,	a.pgm_name
+			,	a.pgm_img
+			,	a.pgm_url
+			,	a.layout_div
+			,	a.menu_level
+			,	u.user_tag
+			,	case	when	a.update_yesno = 'Y'	and b.update_yesno = 'Y'	then	'Y'	else	'N'	end	as	update_yesno
+			,	case	when	a.retrieve_yesno = 'Y'	and b.retrieve_yesno = 'Y'	then	'Y'	else	'N'	end	as	retrieve_yesno
+			,	case	when	a.insert_yesno = 'Y'	and b.insert_yesno = 'Y'	then	'Y'	else	'N'	end	as	insert_yesno
+			,	case	when	a.append_yesno = 'Y'	and b.append_yesno = 'Y'	then	'Y'	else	'N'	end	as	append_yesno
+			,	case	when	a.duplicate_yesno = 'Y'	and b.duplicate_yesno = 'Y'	then	'Y'	else	'N'	end	as	duplicate_yesno
+			,	case	when	a.delete_yesno = 'Y'	and b.delete_yesno = 'Y'	then	'Y'	else	'N'	end	as	delete_yesno
+			,	case	when	a.print_yesno = 'Y'		and b.print_yesno = 'Y'		then	'Y'	else	'N'	end	as	print_yesno
+			,	case	when	a.excel_yesno = 'Y'		and b.excel_yesno = 'Y'		then	'Y'	else	'N'	end	as	excel_yesno
+			,	case	when	a.close_yesno = 'Y'		and b.close_yesno = 'Y'		then	'Y'	else	'N'	end	as	close_yesno
+		from	ha_auth_pgmcode a
+				inner join	ha_auth_sys sys
+					on	sys.sys_id			=	a.sys_id
+				inner join	ha_auth_group_menu b
+					on	b.sys_id		=	a.sys_id
+					and	b.pgm_code		=	a.pgm_code
+				inner join	ha_auth_user u
+					on	u.auth_group_seq		=	b.auth_group_seq
+				left join	ha_auth_pgmcode c
+					on	c.parent_sort_code	=	a.sort_code
+		where	u.user_id			=	#{userId}
+		and		a.pgm_code			=	#{decrypt_pgm_code}
+		and		a.show_yesno		=	'Y'
+		and		a.developed_yesno	=	'Y'
+	</select>
+	
+    <select id="CommDao.Passward.update" parameterType="CmResMap" resultType="CmResMap">
+    	update ha_auth_user set user_password = #{encrypt_user_password}
+    	 where user_id = #{userId}
+    </select>    
+</mapper>

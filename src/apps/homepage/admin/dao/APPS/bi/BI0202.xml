@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0202Dao">
+
+	<select id="BI0202Dao.ha_auth_group.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	a.auth_group_seq
+			,	a.auth_group_name
+			,	a.remark
+			,	a.use_yn
+			,	a.row_input_id
+			,	a.row_input_date
+			,	a.row_input_ip
+			,	a.row_update_id
+			,	a.row_update_date
+			,	a.row_update_ip
+		from	ha_auth_group a
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		and		search(#{main_search_key_word}, auth_group_name)
+		</if>		
+		order by	a.auth_group_seq, a.auth_group_name
+	</select>
+
+	<select id="BI0202Dao.ha_auth_group.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_auth_group	(
+			auth_group_name
+		,	remark
+		,	use_yn
+		,	row_input_id
+		,	row_input_date
+		,	row_input_ip
+		)
+		values	(
+			#{auth_group_name}
+		,	#{remark}
+		,	#{use_yn}
+		,	#{userId}
+		,	now()
+		,	#{userIp}		
+		)
+	</select>
+	
+	<select id="BI0202Dao.ha_auth_group.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_auth_group
+		where	auth_group_seq	=	#{auth_group_seq}::bigint
+	</select>
+	
+	<select id="BI0202Dao.ha_auth_group.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_auth_group
+		set	auth_group_name		=	#{auth_group_name}
+		,	remark				=	#{remark}
+		,	use_yn				=	#{use_yn}
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	auth_group_seq	=	#{auth_group_seq}::bigint
+	</select>	
+
+</mapper>

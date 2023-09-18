@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminSignDao">
+
+
+	<select id="AdminSignDao.selectSignMyList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.company_code,
+			a.user_id,
+			a.signature_detail_seq,
+			a.signature_seq,
+			a.recpnt_div,
+			a.user_name AS decrypt_user_name,
+			a.user_phon AS decrypt_user_phon,
+			a.user_email,
+			TO_CHAR(a.view_time, 'YYYY-MM-DD HH24:MI') AS view_time,
+			TO_CHAR(a.sign_time, 'YYYY-MM-DD HH24:MI') AS sign_time,
+			b.service_no,
+			TO_CHAR(b.sign_possible_s, 'YYYY-MM-DD HH24:MI') AS sign_possible_s,
+			TO_CHAR(b.sign_possible_e, 'YYYY-MM-DD HH24:MI') AS sign_possible_e,
+			b.paper_seq,
+			c.paper_name,			
+			c.sign_form_path,
+			c.sign_form_name,
+			c.pre_view_img_path,
+			(
+				SELECT
+					r.user_name
+				FROM
+					ha_recipient_info r
+				WHERE
+					r.signature_detail_seq = a.signature_detail_seq
+				AND	r.signature_seq = a.signature_seq
+				AND	r.recpnt_div = 'S'
+			) AS decrypt_sender_name,
+			CASE
+				WHEN a.sign_img IS NOT NULL OR b.sign_possible_e   <![CDATA[<]]>   NOW() THEN 'N'
+				ELSE 'Y'
+			END AS is_able_to_sign,
+			d.receipt_seq,
+			a.recipient_seq
+		FROM
+			ha_recipient_info a
+		LEFT OUTER JOIN
+			ha_signature_detail b
+		ON
+			a.company_code = b.company_code
+		AND a.signature_seq = b.signature_seq
+		AND a.signature_detail_seq = b.signature_detail_seq
+		LEFT OUTER JOIN
+			ha_paper_info c
+		ON
+			b.company_code = c.company_code
+		AND b.paper_seq = c.paper_seq
+		LEFT OUTER JOIN
+			ha_signature_master d
+		ON
+			b.company_code = d.company_code
+		AND b.signature_seq = d.signature_seq
+			
+		WHERE
+			1 = 1
+		AND a.user_phon = #{admin_mobileno}
+		AND b.sign_possible_e <![CDATA[ < ]]> (NOW() + '10 day')
+		AND case when d.recipient_d_yn = 'N' then a.recpnt_div = 'R' else a.recpnt_div = 'D' end
+		ORDER BY
+			a.signature_seq DESC, a.recipient_seq ASC
+	</select>
+
+
+	<select id="AdminSignDao.selectSignPaper" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.company_code,
+			a.paper_div,
+			a.paper_seq,
+			a.paper_name,
+			a.sign_form_path,
+			a.sign_form_name,
+			a.sign_report_path,
+			a.sign_report_name,
+			a.pre_view_img_path
+		FROM
+			ha_paper_info a
+		LEFT OUTER JOIN
+			ha_signature_detail b
+		ON
+			a.company_code = b.company_code
+		AND a.paper_seq = b.paper_seq
+		LEFT OUTER JOIN
+			ha_signature_master c
+		ON
+			b.company_code = c.company_code
+		AND b.signature_seq = c.signature_seq
+		WHERE
+			1 = 1
+		AND c.receipt_seq = #{receipt_seq}
+		LIMIT 1
+	</select>
+	<!-- 
+		FIXME: 세션 보안처리 필요
+		AND a.user_id = #{admin_userId}
+	-->
+
+	<select id="AdminSignDao.selectSignDetail" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.company_code,
+			a.user_id,
+			a.signature_detail_seq,
+			a.signature_seq,
+			a.paper_seq,
+			a.report_param,
+			a.service_no,
+			a.send_date,
+			a.sign_possible_s,
+			a.sign_possible_e,
+			a.awrt_anth_img_path
+		FROM
+			ha_signature_detail a
+		LEFT OUTER JOIN
+			ha_signature_master b
+		ON
+			a.company_code = b.company_code
+		AND a.signature_seq = b.signature_seq
+		WHERE
+			1 = 1
+		<choose>
+		<when test="key == 'service_no'">
+			AND a.service_no = #{service_no}
+		</when>
+		<otherwise>
+			AND b.receipt_seq = #{receipt_seq}
+			LIMIT 1
+		</otherwise>		
+		</choose>
+	</select>
+	<!-- 
+		FIXME: 세션 보안처리 필요
+		AND a.user_id = #{admin_userId}
+	-->
+	
+	<select id="AdminSignDao.selectRecipientList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			b.company_code,
+			b.user_id,
+			b.signature_detail_seq,
+			b.signature_seq,
+			b.recipient_seq,
+			b.recpnt_div,
+			b.user_name AS decrypt_user_name,
+			b.user_phon AS decrypt_user_phon,
+			b.user_email AS decrypt_email,
+			to_char(b.view_time, 'YYYYMMDD HH24:MI:SS') as view_time,
+			to_char(b.sign_time, 'YYYYMMDD HH24:MI:SS') as sign_time,
+			b.name_img,
+			b.sign_img			
+		FROM
+			ha_signature_master a 
+		left join ha_recipient_info b on a.company_code = b.company_code and a.signature_seq = b.signature_seq 
+		WHERE
+			1 = 1
+		AND a.signature_seq = #{signature_seq}::bigint
+		AND case when a.recipient_d_yn = 'Y' then b.recpnt_div = 'D' else b.recpnt_div = 'R' end
+
+		AND case when #{admin_m} = '1' then 1=1 else b.recipient_seq = #{recipient_seq}::bigint end
+
+	</select>
+	
+	<select id="AdminSignDao.selectemaillist" parameterType="CmMap" resultType="CmResMap">
+		select	a.company_code
+		,		a.user_id	as fromname
+		,		a.user_id	as fromemail
+		,		a.signature_detail_seq
+		,		a.signature_seq
+		,		a.recipient_seq
+		,		a.recpnt_div
+		,		a.user_name
+		,		a.user_email as decrypt_toemail
+		,		c.awrt_anth_img_path
+		,		'[리맥스코리아 X SignON] 서명하신 양식이 도착하였습니다. 첨부파일을 확인해 주세요.' as title
+		,		'첨부파일을 확인해 주세요.' as contents
+		from ha_recipient_info a	inner join	ha_signature_master b
+									on	a.company_code	=	b.company_code
+									and	a.signature_seq	=	b.signature_seq
+									inner join	ha_signature_detail	c
+									on	a.company_code	=	c.company_code
+									and	a.signature_seq	=	c.signature_seq
+									and	a.signature_detail_seq	=	c.signature_detail_seq
+		where a.signature_detail_seq = #{signature_detail_seq}::bigint
+		  and a.signature_seq		 = #{signature_seq}::bigint
+	  	  and user_email != ''
+	</select>	
+
+
+	
+	<select id="AdminSignDao.selectSenderList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.company_code,
+			a.user_id AS email,
+			a.user_name AS decrypt_user_name,
+			a.mobile_no AS decrypt_user_phon		
+		FROM
+			ha_auth_user a
+		WHERE
+			1 = 1
+		AND a.company_code = #{company_code}
+		AND a.user_id = #{user_id}
+	</select>
+
+
+	<update id="AdminSignDao.updateRecipientRead" parameterType="CmMap">
+		UPDATE
+			ha_recipient_info a
+		SET
+			view_time = NOW(),
+			row_update_date = NOW(),
+			row_update_id = COALESCE(#{userId}, #{admin_userId}),
+			row_update_ip = #{ipAddr}
+		FROM
+			ha_signature_detail b
+		WHERE
+			a.view_time IS NULL
+		AND a.use_yn = 'Y'
+		AND a.recipient_seq = #{recipient_seq}::bigint
+		
+		<choose>
+		<when test="service_no != null and service_no != ''">
+			AND b.service_no = #{service_no}
+		</when>
+		<when test="signature_detail_seq != null and signature_detail_seq != ''">
+			AND b.signature_seq = #{signature_seq}
+			AND b.signature_detail_seq = #{signature_detail_seq}
+		</when>
+		<otherwise>
+			AND 1 = 0
+		</otherwise>
+		</choose>
+		AND a.signature_detail_seq = b.signature_detail_seq
+		AND a.signature_seq = b.signature_seq
+	</update>
+
+
+	<update id="AdminSignDao.updateRecipientSignOn" parameterType="CmMap">
+		UPDATE
+			ha_recipient_info a
+		SET
+			sign_time = NOW(),
+		<if test="name_img != null and name_img != ''">
+			name_img = #{name_img},
+		</if>
+			sign_img = #{sign_img},
+			lat = #{lat},
+			lon = #{lon},
+			location = #{location},
+			row_update_date = NOW(),
+			row_update_id = #{admin_userId},
+			row_update_ip = #{ipAddr}
+
+		WHERE
+			(a.sign_img IS NULL OR a.sign_img = '') 
+		AND a.use_yn = 'Y'
+		AND a.recipient_seq = #{recipient_seq}::bigint
+		AND a.signature_seq = #{signature_seq}::bigint
+	</update>
+
+	
+	<update id="AdminSignDao.updateAwrtAnthImgPathSignOn" parameterType="CmMap">
+		UPDATE
+			ha_signature_detail a
+		SET
+			awrt_anth_img_path = #{awrt_anth_img_path},
+			row_update_date = NOW(),
+			row_update_id = #{admin_userId},
+			row_update_ip = #{ipAddr}
+
+		WHERE
+			 a.use_yn = 'Y'
+		AND a.signature_detail_seq = #{signature_detail_seq}::bigint
+		AND a.signature_seq = #{signature_seq}::bigint
+	</update>
+
+	
+	<update id="AdminSignDao.updateSaveReportPath" parameterType="CmMap">
+		UPDATE
+			ha_signature_detail a
+		SET
+			pdf_save_path = #{upload_path},
+			pdf_save_name = #{filename},
+			row_update_date = NOW(),
+			row_update_id = #{admin_userId},
+			row_update_ip = #{ipAddr}
+
+		WHERE
+			 a.use_yn = 'Y'
+		AND a.signature_detail_seq = #{signature_detail_seq}::bigint
+		AND a.signature_seq = #{signature_seq}::bigint
+	</update>
+	
+	<select id="AdminSignDao.insertemaillog" parameterType="CmMap">
+		insert into	ha_email_send_info	
+		(	company_code
+		,	user_id
+		,	email_form_id
+		,	send_date
+		,	attch_file_yn
+		,	email_result
+		,	recv_email
+		,	cc_email
+		,	send_email
+		,	email_title
+		,	contents
+		,	signature_detail_seq
+		,	row_input_id
+		,	row_input_date
+		,	row_input_ip
+		,	row_update_id
+		,	row_update_date
+		,	row_update_ip)
+		select	max(z.company_code) as company_code
+		,		max(z.user_id) as user_id
+		,		max(z.paper_seq) as paper_seq
+		,		now() as send_date
+		,		'Y' as attch_file_yn
+		,		#{mail_flag} as email_result
+		,		ARRAY_TO_STRING(ARRAY_AGG(case when z.recpnt_div != 'C' then z.user_email end ORDER BY z.signature_seq),',') as toemail		
+		,		ARRAY_TO_STRING(ARRAY_AGG(case when z.recpnt_div = 'C' then z.user_email end ORDER BY z.signature_seq), ',') as ccemail
+		,		#{send_email}
+		,		#{email_title}
+		,		#{contents}
+		,		max(z.signature_detail_seq) as signature_detail_seq
+		,		#{admin_userId}
+		,		now()
+		,		#{ipAddr}
+		,		#{admin_userId}
+		,		now()
+		,		#{ipAddr}	
+		from (
+		select	a.company_code
+		,		a.user_id
+		,		a.signature_detail_seq
+		,		a.signature_seq
+		,		a.recipient_seq
+		,		a.recpnt_div
+		,		c.paper_seq
+		,		a.user_name
+		,		a.user_email
+		,		a.row_input_date
+		,		a.row_update_date
+		from ha_recipient_info a	inner join	ha_signature_master b
+									on	a.company_code	=	b.company_code
+									and	a.signature_seq	=	b.signature_seq
+									inner join	ha_signature_detail	c
+									on	a.company_code	=	c.company_code
+									and	a.signature_seq	=	c.signature_seq
+									and	a.signature_detail_seq	=	c.signature_detail_seq
+		where	1	=	1
+		<if test='signature_detail_seq != null and signature_detail_seq != ""'>
+			and a.signature_detail_seq = #{signature_detail_seq}::bigint
+		</if>
+		<if test='signature_seq != null and signature_seq != ""'>
+			and a.signature_seq = #{signature_seq}::bigint
+		</if>
+		<if test='to != null and to != ""'>
+			and a.user_email = #{to}
+		</if>
+		) z
+		group by z.signature_seq
+				,z.signature_detail_seq
+	</select>	
+
+	<select id="AdminSignDao.selectSignPreview" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			d.sign_report_path,
+			d.sign_report_name
+		FROM
+			ha_signature_detail a
+		LEFT OUTER JOIN
+			ha_recipient_info b
+		ON	a.company_code = b.company_code
+		AND a.signature_seq = b.signature_seq	
+		AND a.signature_detail_seq = b.signature_detail_seq
+		LEFT OUTER JOIN
+			ha_signature_master c
+		ON	b.company_code = c.company_code
+		AND b.signature_seq = c.signature_seq	
+		LEFT OUTER JOIN
+			ha_paper_info d
+		ON	a.company_code = d.company_code
+		AND a.paper_seq = d.paper_seq	
+		WHERE
+			1 = 1
+		AND c.receipt_seq = #{receipt_seq}
+		AND b.sign_img is NOT NULL
+		LIMIT 1
+	</select>
+</mapper>

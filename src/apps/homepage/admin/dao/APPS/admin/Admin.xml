@@ -1,0 +1,2037 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminDao">
+
+	<select id="AdminDao.zeons_법인관리.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		a.법인코드
+		,			a.법인명
+		,			substring(stuff(stuff(a.사업자번호,4,0,'-'),7,0,'-'),0,13) as 사업자등록번호
+		,			a.담당자
+		,			a.담당자연락처
+		,			a.법인구분_대
+		,			a.법인구분_중
+		,			a.법인구분_소
+		,			b.법인마스터코드
+		,			b.법인마스터명
+		,			c.법인상세코드
+		,			c.법인상세명
+		,			a.사용여부
+		,			a.비고
+		,			convert(char(10), a.등록일자, 23) as 등록일자
+		,			a.등록자아이피
+		,			a.등록자아이디
+		,			a.수정일자
+		,			a.수정자아이피
+		,			a.수정자아이디
+		,			b.법인마스터명 										as 법인구분1
+		,			c.법인상세명 										as 법인구분2
+		,			b.법인마스터코드									as 법인구분코드1
+		,			c.법인상세코드										as 법인구분코드2
+		from modu.r114_법인 a
+		left outer join modu.r114_법인마스터 b on a.법인구분_대 = b.법인마스터코드 and b.사용여부 = 'Y'
+		left outer join modu.r114_법인상세 c on a.법인구분_대 = c.법인마스터코드 and a.법인구분_중 = c.법인상세코드 and c.사용여부 = 'Y'
+
+		where
+		1 = 1
+		<if test ="corpName != null and corpName != ''" >
+			and		a.법인명 like '%'+#{corpName}+'%'
+		</if>
+		<if test ="corpNameCheck != null and corpNameCheck != ''" >
+			and		a.법인명 = #{corpNameCheck}
+		</if>
+		<if test ="corpCode != null and corpCode != ''" >
+			and		a.법인코드 = #{corpCode}
+		</if>
+		<if test ="corpComCode != null and corpComCode != ''" >
+			and		a.법인구분_대 = #{corpComCode}
+		</if>
+		<if test ="corpComDetailCode != null and corpComDetailCode != ''" >
+			and		a.법인구분_중 = #{corpComDetailCode}
+		</if>
+		and		a.사용여부 = 'Y'
+		order by a.법인코드 desc
+	</select>
+
+	<select id="AdminDao.zeons_법인관리사업자번호체크.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		count(사업자번호) as count
+		from 		modu.r114_법인
+		where 		사업자번호 = #{사업자번호}
+		and			사업자번호 != '0000000000'
+		and			사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_법인관리대불러오기.select" parameterType="CmMap" resultType="CmResMap">
+		select 		distinct
+		a.법인마스터코드
+		,			a.법인마스터명
+		from modu.r114_법인마스터 a
+		where
+		a.사용여부 = 'Y'
+		<if test ="master != null and master != ''" >
+			and a.법인마스터코드 = #{master}
+		</if>
+		order by a.법인마스터코드
+	</select>
+
+	<select id="AdminDao.zeons_법인관리중불러오기.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		distinct
+		a.법인상세코드
+		,			a.법인상세명
+		from modu.r114_법인상세 a
+		inner join modu.r114_법인마스터 b
+		on a.법인마스터코드 = b.법인마스터코드 and b.사용여부 = 'Y'
+		where
+		a.법인마스터코드 = #{master}
+		and
+		a.사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_법인관리소불러오기.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		distinct
+		a.법인상세세부코드
+		,			a.법인상세세부명
+		from modu.r114_법인상세세부 a
+		inner join modu.r114_법인마스터 c
+		on a.법인마스터코드 = c.법인마스터코드  and c.사용여부 = 'Y'
+		inner join modu.r114_법인상세 b on a.법인마스터코드 = b .법인마스터코드 and b.사용여부 = 'Y'
+		and a.법인상세코드 = b.법인상세코드
+		where
+		a.법인마스터코드 = #{master}
+		and
+		a.법인상세코드 = #{detail}
+		and
+		a.사용여부 = 'Y'
+	</select>
+
+	<insert id="AdminDao.zeons_법인관리등록.insert" parameterType="CmMap">
+		insert into modu.r114_법인
+		(
+		법인명
+		, 	법인구분_대
+		, 	법인구분_중
+		,	사업자번호
+		,   비고
+		, 	사용여부
+		,	등록일자
+		, 	등록자아이피
+		,	등록자아이디
+		)
+		values
+		(
+		#{법인명}
+		, 	#{법인구분_대}
+		, 	#{법인구분_중}
+		,	#{사업자번호}
+		,	#{비고}
+		, 	'Y'
+		,	getdate()
+		,	#{userIp}
+		,	#{userId}
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_법인관리삭제.delete" parameterType ="CmMap">
+		update
+		modu.r114_법인
+		set
+		사용여부 = 'N'
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		법인코드 = #{corpCode}
+		and
+		사용여부 = 'Y'
+	</update>
+
+	<update id="AdminDao.zeons_법인관리수정.update" parameterType= "CmMap">
+
+		update 	 modu.r114_법인
+		set
+		법인명 = #{법인명}
+		,		법인구분_대 = #{법인구분_대}
+		,		법인구분_중 = #{법인구분_중}
+		,		사업자번호 = #{사업자번호}
+		,		비고		= #{비고}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		법인코드 = #{corpCode}
+	</update>
+
+	<select id="AdminDao.zeons_계정관리.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		ROW_NUMBER() OVER(order by b.법인명 asc) as 번호
+		,	b.법인명
+		,	h.법인마스터명 										as 법인구분1
+		,	i.법인마스터명 										as 법인구분2
+		,	a.아이디
+		,	a.사용자이름										as 담당자
+		,	a.전화번호 										as 담당자연락처
+		,	convert(varchar , d.현재)+'/'+convert(varchar , a.PC등록대수) as ip등록
+		,	c.순번											as 총로그인
+		,	j.그룹명
+		,	e.계약구분
+		,	convert(char(10), a.계약시작일, 23)				as 계약시작일
+		,	(SELECT DATEDIFF(day, a.계약시작일, getdate()) )	as 'D+day'
+		,	convert(char(10), a.계약종료일, 23) 				as 계약종료일
+		,	(SELECT DATEDIFF(day, getdate(), a.계약종료일) )	as 잔여일
+		,	(substring(a.최종로그인일시, 1, 4)+'년 '
+			+ substring(a.최종로그인일시, 5, 2)+'월 '
+			+ substring(a.최종로그인일시, 7, 2)+'일 '
+			+ substring(a.최종로그인일시, 9, 2)+'시 '
+			+ substring(a.최종로그인일시, 11, 2)+'분 '
+			+ substring(a.최종로그인일시, 13, 2)+'초 ') as 최근접속일
+		,	case when a.사용여부 = 'Y' AND DATEDIFF(day, getdate(), a.계약종료일) <![CDATA[>]]> 0 then '사용중'
+		when a.사용여부 = 'N' OR (a.사용여부 = 'Y' AND DATEDIFF(day, getdate(), a.계약종료일) <![CDATA[<=]]> 0 ) then '만료' end 		as 사용여부
+		,	g.그룹코드
+		,	f.기능권한
+		from	modu.r114_사용자 a
+		left outer join modu.r114_법인 b on a.법인코드 = b.법인코드
+		left outer join (
+		select
+		count(순번) as 순번, 아이디
+		from modu.r114_사용자접속로그
+		group by 아이디
+		) c on	a.아이디 = c.아이디
+		left outer join (
+		select
+		아이디, count(순번) as 현재
+		from	modu.r114_PC정보
+		where	사용여부 = 'Y'
+		group by 아이디
+		) d on  a.아이디 = d.아이디
+		left outer join (
+		select
+		공통상세코드, 공통상세명 as 계약구분
+		from modu.r114_공통상세
+		where 공통마스터코드 = '100000'
+		)e on a.계약구분 = e.공통상세코드
+		left outer join (
+		select
+		공통상세코드, 공통상세명 as 기능권한
+		from modu.r114_공통상세
+		where 공통마스터코드 = '100001'
+		)f on a.기능권한 = f.공통상세코드
+		left outer join (
+		select
+		공통상세코드, 공통상세명 as 그룹코드
+		from modu.r114_공통상세
+		where 공통마스터코드 = '100002'
+		)g on a.그룹코드 = g.공통상세코드
+		left outer join (
+		select
+		법인마스터코드 , 법인마스터명
+		from modu.r114_법인마스터
+		where 사용여부 = 'Y'
+		)h on b.법인구분_대 = h.법인마스터코드
+		left outer join (
+		select
+		법인마스터코드 , 법인마스터명
+		from modu.r114_법인마스터
+		where 사용여부 = 'Y'
+		)i on b.법인구분_중 = h.법인마스터코드
+		left outer join
+		(
+		select
+		그룹코드,그룹명
+		from modu.r114_그룹
+		where 사용여부='Y'
+		)j on a.그룹코드 = j.그룹코드
+
+		<if test="search_query!='' and search_query!=null">
+			where b.법인명 like '%' + #{search_query}+ '%'
+			or c.아이디  like '%' + #{search_query}+ '%'
+			or a.사용자이름 like '%' + #{search_query}+ '%'
+			or a.전화번호 like '%' + #{search_query}+ '%'
+		</if>
+		order by 번호 asc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		b.법인명
+		<!-- ,	h.법인마스터명 										as 법인구분1
+        ,	i.법인마스터명 										as 법인구분2 -->
+		,	a.아이디
+		,	a.사용자이름										as 담당자
+		,	a.전화번호 										as 담당자연락처
+		,	CONVERT(varchar , d.현재)							as ip현재
+		,	CONVERT(varchar , a.PC등록대수)					as ip전체
+		<!-- ,	c.순번											as 총로그인
+         ,	j.그룹명
+        ,	e.계약구분 -->
+		,	LEFT(CONVERT(varchar, a.계약시작일, 112),4)+'년 '+
+		SUBSTRING(CONVERT(varchar, a.계약시작일, 112),5,2) +'월 '+
+		RIGHT(CONVERT(varchar, a.계약시작일, 112),2)+'일' 	as 계약시작일
+
+		,	LEFT(CONVERT(varchar, a.계약종료일, 112),4)+'년 '+
+		SUBSTRING(CONVERT(varchar, a.계약종료일, 112),5,2) +'월 '+
+		RIGHT(CONVERT(varchar, a.계약종료일, 112),2)+'일' 	as 계약종료일
+
+		,	(SELECT DATEDIFF(day, getdate(), a.계약종료일) )	as 잔여일
+		<!-- ,	a.최종로그인일시									as 최근접속일
+        ,	case when a.사용여부 = 'Y' then '사용중'
+                 when a.사용여부 = 'N' then '만료'	end 		as 사용여부
+        ,	g.그룹코드
+        ,	f.기능권한 -->
+		from	modu.r114_사용자 a
+		left outer join modu.r114_법인 b on a.법인코드 = b.법인코드
+		left outer join (
+		select
+		count(순번) as 순번, 아이디
+		from modu.r114_사용자접속로그
+		where  아이디 = #{targetId}
+		group by 아이디
+		) c on	a.아이디 = c.아이디
+		left outer join (
+		select
+		아이디, count(순번) as 현재
+		from	modu.r114_PC정보
+		where	사용여부 = 'Y'
+		and  아이디 = #{targetId}
+		group by 아이디
+		) d on  a.아이디 = d.아이디
+		where a.아이디 = #{targetId}
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세_IP_목록.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		ROW_NUMBER () over(order by a.순번 asc  ) as 순번
+		, a.PC명
+		, a.아이피
+		from modu.r114_PC정보 a
+		where a.아이디  = #{targetId}
+		and a.사용여부 ='Y'
+		order by 순번 desc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세_IP_목록상세.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		LEFT(CONVERT(varchar, T.발생일시, 21),4)+'년 '+
+		SUBSTRING(CONVERT(varchar, T.발생일시, 21),4,2) +'월 '+
+		SUBSTRING(CONVERT(varchar, T.발생일시, 21),6,2)+'일 '+
+		SUBSTRING(CONVERT(varchar, T.발생일시, 21),8,2) +'시 '+
+		SUBSTRING(CONVERT(varchar, T.발생일시, 21),10,2) +'분 '+
+		SUBSTRING(CONVERT(varchar, T.발생일시, 21),12,2) +'초'
+		as 발생일시
+		, 	case when 종료일시 is not null then '로그아웃'
+		else '로그인'
+		end as 접속상태
+		from (
+		select
+		ROW_NUMBER () over(order by 발생일시 desc) as 순번
+		, max(발생일시)as 발생일시
+		,종료일시
+		from modu.r114_사용자접속로그
+		where 아이디 =#{targetId}
+		and 아이피 =#{ip}
+		GROUP by 발생일시 ,종료일시
+		)T
+		where T.순번 BETWEEN 1 and 1
+	</select>
+
+	<select id="AdminDao.zeons_계정관리PC등록정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		row_number() over(order by a.아이디) as 순번
+		,		a.아이디
+		,		b.사용자이름
+		,		a.아이피
+		,		a.순번
+		,		a.PC명
+		,		a.접속지역
+		,		a.사용여부
+		,		a.등록일시
+		,		a.삭제일시
+		,		e.사용자이름 as 삭제사용자
+		,		a.비고
+		,		a.등록일자
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+		from modu.r114_PC정보 a
+		left outer join modu.r114_사용자 b
+		on a.아이디 = b.아이디
+		left outer join
+		(
+		select
+		top 1
+		c.아이디
+		,		c.사용자이름
+		from modu.r114_사용자 c, modu.r114_PC정보 d
+		where c.아이디 = d.아이디
+		) e
+		on a.삭제자아이디 = e.아이디
+		<if test="id != null and id != ''">
+			where a.아이디 = #{id}
+		</if>
+		order by a.아이디 asc
+	</select>
+
+	<!-- 	<select id="AdminDao.zeons_계정관리PC등록상세정보.select" parameterType="CmMap" resultType="CmResMap">
+            select
+                     count(b.아이피) as 아이피
+            from modu.r114_사용자 a
+            inner join
+            modu.r114_PC정보 b
+            on a.아이디 = b.아이디
+            where a.아이디 = #{아이디}
+            and
+            b.사용여부 = 'Y'
+        </select> -->
+
+	<select id="AdminDao.zeons_계정관리사용자접속정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		row_number() over (order by a.아이디 desc) as 순번
+		,		a.아이디
+		,		b.사용자이름
+		,		a.아이피
+		,		substring(stuff(stuff(a.발생일시,5,0,'-'),8,0,'-'),0,11) as 발생일시
+		from modu.r114_사용자접속로그 a
+		left outer join
+		modu.r114_사용자 b
+		on	a.아이디 = b.아이디
+		where a.아이디 = #{id}
+		order by 순번 desc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리수정리스트.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		a.회원구분
+		,		a.아이디
+		,		a.비밀번호
+		,		a.계약구분
+		,		convert(char(10), a.계약일자,  23)		as 계약일자
+		,		convert(char(10), a.계약시작일, 23)	as 계약시작일
+		,		convert(char(10), a.계약종료일, 23)	as 계약종료일
+		,		b.법인코드
+		,		b.법인명
+		,		b.법인구분_대
+		,		b.법인구분_중
+		,		b.법인구분_소
+		,		a.사용자이름
+		,		a.전화번호
+		,		a.그룹코드
+		,		a.기능권한
+		,		a.PC등록대수
+		,		a.PC삭제가능횟수
+		,		a.비고
+		,		c.아이피
+		from	modu.r114_사용자 a
+		left outer join
+		modu.r114_법인 b
+		on a.법인코드 = b.법인코드
+		left outer join
+		modu.r114_PC정보 c
+		on a.아이디 = c.아이디
+		where	a.아이디 = #{아이디}
+		and		a.사용여부 = 'Y'
+		and		b.사용여부 = 'Y'
+		and		c.사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_아이디중복체크.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		isnull(count(아이디), 0) as user_id
+		from	modu.r114_사용자
+		where	아이디 = #{아이디}
+	</select>
+
+	<select id="AdminDao.zeons_계정관리법인구분가져오기.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		a.법인구분_대
+		,		a.법인구분_중
+		,		a.법인구분_소
+		from	modu.r114_법인 a
+		where
+		a.법인코드 = #{corpCode}
+		and		a.사용여부 = 'Y'
+	</select>
+
+	<insert id="AdminDao.zeons_계정관리등록.insert" parameterType="CmMap">
+		insert into modu.r114_사용자
+		(
+		아이디
+		,	비밀번호
+		,	사용자이름
+		,	전화번호
+		,	계약구분
+		,	그룹코드
+		,	계약일자
+		,	계약시작일
+		,	계약종료일
+		,	회원구분
+		,	법인코드
+		,	PC등록대수
+		,	사용여부
+		,	메모
+		,	등록일자
+		, 	등록자아이피
+		,	등록자아이디
+		,	접속오류수
+		,	로그인락
+		)
+		values
+		(
+		#{아이디}
+		, 	#{비밀번호}
+		, 	#{사용자이름}
+		,	#{전화번호}
+		, 	#{계약구분}
+		,	#{그룹코드}
+		,	#{계약일자}
+		, 	#{계약시작일}
+		,	#{계약종료일}
+		,	'10'
+		,	#{법인코드}
+		,	#{PC등록대수}
+		,	'Y'
+		,	#{메모}
+		,	getdate()
+		, 	#{userIp}
+		,	#{userId}
+		,	#{접속오류수}
+		,	#{로그인락}
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_계정관리수정.update" parameterType="CmMap">
+		update modu.r114_사용자
+		set
+		사용자이름 			= #{사용자이름}
+		, 전화번호 		= #{전화번호}
+		, 계약구분 		= #{계약구분}
+		, 그룹코드 		= #{그룹코드}
+		, 계약일자 		= #{계약일자}
+		, 계약시작일 		= #{계약시작일}
+		, 계약종료일 		= #{계약종료일}
+		, 메모 			= #{메모}
+		, PC등록대수		= #{PC등록대수}
+		, 수정일자			= getdate()
+		, 수정자아이피		= #{userIp}
+		, 수정자아이디		= #{userId}
+		where 아이디 = #{아이디}
+	</update>
+
+	<insert id="AdminDao.zeons_계정관리pc등록.insert" parameterType="CmMap">
+		insert into modu.r114_PC정보
+		(
+		아이디
+		,아이피
+		,PC명
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{아이디}
+		,#{아이피}
+		,#{PC명}
+		,'Y'
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<delete id="AdminDao.zeons_계정관리pc삭제.delete">
+		delete from modu.r114_PC정보
+		where 아이디 = #{targetId}
+	</delete>
+
+	<update id="AdminDao.zeons_계정관리비밀번호초기화.update" parameterType ="CmMap">
+		update
+		modu.r114_법인
+		set
+		사업자번호 = 'R12345678!'
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		아이디 = #{아이디}
+		and 	사용여부 = 'Y'
+	</update>
+
+	<update id="AdminDao.zeons_계정관리사용자삭제.delete" parameterType ="CmMap">
+		update
+		modu.r114_사용자
+		set
+		사용여부		='N'
+		,		수정일자		= getdate()
+		,		수정자아이피	= #{userIp}
+		,		수정자아이디	= #{userId}
+		where
+		아이디 = #{아이디}
+		and 	사용여부 = 'Y'
+	</update>
+
+	<update id="AdminDao.zeons_계정관리PC삭제.delete" parameterType ="CmMap">
+		update
+		from   	modu.r114_PC정보
+		set
+		'N'
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		아이디 = #{아이디}
+		and 	사용여부 = 'Y'
+
+	</update>
+
+	<select id="AdminDao.zeons_사용자접속로그.select" parameterType="CmMap" resultType="CmResMap">
+		select 순번
+		,		ROW_NUMBER() OVER(order by 순번 asc) as 번호
+		,		아이피
+		,		아이디
+		,		브라우저구분
+		,		CONVERT(CHAR(19), 등록일자, 120) as 발생일시
+		from	modu.r114_사용자접속로그
+		where 	CONVERT(CHAR(10), 등록일자, 23) between #{dateStart} and #{dateEnd}
+		order by 번호 desc
+	</select>
+
+	<select id="AdminDao.zeons_메뉴별접속로그.select" parameterType="CmMap" resultType="CmResMap">
+		select 	convert(char, round((convert(float, c.합계)/c.클릭수),2)) 평균체류시간
+		, 		c.클릭수
+		, 		c.메뉴명
+		from(
+		select 		sum(convert(int, a.체류시간)) 합계
+		, 			count(a.순번) as 클릭수
+		, 			b.메뉴명 as 메뉴명
+		from 		modu.r114_사용자메뉴로그 a
+		join 		modu.r114_메뉴 b
+		on			a.메뉴코드 = b.메뉴코드
+		where 		a.체류시간 is not null
+		and 		a.메뉴코드 NOT LIKE 'MA06%'
+		and 		CONVERT(CHAR(10), a.등록일자, 23) between #{dateStart} and #{dateEnd}
+		group by 	b.메뉴명
+		) c
+		order by c.클릭수	desc
+	</select>
+
+	<select id="AdminDao.zeons_주요검색지역.select" parameterType="CmMap" resultType="CmResMap">
+		select 		a.검색지역
+		, 			count(a.순번) 클릭수
+		from 	(
+		select (지역명_시 + ' ' + 지역명_구 + ' '+ 지역명_동) as 검색지역
+		,		순번
+		from 	modu.r114_사용자검색지역로그
+		where 		CONVERT(CHAR(10), 발생일시, 23) between #{dateStart} and #{dateEnd}
+		) a
+		group by 	a.검색지역
+		order by    클릭수	desc
+	</select>
+
+	<select id="AdminDao.zeons_주요다운로드메뉴.select" parameterType="CmMap" resultType="CmResMap">
+
+		select a.주요다운로드
+		,		count(a.순번) 클릭수
+		from	(
+		select (c.메뉴명 + '_' + b.다운로드명) as 주요다운로드
+		,		b.순번
+		from	modu.r114_사용자다운로드메뉴로그 b
+		join	modu.r114_메뉴 c
+		on		b.메뉴코드 = c.메뉴코드
+		where	CONVERT(CHAR(10), b.등록일자, 23) between #{dateStart} and #{dateEnd}
+		)	a
+		group by a.주요다운로드
+		order by 클릭수 desc
+
+
+	</select>
+
+	<select id="AdminDao.zeons_공지사항.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	순번 as seq
+		,		구분
+		,		convert(char(10), 입력일자, 23) as 입력일자
+		,		분류
+		,		제목 as t_title
+		,		(replace(convert(varchar(max), a.내용), char(10), '<br>')) 내용
+		,		사용여부
+		,		비고
+		,		상단공지여부
+		,		ROW_NUMBER() OVER(ORDER BY 상단공지여부 asc, 순번 asc) as 번호
+		,		공지구분
+		,		등록일자
+		,		등록자아이피
+		,		등록자아이디
+		,		수정일자
+		,		수정자아이피
+		,		수정자아이디
+	]]>
+		from modu.r114_공지사항 a
+		where 구분 = 10
+		and   사용여부 = 'Y'
+		order by 번호 desc
+	</select>
+
+	<select id="AdminDao.zeons_공지사항상세보기.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	a.순번
+		,		a.구분
+		,		replace(convert(char(10), a.입력일자, 23),'-','.') as 입력일자
+		,		a.분류
+		,		a.제목 as t_title
+		,		(replace(convert(varchar(max), a.내용), char(10), '<br>')) 내용
+		,		a.사용여부
+		,		a.비고
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+		, 		a.첨부파일ID	
+		,		a.공지구분
+		,		a.상단공지여부
+		,		b.파일저장명	
+		,		b.원본파일명
+		,		b.파일사이즈
+		,		b.파일확장자
+		,		b.순번   as 파일순번
+		,		b.파일저장경로
+	]]>
+		from modu.r114_공지사항 a
+		left outer join modu.r114_첨부파일상세 b
+		on	  a.첨부파일ID = b.첨부파일ID
+		where a.구분 = 10
+		and   a.순번 = #{순번}
+		and   a.사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_공지사항상세수정.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	a.순번
+		,		a.구분
+		,		replace(convert(char(10), a.입력일자, 23),'-','.') as 입력일자
+		,		a.분류
+		,		a.제목 as t_title
+		,		a.내용
+		,		a.사용여부
+		,		a.비고
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+		, 		a.첨부파일ID	
+		,		a.공지구분
+		,		a.상단공지여부
+		,		a.팝업여부
+		, 		a.팝업내용
+		,  		convert(varchar, 팝업시작일시, 120) as 팝업시작일시
+		,  		convert(varchar, 팝업종료일시, 120) as 팝업종료일시
+		,		b.파일저장명
+		,		b.원본파일명
+		,		b.파일사이즈
+		,		b.파일확장자
+		,		b.순번   as 파일순번
+		,		b.파일저장경로
+	]]>
+		from modu.r114_공지사항 a
+		left outer join modu.r114_첨부파일상세 b
+		on	  a.첨부파일ID = b.첨부파일ID
+		where a.구분 = 10
+		and   a.순번 = #{순번}
+		and   a.사용여부 = 'Y'
+	</select>
+
+
+	<insert id="AdminDao.zeons_공지사항.insert" parameterType="CmMap">
+		INSERT INTO modu.r114_공지사항
+		(
+		구분, 입력일자, 분류, 제목, 내용, 사용여부,
+		등록자아이피, 등록자아이디, 공지구분, 상단공지여부, 첨부파일ID,
+		팝업여부, 팝업내용, 팝업시작일시, 팝업종료일시
+		)
+		VALUES
+		(
+		'10', getdate(), #{status}, #{title}, #{content}, 'Y',
+		#{userIp}, #{userId}, #{noticeYN}, #{noticeTop},
+		<choose>
+			<when test ="masterSeq == null or masterSeq == ''" >
+				NULL,
+			</when>
+			<otherwise>
+				#{masterSeq},
+			</otherwise>
+		</choose>
+		#{popupYN},
+		<choose>
+			<when test='popupYN == "N"'>
+				NULL, NULL, NULL
+			</when>
+			<otherwise>
+				#{popupContent}, #{popupStartDate}, #{popupEndDate}
+			</otherwise>
+		</choose>
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_공지사항.delete" parameterType ="CmMap">
+		UPDATE 	modu.r114_공지사항
+		SET 	사용여부 = 'N'
+		WHERE 	순번 = #{seq}
+		AND		구분 = '10'
+		AND		사용여부 = 'Y'
+	</update>
+
+	<update id="AdminDao.zeons_공지사항.update" parameterType= "CmMap">
+		UPDATE 	modu.r114_공지사항
+		SET 	분류 = #{status},
+		제목 = #{title},
+		내용 = #{content},
+		수정일자 = getdate(),
+		수정자아이피 = #{userIp},
+		수정자아이디 = #{userId},
+		공지구분 = #{noticeYN},
+		상단공지여부 = #{noticeTop},
+		팝업여부 = #{popupYN},
+		<choose>
+			<when test ="masterSeq == null or masterSeq == ''" >
+				첨부파일ID = NULL,
+			</when>
+			<otherwise>
+				첨부파일ID = #{masterSeq},
+			</otherwise>
+		</choose>
+		<choose>
+			<when test='popupYN == "N"'>
+				팝업내용 = NULL,
+				팝업시작일시 = NULL,
+				팝업종료일시 = NULL
+			</when>
+			<otherwise>
+				팝업내용 = #{popupContent},
+				팝업시작일시 = #{popupStartDate},
+				팝업종료일시 = #{popupEndDate}
+			</otherwise>
+		</choose>
+		WHERE	순번 = #{seq}
+		AND		구분 = '10'
+		AND		사용여부 = 'Y'
+	</update>
+
+	<select id="AdminDao.zeons_공지사항유무.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT 	isnull(count(순번), 0) as count
+		FROM 	modu.r114_공지사항
+		WHERE	구분 = '10'
+		AND		사용여부 = 'Y'
+		<choose>
+			<when test="seq != null and seq != ''">
+				AND		순번 = #{seq}
+			</when>
+			<otherwise>
+				AND		순번 = 0
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="AdminDao.공지사항팝업.select" parameterType="CmMap" resultType="CmResMap">
+		select top 1 row_number() over(order by 순번 desc) as 번호
+		,  순번 as seq
+		,  구분
+		,  분류
+		,  제목
+		,  내용
+		,  첨부파일ID
+		,  팝업내용
+		,  convert(varchar, 팝업시작일시, 120) as 팝업시작일시
+		,  convert(varchar, 팝업종료일시, 120) as 팝업종료일시
+		from modu.r114_공지사항
+		where 구분 = 10
+		and 팝업여부 = 'Y'
+		and 사용여부 = 'Y'
+		and getDate() <![CDATA[<]]> 팝업종료일시
+	</select>
+
+	<select id="AdminDao.zeons_상권분석관리.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	a.순번 as seq
+		,		a.구분
+		,		convert(char(10), a.입력일자, 23) as 입력일자
+		,		a.분류
+		, 		c.공통상세명 as 분류명 
+		,		a.제목 as t_title
+		,		(replace(convert(varchar(max), a.내용), char(10), '<br>')) 내용
+		,		a.공지구분
+		,		a.사용여부
+		,		a.비고
+		,		ROW_NUMBER() OVER(ORDER BY 순번 asc) as 번호
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+	]]>
+		from modu.r114_공지사항 a left join modu.r114_공통상세 c on c.공통마스터코드 = '100200' and c.공통상세코드 = a.분류
+		where a.구분 = '20'
+		and a.사용여부 = 'Y'
+		<if test="status != null and status != ''">
+			and	a.공지구분 = 'Y'
+		</if>
+		order by 번호 desc
+	</select>
+
+	<select id="AdminDao.zeons_상권분석상세보기.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	a.순번
+		,		a.구분
+		,		replace(convert(char(10), a.입력일자, 23),'-','.') as 입력일자
+		,		replace(convert(char(10), a.수정일자, 23),'-','.') as 수정일자
+		,		a.분류 
+		,		a.제목 as t_title
+		,		(replace(convert(varchar(max), a.내용), char(10), '<br>')) 내용
+		,		a.사용여부
+		,		a.비고
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+		,		a.첨부파일ID	
+		,		a.공지구분
+		,		b.파일저장명
+		,		b.원본파일명
+		,		b.파일사이즈
+		,		b.파일확장자
+		,		b.순번 AS 파일순번
+		,		b.파일저장경로
+		, 		c.공통상세명 
+	]]>
+		from modu.r114_공지사항 a  left join modu.r114_공통상세 c on c.공통마스터코드 = '100200' and c.공통상세코드 = a.분류
+		left outer join modu.r114_첨부파일상세 b on	  a.첨부파일ID = b.첨부파일ID
+		where a.구분 = '20'
+		and   a.순번 = #{seq}
+		and   a.사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_상권분석상세수정.select" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+		select	a.순번
+		,		a.구분
+		,		replace(convert(char(10), a.입력일자, 23),'-','.') as 입력일자
+		,		replace(convert(char(10), a.수정일자, 23),'-','.') as 수정일자
+		,		a.분류 
+		,		a.제목 as t_title
+		,		a.내용
+		,		a.사용여부
+		,		a.비고
+		,		a.등록자아이피
+		,		a.등록자아이디
+		,		a.수정일자
+		,		a.수정자아이피
+		,		a.수정자아이디
+		,		a.첨부파일ID	
+		,		a.공지구분
+		,		b.파일저장명
+		,		b.원본파일명
+		,		b.파일사이즈
+		,		b.파일확장자
+		,		b.순번 AS 파일순번
+		,		b.파일저장경로
+		, 		c.공통상세명 
+	]]>
+		from modu.r114_공지사항 a  left join modu.r114_공통상세 c on c.공통마스터코드 = '100200' and c.공통상세코드 = a.분류
+		left outer join modu.r114_첨부파일상세 b on	  a.첨부파일ID = b.첨부파일ID
+		where a.구분 = '20'
+		and   a.순번 = #{seq}
+		and   a.사용여부 = 'Y'
+	</select>
+
+	<insert id="AdminDao.zeons_상권분석관리.insert" parameterType="CmMap">
+		INSERT INTO modu.r114_공지사항
+		(
+		구분, 입력일자, 분류, 제목, 내용, 사용여부,
+		등록자아이피, 등록자아이디, 공지구분, 첨부파일ID
+		)
+		VALUES
+		(
+		'20', getdate(), #{status}, #{title}, #{content}, 'Y',
+		#{userIp}, #{userId}, #{noticeYN},
+		<choose>
+			<when test ="masterSeq == null or masterSeq == ''" >
+				NULL
+			</when>
+			<otherwise>
+				#{masterSeq}
+			</otherwise>
+		</choose>
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_상권분석관리.delete" parameterType ="CmMap">
+		UPDATE 	modu.r114_공지사항
+		SET 	사용여부 = 'N'
+		WHERE 	순번 = #{seq}
+		AND		구분 = '20'
+		AND		사용여부 = 'Y'
+	</update>
+
+	<update id="AdminDao.zeons_상권분석관리.update" parameterType= "CmMap">
+		UPDATE 	modu.r114_공지사항
+		SET 	분류 = #{status},
+		제목 = #{title},
+		내용 = #{content},
+		수정일자 = getdate(),
+		수정자아이피 = #{userIp},
+		수정자아이디 = #{userId},
+		공지구분 = #{noticeYN},
+		<choose>
+			<when test ="masterSeq == null or masterSeq == ''" >
+				첨부파일ID = NULL
+			</when>
+			<otherwise>
+				첨부파일ID = #{masterSeq}
+			</otherwise>
+		</choose>
+		WHERE	순번 = #{seq}
+		AND		구분 = '20'
+		AND		사용여부 = 'Y'
+	</update>
+
+	<select id="AdminDao.zeons_공통코드관리마스터.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		공통마스터코드
+		,		공통마스터명     as t_title
+		,		정렬코드
+		,		사용여부
+		from modu.r114_공통마스터
+		<if test="master != null and master != ''">
+			where
+			공통마스터코드 = #{master}
+		</if>
+		order by 공통마스터코드
+	</select>
+
+	<select id="AdminDao.zeons_공통코드관리상세.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		공통상세코드
+		,		공통상세명
+		,		정렬코드
+		,		사용여부
+		,		공통마스터코드
+		from modu.r114_공통상세
+		where
+		공통마스터코드 = #{master}
+		<if test="detail != null and detail != ''">
+			and		공통상세코드 = #{detail}
+		</if>
+		<if test="YN != null and YN != ''">
+			and
+			사용여부 = #{YN}
+		</if>
+		<if test="order == null or order == ''">
+			order by 공통상세코드 asc
+		</if>
+		<if test="order != null and order != ''">
+			order by 정렬코드
+			<if test="order == 'desc' or order == 'DESC'">
+				desc
+			</if>
+			<if test="order != 'desc' and order != 'DESC'">
+				asc
+			</if>
+		</if>
+	</select>
+
+	<insert id="AdminDao.zeons_공통코드관리마스터등록.insert" parameterType="CmMap">
+		insert into modu.r114_공통마스터
+		(
+		공통마스터코드
+		,공통마스터명
+		,정렬코드
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{master}
+		,#{공통마스터명}
+		,#{정렬코드}
+		,#{YN}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<insert id="AdminDao.zeons_공통코드관리상세등록.insert" parameterType="CmMap">
+		insert into modu.r114_공통상세
+		(
+		공통마스터코드
+		,공통상세코드
+		,공통상세명
+		,정렬코드
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{master}
+		,#{detail}
+		,#{공통상세명}
+		,#{정렬코드}
+		,#{YN}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_공통코드사용유무변경.delete" parameterType ="CmMap">
+		update
+		modu.r114_공통마스터
+		set
+		사용여부 = #{YN}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		공통마스터코드 = #{master}
+	</update>
+
+	<update id="AdminDao.zeons_공통상세코드사용유무변경.delete" parameterType ="CmMap">
+		update
+		modu.r114_공통상세
+		set
+		사용여부 = #{YN}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		공통마스터코드 = #{master}
+		and
+		공통상세코드 = #{detail}
+	</update>
+
+	<update id="AdminDao.zeons_공통코드수정.update" parameterType ="CmMap">
+		update
+		modu.r114_공통마스터
+		set
+		공통마스터명 = #{공통마스터명}
+		,		정렬코드 = #{정렬코드}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		,		사용여부 = #{YN}
+		where
+		공통마스터코드 = #{master}
+	</update>
+
+	<update id="AdminDao.zeons_공통상세코드수정.update" parameterType ="CmMap">
+		update
+		modu.r114_공통상세
+		set
+		공통상세명 = #{공통상세명}
+		,		정렬코드 = #{정렬코드}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		,		사용여부 = #{YN}
+		where
+		공통마스터코드 = #{master}
+		and
+		공통상세코드 = #{detail}
+	</update>
+
+	<select id="AdminDao.zeons_공통코드관리마스터확인.select" parameterType="CmMap" resultType="CmResMap">
+		select 		count(*) as count
+		from modu.r114_공통마스터
+		where
+		공통마스터코드 = #{master}
+	</select>
+
+	<select id="AdminDao.zeons_공통코드관리상세확인.select" parameterType="CmMap" resultType="CmResMap">
+		select 		count(*)	as count
+		from modu.r114_공통상세
+		where
+		공통마스터코드 = #{master}
+		and
+		공통상세코드 = #{detail}
+	</select>
+
+	<select id="AdminDao.zeons_상권분석관리유무.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT 	isnull(count(순번), 0) as count
+		FROM 	modu.r114_공지사항
+		WHERE	구분 = '20'
+		AND		사용여부 = 'Y'
+		<choose>
+			<when test="seq != null and seq != ''">
+				AND		순번 = #{seq}
+			</when>
+			<otherwise>
+				AND		순번 = 0
+			</otherwise>
+		</choose>
+
+	</select>
+
+	<select id="AdminDao.zeons_메뉴.select" parameterType="CmMap" resultType="CmResMap">
+		with menulist as (
+		select a.메뉴코드
+		, a.상위메뉴코드
+		, a.메뉴명
+		, a.정렬
+		, a.메뉴코드 메뉴정렬
+		, a.아이콘
+		, a.파일경로
+		, a.레벨
+		, a.모달창사용여부
+		, a.메뉴바오픈여부
+		, (select case when count(*) > 0 then 'Y' else 'N' end from modu.r114_메뉴 b where b.상위메뉴코드 = a.메뉴코드) 하위메뉴
+		, 0 하위메뉴순서
+		, (select count(*) from modu.r114_메뉴 b where b.상위메뉴코드 = a.상위메뉴코드) 하위메뉴숫자
+		, (select min(b.메뉴코드) from modu.r114_메뉴 b where b.상위메뉴코드 = a.메뉴코드 and b.레벨 = '2') 오픈메뉴
+		, row_number() over (order by a.정렬) 메뉴순서
+		, a.사용여부
+		from modu.r114_메뉴 a
+		where a.레벨 = '1'
+		union all
+		select a.메뉴코드
+		, a.상위메뉴코드
+		, a.메뉴명
+		, a.정렬
+		, b.메뉴코드 + '-' + a.정렬 + '-' + a.메뉴코드  메뉴정렬
+		, a.아이콘
+		, a.파일경로
+		, a.레벨
+		, a.모달창사용여부
+		, a.메뉴바오픈여부
+		, 'N' 하위메뉴
+		, row_number() over (partition by a.상위메뉴코드, a.레벨 order by a.정렬 asc) 하위메뉴순서
+		, (select count(*) from modu.r114_메뉴 b where b.상위메뉴코드 = a.상위메뉴코드) 하위메뉴숫자
+		, a.메뉴코드 오픈메뉴
+		, 99 메뉴순서
+		, a.사용여부
+		from modu.r114_메뉴 a inner join modu.r114_메뉴 b on a.상위메뉴코드 = b.메뉴코드
+		where a.레벨 = '2'
+		union all
+		select a.메뉴코드
+		, a.상위메뉴코드
+		, a.메뉴명
+		, a.정렬
+		, c.메뉴코드 + '-' + b.정렬 + '-' + b.메뉴코드 + '-' + a.메뉴코드  메뉴정렬
+		, a.아이콘
+		, a.파일경로
+		, a.레벨
+		, a.모달창사용여부
+		, a.메뉴바오픈여부
+		, 'N' 하위메뉴
+		, row_number() over (partition by a.상위메뉴코드, a.레벨 order by a.정렬 asc) 하위메뉴순서
+		, (select count(*) from modu.r114_메뉴 b where b.상위메뉴코드 = a.상위메뉴코드) 하위메뉴숫자
+		, a.메뉴코드 오픈메뉴
+		, 99 메뉴순서
+		, a.사용여부
+		from modu.r114_메뉴 a inner join modu.r114_메뉴 b on a.상위메뉴코드 = b.메뉴코드
+		inner join modu.r114_메뉴 c on b.상위메뉴코드 = c.메뉴코드
+		where a.레벨 = '3'
+		)
+		select a.메뉴코드 menucode
+		, a.상위메뉴코드 upmenucode
+		, case when a.레벨 = '2' then '  ㄴ  ' + a.메뉴명
+		when a.레벨 = '3' then '    >        ' + a.메뉴명
+		else a.메뉴명
+		end menuname
+		, a.정렬  sortcode
+		, row_number() over(order by a.메뉴정렬, a.하위메뉴순서) as sortmenu
+		, a.아이콘 icon
+		, a.파일경로 filepath
+		, a.레벨 lvl
+		, a.하위메뉴 downyn
+		, a.하위메뉴순서 downsort
+		, a.하위메뉴숫자 downcnt
+		, a.메뉴순서 menuorder1
+		, isnull(a.메뉴바오픈여부, 'N') menubaryn
+		, isnull(a.모달창사용여부, 'N') modalyn
+		, a.오픈메뉴 opencode
+		, a.사용여부 useyn
+		from menulist a
+		where 1=1
+		<if test='useyn != null and useyn != ""'>
+			and a.사용여부 = #{useyn}
+		</if>
+		order by a.메뉴정렬, a.하위메뉴순서
+	</select>
+
+	<insert id="AdminDao.zeons_메뉴.insert" parameterType="CmMap">
+		insert modu.r114_메뉴
+		(
+		메뉴코드
+		,메뉴명
+		,상위메뉴코드
+		,단위구분
+		,아이콘
+		,파일경로
+		,레벨
+		,정렬
+		,메뉴바오픈여부
+		,모달창사용여부
+		,사용여부
+		,비고
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{menucode}
+		,#{menuname}
+		,#{upmenucode}
+		,'MA'
+		,#{icon}
+		,#{filepath}
+		,#{lvl}
+		,#{sortcode}
+		,#{menubaryn}
+		,#{modalyn}
+		,#{useyn}
+		,#{remarks}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_메뉴.update" parameterType="CmMap">
+		update modu.r114_메뉴
+		set 메뉴명 = #{menuname}
+		, 상위메뉴코드 = #{upmenucode}
+		, 아이콘 = #{icon}
+		, 파일경로 = #{filepath}
+		, 레벨 = #{lvl}
+		, 정렬 = #{sortcode}
+		, 메뉴바오픈여부 = #{menubaryn}
+		, 모달창사용여부 = #{modalyn}
+		, 사용여부 = #{useyn}
+		, 비고 = #{remarks}
+		, 수정일자 = getdate()
+		, 수정자아이피 = #{userIp}
+		, 수정자아이디 = #{userId}
+		where 메뉴코드 = #{menucode}
+	</update>
+
+	<update id="AdminDao.zeons_메뉴.delete" parameterType="CmMap">
+		update modu.r114_메뉴
+		set 사용여부 = 'N'
+		, 수정일자 = getdate()
+		, 수정자아이피 = #{userIp}
+		, 수정자아이디 = #{userId}
+		where 메뉴코드 = #{menucode}
+	</update>
+
+	<select id="AdminDao.zeons_메뉴상세.select" parameterType="CmMap" resultType="CmResMap">
+		select a.메뉴코드 as menucode
+		, a.메뉴명 as menuname
+		, a.상위메뉴코드 as upmenucode
+		, a.단위구분 as unitdiv
+		, a.아이콘 as icon
+		, a.파일경로 as filepath
+		, a.레벨 as lvl
+		, a.정렬 as sortcode
+		, a.메뉴바오픈여부 as menubaryn
+		, a.모달창사용여부 as modalyn
+		, a.사용여부 as useyn
+		, a.비고 as remarks
+		from modu.r114_메뉴 a
+		where a.메뉴코드 = #{menucode}
+	</select>
+
+	<select id="AdminDao.zeons_권한관리그룹.select" parameterType="CmMap" resultType="CmResMap">
+		select 		그룹명, 비고, 그룹코드, row_number() over(order by 그룹코드) as 정렬
+		from 		modu.r114_그룹
+		where 		사용여부 = 'Y'
+		order by 	정렬
+	</select>
+
+	<select id="AdminDao.zeons_권한관리메뉴.select" parameterType="CmMap" resultType="CmResMap">
+		with menulist as (
+		select a.메뉴코드
+		, a.메뉴명
+		, a.정렬
+		, a.레벨
+		, a.사용여부
+		from modu.r114_메뉴 a
+		where a.레벨 = '1'
+		union all
+		select a.메뉴코드
+		, a.메뉴명
+		, a.정렬
+		, a.레벨
+		, a.사용여부
+		from modu.r114_메뉴 a inner join modu.r114_메뉴 b on a.상위메뉴코드 = b.메뉴코드
+		where a.레벨 = '2'
+		)
+		select a.메뉴코드 menucode
+		, a.메뉴명 menuname
+		, a.레벨 lvl
+		, a.사용여부 useyn
+		, row_number() over(order by a.메뉴코드) as 정렬
+		, c.사용여부 checkyn
+		, isnull(c.엑셀다운, 'N') excelyn
+		, isnull(c.상세엑셀다운, 'N') dtlexcelyn
+		from menulist a
+		left outer join modu.r114_그룹별권한 c
+		on a.메뉴코드 = c.메뉴코드  and c.그룹코드 = #{groupCode}
+		where a.사용여부 = 'Y'
+		order by a.메뉴코드
+	</select>
+
+
+	<select id="AdminDao.zeons_메뉴클릭.select" parameterType="CmMap" resultType="CmResMap">
+		with menulist as (
+		select a.메뉴코드
+		, a.메뉴명
+		, a.레벨
+		, a.사용여부
+		, a.상위메뉴코드
+		from modu.r114_메뉴 a
+		where a.레벨 = '1'
+		union all
+		select a.메뉴코드
+		, a.메뉴명
+		, a.레벨
+		, a.사용여부
+		, a.상위메뉴코드
+		from modu.r114_메뉴 a inner join modu.r114_메뉴 b on a.상위메뉴코드 = b.메뉴코드
+		where a.레벨 = '2'
+		)
+		select a.메뉴코드
+		, a.메뉴명 menuname
+		, a.레벨 lvl
+		, c.사용여부 checkyn
+		, a.상위메뉴코드 upmenucode
+		from menulist a
+		left outer join modu.r114_그룹별권한 c
+		on a.메뉴코드 = c.메뉴코드
+		where a.사용여부 = 'Y'
+		and c.그룹코드 = #{groupCode}
+		and c.메뉴코드 like '%' + #{menuCode}+ '%'
+		order by a.메뉴코드
+	</select>
+
+	<insert id="AdminDao.zeons_권한관리등록.insert" parameterType="CmMap">
+		insert into modu.r114_그룹
+		(
+		그룹명
+		, 	사용여부
+		, 	비고
+		, 	등록일자
+		,	등록자아이피
+		,	등록자아이디
+		,	엑셀다운
+		)
+		values
+		(
+		#{authGroupName}
+		, 	'Y'
+		, 	#{authGroupEx}
+		,	getdate()
+		,	#{userIp}
+		,	#{userId}
+		,	#{excelDown}
+		)
+	</insert>
+
+
+	<insert id="AdminDao.zeons_권한관리메뉴등록.insert" parameterType="CmMap">
+		INSERT INTO modu.r114_그룹별권한(메뉴코드, 그룹코드, 사용여부, 엑셀다운, 상세엑셀다운, 등록일자, 등록자아이피, 등록자아이디)
+		SELECT b.메뉴코드, a.그룹코드, 'N', 'N', 'N', GETDATE(), #{userIp}, #{userIp}
+		FROM [modu].[r114_그룹] a inner join [modu].[r114_메뉴] b on 1=1
+		WHERE a.그룹코드 = #{groupCode}
+		and not exists (select 1
+		from modu.r114_그룹별권한 z
+		where b.메뉴코드 = z.메뉴코드
+		and a.그룹코드 = z.그룹코드)
+	</insert>
+
+	<update id="AdminDao.zeons_권한관리수정.update" parameterType="CmMap">
+		update	modu.r114_그룹
+		set
+		그룹명 = #{authGroupName}
+		, 	사용여부 = 'Y'
+		, 	비고 = #{authGroupEx}
+		,	엑셀다운 = #{excelDown}
+		,	아이피확인 = #{ipChk}
+		,	수정일자 = getdate()
+		,	수정자아이피 = #{userIp}
+		,	수정자아이디 = #{userId}
+		where 	그룹코드 = #{groupCode}
+	</update>
+
+	<update id="AdminDao.zeons_그룹별권한수정.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			사용여부 		=	'Y'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<update id="AdminDao.zeons_그룹별권한수정체크.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			사용여부 		=	'N'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<update id="AdminDao.zeons_그룹별권한엑셀수정.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			엑셀다운 		=	'Y'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<update id="AdminDao.zeons_그룹별권한엑셀수정체크.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			엑셀다운 		=	'N'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<update id="AdminDao.zeons_그룹별상세엑셀수정.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			상세엑셀다운	=	'Y'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<update id="AdminDao.zeons_그룹별상세엑셀수정체크.update" parameterType="CmMap">
+		<foreach collection="menuCode" item="menuCode"  separator=";">
+
+			update
+			modu.r114_그룹별권한
+			set
+			상세엑셀다운	=	'N'
+			, 	수정일자		=	getDate()
+			,	수정자아이피	=	#{userIp}
+			,	수정자아이디	=	#{userId}
+			where
+			메뉴코드		= 	'${menuCode}'
+			and	그룹코드 		=	 #{groupCode}
+		</foreach>
+	</update>
+
+	<select id="AdminDao.zeons_권한그룹모달.select" parameterType="CmMap" resultType="CmResMap">
+		select 		그룹명
+		, 	비고
+		,	엑셀다운
+		,	아이피확인
+		from 		modu.r114_그룹
+		where 		그룹코드 = #{groupCode}
+	</select>
+
+	<insert id="AdminDao.zeons_메뉴목록.insert" parameterType="CmMap">
+		INSERT INTO modu.r114_그룹별권한
+		(메뉴코드
+		,그룹코드
+		,사용여부
+		,엑셀다운
+		,상세엑셀다운
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		SELECT a.메뉴코드
+		, b.그룹코드
+		, 'Y'
+		, 'N'
+		, 'N'
+		, GETDATE()
+		, #{userIp}
+		, #{userId}
+		FROM modu.r114_메뉴 a inner join modu.r114_그룹 b on 1=1
+		where not exists (select 1
+		from modu.r114_그룹별권한 z
+		where a.메뉴코드 = z.메뉴코드
+		and b.그룹코드 = z.그룹코드)
+
+	</insert>
+
+	<update id="AdminDao.zeons_권한관리삭제.update" parameterType="CmMap">
+		update	modu.r114_그룹
+		set		사용여부 = 'N'
+		where 	그룹코드 = #{groupCode}
+		and		사용여부 = 'Y'
+
+	</update>
+
+	<select id="AdminDao.zeons_법인코드관리마스터.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		법인마스터코드
+		,		법인마스터명     as t_title
+		,		정렬코드
+		,		사용여부
+		from modu.r114_법인마스터
+		<if test="master != null and master != ''">
+			where
+			법인마스터코드 = #{master}
+		</if>
+		order by 법인마스터코드
+	</select>
+
+	<select id="AdminDao.zeons_법인코드관리상세.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		법인상세코드
+		,		법인상세명
+		,		정렬코드
+		,		사용여부
+		,		법인마스터코드
+		from modu.r114_법인상세
+		where
+		법인마스터코드 = #{master}
+		<if test="detail != null and detail != ''">
+			and		법인상세코드 = #{detail}
+		</if>
+		order by 법인상세코드
+	</select>
+
+	<select id="AdminDao.zeons_법인코드관리상세세부.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		법인마스터코드
+		,		법인상세코드
+		,		법인상세세부코드
+		,		법인상세세부명
+		,		정렬코드
+		,		사용여부
+		from modu.r114_법인상세세부
+		where
+		법인마스터코드 = #{master}
+		and		법인상세코드 = #{detail_1}
+		<if test="detail_2 != null and detail_2 != ''">
+			and		법인상세세부코드 = #{detail_2}
+		</if>
+		order by 법인상세세부코드
+	</select>
+
+	<insert id="AdminDao.zeons_법인코드관리마스터등록.insert" parameterType="CmMap">
+		insert into modu.r114_법인마스터
+		(
+		법인마스터코드
+		,법인마스터명
+		,정렬코드
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{master}
+		,#{법인마스터명}
+		,#{정렬코드}
+		,#{YN}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<insert id="AdminDao.zeons_법인코드관리상세등록.insert" parameterType="CmMap">
+		insert into modu.r114_법인상세
+		(
+		법인마스터코드
+		,법인상세코드
+		,법인상세명
+		,정렬코드
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{master}
+		,#{detail}
+		,#{법인상세명}
+		,#{정렬코드}
+		,#{YN}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<insert id="AdminDao.zeons_법인코드관리상세등록_2.insert" parameterType="CmMap">
+		insert into modu.r114_법인상세세부
+		(
+		법인마스터코드
+		,법인상세코드
+		,법인상세세부코드
+		,법인상세세부명
+		,정렬코드
+		,사용여부
+		,등록일자
+		,등록자아이피
+		,등록자아이디
+		)
+		values
+		(
+		#{master}
+		,#{detail_1}
+		,#{detail_2}
+		,#{법인상세세부명}
+		,#{정렬코드}
+		,#{YN}
+		,getdate()
+		,#{userIp}
+		,#{userId}
+		)
+	</insert>
+
+	<update id="AdminDao.zeons_법인코드사용유무변경.delete" parameterType ="CmMap">
+		update
+		modu.r114_법인마스터
+		set
+		사용여부 = #{YN}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		법인마스터코드 = #{master}
+	</update>
+
+	<update id="AdminDao.zeons_법인상세코드사용유무변경.delete" parameterType ="CmMap">
+		update
+		modu.r114_법인상세
+		set
+		사용여부 = #{YN}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail}
+	</update>
+
+	<update id="AdminDao.zeons_법인상세코드사용유무변경_2.delete" parameterType ="CmMap">
+		update
+		modu.r114_법인상세세부
+		set
+		사용여부 = #{YN}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail_1}
+		and
+		법인상세세부코드 = #{detail_2}
+	</update>
+
+	<update id="AdminDao.zeons_법인공통코드수정.update" parameterType ="CmMap">
+		update
+		modu.r114_법인마스터
+		set
+		법인마스터명 = #{법인마스터명}
+		,		정렬코드 = #{정렬코드}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		,		사용여부 = #{YN}
+		where
+		법인마스터코드 = #{master}
+	</update>
+
+	<update id="AdminDao.zeons_법인공통상세코드수정.update" parameterType ="CmMap">
+		update
+		modu.r114_법인상세
+		set
+		법인상세명 = #{법인상세명}
+		,		정렬코드 = #{정렬코드}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		,		사용여부 = #{YN}
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail}
+	</update>
+
+	<update id="AdminDao.zeons_법인공통상세코드수정_2.update" parameterType ="CmMap">
+		update
+		modu.r114_법인상세세부
+		set
+		법인상세세부명 = #{법인상세세부명}
+		,		정렬코드 = #{정렬코드}
+		,		수정일자      = getdate()
+		,		수정자아이피 = #{userIp}
+		,		수정자아이디 = #{userId}
+		,		사용여부 = #{YN}
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail_1}
+		and
+		법인상세세부코드 = #{detail_2}
+	</update>
+
+	<select id="AdminDao.zeons_법인공통코드관리마스터확인.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		count(*) as count
+		from modu.r114_법인마스터
+		where
+		법인마스터코드 = #{master}
+	</select>
+
+	<select id="AdminDao.zeons_법인공통코드관리상세확인.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		count(*)	as count
+		from modu.r114_법인상세
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail}
+	</select>
+
+	<select id="AdminDao.zeons_법인공통코드관리상세확인_2.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		count(*)	as count
+		from modu.r114_법인상세세부
+		where
+		법인마스터코드 = #{master}
+		and
+		법인상세코드 = #{detail_1}
+		and
+		법인상세세부코드 = #{detail_2}
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세_접속내역.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		ROW_NUMBER () over(order by a.발생일시 asc  ) as 순번
+		, a.아이디
+		, a.아이피
+		,	substring(a.발생일시, 1, 4)+'년 '
+		+ substring(a.발생일시, 5, 2)+'월 '
+		+ substring(a.발생일시, 7, 2)+'일 '
+		+ substring(a.발생일시, 9, 2)+'시 '
+		+ substring(a.발생일시, 11, 2)+'분 '
+		+ substring(a.발생일시, 13, 2)+'초 '
+		as 발생일시
+		,	substring(a.종료일시, 1, 4)+'년 '
+		+ substring(a.종료일시, 5, 2)+'월 '
+		+ substring(a.종료일시, 7, 2)+'일 '
+		+ substring(a.종료일시, 9, 2)+'시 '
+		+ substring(a.종료일시, 11, 2)+'분 '
+		+ substring(a.종료일시, 13, 2)+'초 '
+		as 종료일시
+		, (select convert(varchar , DATEDIFF(MINUTE ,
+		substring(a.발생일시, 1, 8)+' '+
+		substring(a.발생일시, 9, 2)+':'+
+		substring(a.발생일시, 11, 2)+':'+
+		substring(a.발생일시, 13, 2)
+		,
+		substring(a.종료일시, 1, 8)+' '+
+		substring(a.종료일시, 9, 2)+':'+
+		substring(a.종료일시, 11, 2)+':'+
+		substring(a.종료일시, 13, 2)
+		)
+		)+'분'
+		)as 체류시간
+		, b.PC명
+		from modu.r114_사용자접속로그 a
+		left outer join (
+		select
+		아이피 ,PC명
+		from modu.r114_PC정보
+		where 아이디  = #{targetId}
+		and 사용여부 ='Y'
+		)b on a.아이피 = b.아이피
+		where a.아이디  = #{targetId}
+		order by a.발생일시 desc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세_아이피변경내역.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		ROW_NUMBER () over(order by 등록일자 asc ) as 순번
+		, PC명
+		, 아이피
+		, case when 사용여부 = 'Y' then '등록'
+		else '비활성'
+		end as 이벤트
+		, case when 수정일자 is not null then
+		substring(convert(varchar,수정일자,20), 1, 4)+'년 '
+		+ substring(convert(varchar,수정일자,20), 6, 2)+'월 '
+		+ substring(convert(varchar,수정일자,20), 9, 2)+'일 '
+		+ substring(convert(varchar,수정일자,20), 12, 2)+'시 '
+		+ substring(convert(varchar,수정일자,20), 15, 2)+'분 '
+		+ substring(convert(varchar,수정일자,20), 18, 2)+'초 '
+		else substring(convert(varchar,등록일자,20), 1, 4)+'년 '
+		+ substring(convert(varchar,등록일자,20), 6, 2)+'월 '
+		+ substring(convert(varchar,등록일자,20), 9, 2)+'일 '
+		+ substring(convert(varchar,등록일자,20), 12, 2)+'시 '
+		+ substring(convert(varchar,등록일자,20), 15, 2)+'분 '
+		+ substring(convert(varchar,등록일자,20), 18, 2)+'초 '
+		end as 이벤트변경일시
+		, case when 수정일자 is not null then 수정자아이디
+		else 등록자아이디
+		end as 담당자
+		from modu.r114_PC정보
+		where 아이디 = #{targetId}
+		order by 등록일자 desc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리_상세_메뉴별접속시간.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		ROW_NUMBER () over(order by a.등록일자 asc ) as 순번
+		, (select 메뉴명 from modu.r114_메뉴 where 사용여부='Y' and 메뉴코드 = a.메뉴코드)as 메뉴명
+		,	substring(a.발생일시, 1, 4)+'년 '
+		+ substring(a.발생일시, 5, 2)+'월 '
+		+ substring(a.발생일시, 7, 2)+'일 '
+		+ substring(a.발생일시, 9, 2)+'시 '
+		+ substring(a.발생일시, 11, 2)+'분 '
+		+ substring(a.발생일시, 13, 2)+'초 '
+		as 발생일시
+		,	substring(a.종료일시, 1, 4)+'년 '
+		+ substring(a.종료일시, 5, 2)+'월 '
+		+ substring(a.종료일시, 7, 2)+'일 '
+		+ substring(a.종료일시, 9, 2)+'시 '
+		+ substring(a.종료일시, 11, 2)+'분 '
+		+ substring(a.종료일시, 13, 2)+'초 '
+		as 종료일시
+		, (select convert(varchar , DATEDIFF(MINUTE ,
+		substring(a.발생일시, 1, 8)+' '+
+		substring(a.발생일시, 9, 2)+':'+
+		substring(a.발생일시, 11, 2)+':'+
+		substring(a.발생일시, 13, 2)
+		,
+		substring(a.종료일시, 1, 8)+' '+
+		substring(a.종료일시, 9, 2)+':'+
+		substring(a.종료일시, 11, 2)+':'+
+		substring(a.종료일시, 13, 2)
+		)
+		)+'분'
+		)as 체류시간
+		from modu.r114_사용자메뉴로그 a
+		where a.아이디 = #{아이디} and a.아이피 = #{아이피}
+		ORDER by a.등록일자 desc
+	</select>
+
+	<select id="AdminDao.zeons_계정관리계약구분.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		공통상세코드, 공통상세명 as 계약구분
+		from modu.r114_공통상세
+		where 공통마스터코드 = '100000'
+		and 사용여부 = 'Y'
+	</select>
+
+	<select id="AdminDao.zeons_계정관리계정그룹.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		그룹코드,그룹명
+		from modu.r114_그룹
+		where 사용여부='Y'
+	</select>
+
+	<select id="AdminDao.zeons_계정관리수정정보.select" parameterType="CmMap" resultType="CmResMap">
+		select b.법인명
+		, c.법인마스터명	as 법인구분1
+		, c.법인마스터코드	as 법인구분1코드
+		, d.법인마스터명	as 법인구분2
+		, d.법인마스터코드	as 법인구분2코드
+		, a.사용자이름
+		, a.전화번호
+		, a.계약구분
+		, convert(varchar , a.계약일자, 23) as 계약일자
+		, a.그룹코드
+		, convert(varchar , a.계약시작일, 23) as 계약시작일
+		, convert(varchar , a.계약종료일, 23) as 계약종료일
+		, a.메모
+		, a.PC등록대수
+		from modu.r114_사용자 a
+		left outer join modu.r114_법인 b on a.법인코드 = b.법인코드
+		left outer join (
+		select
+		법인마스터코드 , 법인마스터명
+		from modu.r114_법인마스터
+		where 사용여부 = 'Y'
+		)c on b.법인구분_대 = c.법인마스터코드
+		left outer join (
+		select
+		법인마스터코드 , 법인마스터명
+		from modu.r114_법인마스터
+		where 사용여부 = 'Y'
+		)d on b.법인구분_중 = c.법인마스터코드
+
+		where a.아이디 = #{targetId}
+	</select>
+
+	<select id="AdminDao.zeons_계정관리수정아이피.select" parameterType="CmMap" resultType="CmResMap">
+		select
+		PC명, 아이피
+		from modu.r114_PC정보 a
+		where a.아이디 = #{targetId}
+		and 사용여부 = 'Y'
+		order by a.순번
+	</select>
+
+	<update id="AdminDao.zeons_비밀번호초기화.update" parameterType="CmMap">
+		update modu.r114_사용자
+		set 비밀번호 = #{비밀번호}
+		, 수정일자		= getdate()
+		, 수정자아이피		= #{userIp}
+		, 수정자아이디		= #{userId}
+		where 아이디	= #{아이디}
+	</update>
+</mapper>

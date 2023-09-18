@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+    updateCheck="false">
+    <diskStore path="java.io.tmpdir" />
+    
+	<defaultCache 
+		eternal="false"
+		maxElementsInMemory="10000"
+		overflowToDisk="false" 
+		diskPersistent="false" 
+		timeToIdleSeconds="0"
+		timeToLiveSeconds="0" 
+		memoryStoreEvictionPolicy="LRU">
+	</defaultCache>
+
+	<!-- 120초 후 캐쉬 만료 -->   
+	<cache name="StaticCache"
+		eternal="false"   
+        maxElementsInMemory="100"  
+        timeToIdleSeconds="120" 
+        timeToLiveSeconds="120" 
+        overflowToDisk="false"
+        diskPersistent="false" 
+        diskExpiryThreadIntervalSeconds="120"
+        copyOnRead="true" 
+        copyOnWrite="true" 
+		memoryStoreEvictionPolicy="LRU">
+	</cache>
+	
+	<!-- 120초 후 캐쉬 만료 -->   
+	<cache name="getNoticeListCount"
+		eternal="false"   
+        maxElementsInMemory="100"  
+        timeToIdleSeconds="120" 
+        timeToLiveSeconds="120" 
+        overflowToDisk="false"
+        diskPersistent="false" 
+        diskExpiryThreadIntervalSeconds="120"
+        copyOnRead="true" 
+        copyOnWrite="true" 
+		memoryStoreEvictionPolicy="LRU">
+	</cache>
+	<!-- 120초 후 캐쉬 만료 -->   
+	<cache name="getNoticeList"
+		eternal="false"   
+        maxElementsInMemory="100"  
+        timeToIdleSeconds="120" 
+        timeToLiveSeconds="120" 
+        overflowToDisk="false"
+        diskPersistent="false" 
+        diskExpiryThreadIntervalSeconds="120"
+        copyOnRead="true" 
+        copyOnWrite="true" 
+		memoryStoreEvictionPolicy="LRU">
+	</cache>
+</ehcache>

@@ -1,0 +1,85 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<!DOCTYPE html>
+<html lang="ko">
+	<!--begin::Head-->
+	<head><base href="../">
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+		<meta id="metaURL" property="og:url" content='https://www.r114.com/Default.asp?_c=StartupSupport&_s=StoreInfo'>
+		<meta id="metaType" property="og:type" content='website' />
+		<meta id="metaImg" property="og:image" content='https://image.r114.co.kr/W1/images/common/fe_logo.png' />
+		<meta id="metaTitle" property="og:title" content='부동산 빅데이터 플랫폼 부동산114' />
+		<meta id="metaDescription" property="og:description" content='종합부동산포털, 매물, 시세, 실거래가, 분양, 리서치, 매물의뢰, 창업지원, 컨설팅, 솔루션, 부동산뉴스 제공' />
+		<meta id="metaKeyword" name="keyword" content='종합부동산포털, 매물, 시세, 실거래가, 분양, 리서치, 매물의뢰, 창업지원, 컨설팅, 솔루션, 부동산뉴스 제공' />
+		<meta name="description" content="종합부동산포털, 매물, 시세, 실거래가, 분양, 리서치, 매물의뢰, 창업지원, 컨설팅, 솔루션, 부동산뉴스 제공" />
+		<meta name="twitter:card" content="summary" />
+		<title>부동산114 - RCS</title>
+		<!--begin::Fonts-->
+		<link rel="stylesheet" href="/resources/common/custom/fonts/NotoSansKR-Hestia.css" />
+		<!--end::Fonts-->
+		<!--begin::Global Theme Styles(used by all pages)-->
+		<link href="/resources/common/custom/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/plugins/custom/prismjs/prismjs.bundle.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/css/style.bundle.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/css/style.bundle.extend.css" rel="stylesheet" type="text/css" />
+		<!--end::Global Theme Styles-->
+		<!--begin::Layout Themes(used by all pages)-->		
+		<link href="/resources/common/custom/css/themes/layout/header/base/light.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/css/themes/layout/header/menu/light.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/css/themes/layout/brand/dark.css" rel="stylesheet" type="text/css" />
+		<link href="/resources/common/custom/css/themes/layout/aside/dark.css" rel="stylesheet" type="text/css" />
+		<!--end::Layout Themes-->
+		<link rel="shortcut icon" href="/resources/common/custom/media/logos/favicon.ico" />
+	</head>
+	<!--end::Head-->
+	<!--begin::Body-->
+	<body id="kt_body" class="page-loading">
+		<!--begin::Main-->
+		<div class="d-flex flex-column flex-root">
+			<!--begin::Page-->
+			<div class="d-flex flex-row flex-column-fluid page">
+				<!--begin::Wrapper-->
+				<div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+					<!--begin::Content-->
+					<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+						<!--begin::Entry-->
+						<div class="d-flex flex-column-fluid align-items-center justify-content-center">
+                            <!--begin::Card-->
+                            <div class="card card-custom border-0 bg-transparent shadow-none">
+                                <!--begin::Body-->
+                                <div class="card-body text-center">
+                                    <div class="text-center mb-15">
+										<img src="/resources/common/custom/media/svg/error.svg" alt="error" />
+									</div>
+                                    <!--begin: Form Group-->
+                                    <h1 class="display-4 font-weight-bold">페이지가 존재하지 않습니다.</h1>
+                                    <p class="font-size-h4 mb-15">URL이 잘못됐거나, 삭제된 페이지 입니다.</p>
+									<a href="/admin/member/adminActionLogin.do" class="btn btn-outline-secondary btn-lg font-weight-bold px-15"><span class="font-size-lg">홈으로 돌아가기</span></a>
+									<!--end: Form Group-->
+                                </div>
+								<!--end: Card Body-->
+                            </div>
+                            <!--end: Card-->
+						</div>
+						<!--end::Entry-->
+					</div>
+					<!--end::Content-->
+				</div>
+				<!--end::Wrapper-->
+			</div>
+			<!--end::Page-->
+		</div>
+        <!--end::Main-->
+		<!--begin::Global Config(global config for global JS scripts)-->
+		<!--end::Global Config-->
+		<!--begin::Global Theme Bundle(used by all pages)-->
+		<script src="assets/plugins/global/plugins.bundle.js"></script>
+		<script src="assets/plugins/custom/prismjs/prismjs.bundle.js"></script>
+		<script src="assets/js/scripts.bundle.js"></script>
+		<!--end::Global Theme Bundle-->
+		<!--begin::Page Scripts(used by this page)-->
+		<!--end::Page Scripts-->
+	</body>
+	<!--end::Body-->
+</html>

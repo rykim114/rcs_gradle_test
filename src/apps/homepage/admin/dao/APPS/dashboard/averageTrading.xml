@@ -1,0 +1,1035 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="averageTradingDao">
+
+	<select id="averageTradingDao.평균매매가시도추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select		z.dongnm
+				,	z.period
+				,   case when sum(z.usage_area) = 0 then 0
+						 else sum(z.deal) / sum(z.usage_area)
+					end as rent_ua
+				,   case when sum(z.cont_area) = 0 then 0
+						 else sum(z.deal) / sum(z.cont_area)
+					end as rent_ca
+				, 	z.cd
+				,	sum(z.deal) as deal
+				,	sum(z.usage_area) as usage_area
+				, 	sum(z.cont_area) as cont_area
+		from	(
+				select    a.sido_kor_nm as dongnm
+					   	, a.sido_cd as cd
+						, isnull(a.deal, 0) as deal
+						, isnull(a.usage_area, 0) as usage_area
+						, isnull(a.cont_area, 0) as cont_area
+						, a.floor
+						, a.SANGGA_TYPE as 상가유형
+						, case when #{period}  = '1' then substring(a.std_yyyymm, 1, 4)
+							   when #{period}  = '2' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							   when #{period}  = '3' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							   when #{period}  = '4' then substring(a.std_yyyymm, 1, 6)
+						  end as period
+				from modu.shop_deal_sido a
+				where 1 = 1
+				<if test='jusoCd.equals("sido")'>
+					and a.sido_cd = #{pnu}
+				</if>
+				<if test='jusoCd.equals("sgg")'>
+					and	a.sido_cd = #{pnu2}
+				</if>
+				<if test='jusoCd.equals("emd")'>
+					and 1 = 2
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 0 		AND a.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 1000 	AND a.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 3000 	AND a.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 5000 	AND a.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 7000 	AND a.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 10000	AND a.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 15000 	AND a.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 30000 	AND a.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+				</if>
+				union all
+				select 		  b.sgg_kor_nm	as dongnm
+					  	  	, b.sgg_cd as cd
+							, isnull(b.deal, 0) as deal
+							, isnull(b.usage_area, 0) as usage_area
+							, isnull(b.cont_area, 0) as cont_area
+							, b.floor
+							, b.SANGGA_TYPE as 상가유형
+							, case when #{period}  = '1' then substring(b.std_yyyymm, 1, 4)
+		  						   when #{period}  = '2' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+								   when #{period}  = '3' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+								   when #{period}  = '4' then substring(b.std_yyyymm, 1, 6)
+							  end as period
+				from modu.shop_deal_ssg b
+				where 1 = 1
+				<if test='jusoCd.equals("sido") and pnu != "all"'>
+				and	 b.sgg_cd like #{pnu} + '%'
+				</if>
+				<if test='jusoCd.equals("sgg")'>
+				and  b.sgg_cd like #{pnu2} + '%'
+				and  b.sgg_cd like #{pnu} + '%'
+				</if>
+				<if test='jusoCd.equals("emd")'>
+				and  b.sgg_cd = #{pnu2}
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+				  and 	(		CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 0 		AND b.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 1000 	AND b.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 3000 	AND b.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 5000 	AND b.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 7000 	AND b.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 10000	AND b.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 15000 	AND b.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 30000 	AND b.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+				</if>
+				union all
+				select	  c.emd_kor_nm	as dongnm
+						, c.emd_cd as cd
+						, isnull(c.deal, 0) as deal
+						, isnull(c.usage_area, 0) as usage_area
+						, isnull(c.cont_area, 0) as cont_area
+						, c.floor
+						, c.SANGGA_TYPE as 상가유형
+						, case when #{period}  = '1' then substring(c.std_yyyymm, 1, 4)
+							   when #{period}  = '2' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							   when #{period}  = '3' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							   when #{period}  = '4' then substring(c.std_yyyymm, 1, 6)
+					  	  end as period
+				from  modu.shop_deal_emd c
+				where 1 = 1
+				<if test='jusoCd.equals("sgg")'>
+					and	1 = 2
+				</if>
+				<if test='jusoCd.equals("sido")'>
+					and 1 = 2
+				</if>
+				<if test='jusoCd.equals("emd")'>
+					and c.emd_cd like #{pnu} + '%'
+					and c.emd_cd like #{pnu2} + '%'
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+				   and 	(		CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 0 		AND c.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 1000 	AND c.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 3000 	AND c.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 5000 	AND c.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 7000 	AND c.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 10000	AND c.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 15000 	AND c.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 30000 	AND c.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+				</if>
+			) as z
+			where 1 = 1
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and z.상가유형 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+			and case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+				 	 else z.floor + 'F' end in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''">
+			and	z.period <![CDATA[ >= ]]> #{startDate}
+			</if>
+			<if test="startYMD != null and startYMD != ''">
+			and	z.period <![CDATA[ >= ]]> #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+			and	z.period <![CDATA[ <= ]]> #{endYMD}
+			</if>
+			group by 	z.dongnm
+					,	z.period
+					,	z.cd
+			order by	z.cd
+	</select>
+
+	<!-- 전국 데이터 작업 -->
+	<select id="averageTradingDao.평균매매가전국추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select 	a.dongnm,
+				a.period,
+				case when sum(a.usage_area) = 0 then 0
+					 else sum(a.deal) / sum(a.usage_area)
+				end as rent_ua,
+				case when sum(a.cont_area) = 0 then 0
+					 else sum(a.deal) / sum(a.cont_area)
+				end as rent_ca,
+				a.cd,
+				sum(a.deal) as deal,
+				sum(a.usage_area) as usage_area,
+				sum(a.cont_area) as cont_area
+		from (
+				select 	'전국' as dongnm,
+						'00' as cd,
+						isnull(deal, 0) as deal,
+						isnull(usage_area, 0) as usage_area,
+						isnull(cont_area, 0) as cont_area,
+						floor,
+						SANGGA_TYPE as 상가유형,
+						case when #{period}  = '1' then substring(std_yyyymm, 1, 4)
+							 when #{period}  = '2' then substring(std_yyyymm, 1, 4) + cast(ceiling(cast(substring(std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							 when #{period}  = '3' then substring(std_yyyymm, 1, 4) + cast(ceiling(cast(substring(std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							 when #{period}  = '4' then substring(std_yyyymm, 1, 6)
+						end as period
+				from modu.shop_deal_all
+				where 1 = 1
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 0 	AND ${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 1000 	AND ${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 3000 	AND ${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 5000 	AND ${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 7000 	AND ${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 10000	AND ${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 15000 AND ${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 30000 AND ${areaNm} <![CDATA[<]]> 99999999999999999
+					)
+				</if>
+		) a
+		where 1 = 1
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and a.상가유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		<if test="floorArr != null and floorArr.size() > 0">
+			and case when isnumeric(a.floor) = 1 and a.floor <![CDATA[>]]> 3 then '4F이상'
+					 else a.floor + 'F' end in
+			<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+				#{floor}
+			</foreach>
+		</if>
+		<if test="startDate != null and startDate != ''">
+			and	a.period <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test="startYMD != null and startYMD != ''">
+			and	a.period <![CDATA[ >= ]]> #{startYMD}
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and	a.period <![CDATA[ <= ]]> #{endYMD}
+		</if>
+		group by 	a.dongnm,
+				 	a.period,
+				 	a.cd
+		order by	a.cd
+	</select>
+
+	<select id="averageTradingDao.평균매매가시도5건추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select		z.dongnm
+				,	z.period
+				,   case when sum(z.usage_area) = 0 then 0
+						 else sum(z.deal) / sum(z.usage_area)
+						 end as rent_ua
+				,   case when sum(z.cont_area) = 0 then 0
+						 else sum(z.deal) / sum(z.cont_area)
+						 end as rent_ca
+				,	z.상가유형
+				, 	z.cd
+		from	(
+				select 	  a.sido_kor_nm as dongnm
+						, a.sido_cd as cd
+						, isnull(a.deal, 0) as deal
+						, isnull(a.usage_area, 0) as usage_area
+						, isnull(a.cont_area, 0) as cont_area
+						, a.floor
+						, a.SANGGA_TYPE as 상가유형
+						, case when #{period}  = '1' then substring(a.std_yyyymm, 1, 4)
+							   when #{period}  = '2' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							   when #{period}  = '3' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+						  end as period
+				from modu.shop_deal_sido a
+				where 1 = 1
+				<if test='jusoCd.equals("sido")'>
+					and a.sido_cd = #{pnu}
+				</if>
+				<if test='jusoCd.equals("sgg")' >
+					and	a.sido_cd = #{pnu2}
+				</if>
+				<if test='jusoCd.equals("emd")'>
+					and 1 = 2
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 0 		AND a.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 1000 	AND a.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 3000 	AND a.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 5000 	AND a.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 7000 	AND a.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 10000	AND a.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 15000 	AND a.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 30000 	AND a.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+				</if>
+				union all
+				select	  b.sgg_kor_nm	as dongnm
+						, b.sgg_cd as cd
+						, isnull(b.deal, 0) as deal
+						, isnull(b.usage_area, 0) as usage_area
+						, isnull(b.cont_area, 0) as cont_area
+						, b.floor
+						, b.SANGGA_TYPE as 상가유형
+						, case when #{period}  = '1' then substring(b.std_yyyymm, 1, 4)
+							   when #{period}  = '2' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							   when #{period}  = '3' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+						  end as period
+				from modu.shop_deal_ssg b
+				where 1 = 1
+				<if test='jusoCd.equals("sido") and pnu != "all"'>
+					and b.sgg_cd like #{pnu} + '%'
+				</if>
+				<if test='jusoCd.equals("sgg")'>
+					and b.sgg_cd like #{pnu2} + '%'
+					and b.sgg_cd like #{pnu} + '%'
+				</if>
+				<if test='jusoCd.equals("emd")'>
+					and b.sgg_cd = #{pnu2}
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+				  and 	(		CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 0 		AND b.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 1000 	AND b.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 3000 	AND b.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 5000 	AND b.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 7000 	AND b.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 10000	AND b.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 15000 	AND b.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 30000 	AND b.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+				</if>
+				union all
+				select	c.emd_kor_nm	as dongnm
+						, c.emd_cd as cd
+						, isnull(c.deal, 0) as deal
+						, isnull(c.usage_area, 0) as usage_area
+						, isnull(c.cont_area, 0) as cont_area
+						, c.floor
+						, c.SANGGA_TYPE as 상가유형
+						, case when #{period}  = '1' then substring(c.std_yyyymm, 1, 4)
+							   when #{period}  = '2' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							   when #{period}  = '3' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+						  end as period
+				from   modu.shop_deal_emd c
+				where	1 = 1
+				<if test='jusoCd.equals("sgg")'>
+					and 1 = 2
+				</if>
+				<if test='jusoCd.equals("sido")'>
+					and 1 = 2
+				</if>
+				<if test='jusoCd.equals("emd")'>
+					and c.emd_cd like #{pnu} + '%'
+					and c.emd_cd like #{pnu2} + '%'
+				</if>
+				<if test="areaArr != null and areaArr != ''">
+				   and 	(		CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 0 		AND c.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 1000 	AND c.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 3000 	AND c.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 5000 	AND c.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 7000 	AND c.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 10000	AND c.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 15000 	AND c.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 30000 	AND c.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+				</if>
+			) as z
+			where		1 = 1
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and z.상가유형 in
+					<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+					else z.floor + 'F' end in
+					<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''">
+				and	z.period <![CDATA[ >= ]]> #{startDate}
+			</if>
+			<if test="startYMD != null and startYMD != ''">
+				and	z.period <![CDATA[ >= ]]> #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and z.period <![CDATA[ <= ]]> #{endYMD}
+			</if>
+			group by 	z.dongnm
+					,	z.period
+					, 	z.상가유형
+					,	z.cd
+			order by	z.cd
+	</select>
+
+	<!-- 전국 데이터 작업 -->
+	<select id="averageTradingDao.평균매매가전국5건추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select 	a.dongnm,
+				a.period,
+				case when sum(a.usage_area) = 0 then 0
+					 else sum(a.deal) / sum(a.usage_area)
+				end as rent_ua,
+				case when sum(a.cont_area) = 0 then 0
+					 else sum(a.deal) / sum(a.cont_area)
+				end as rent_ca,
+				a.상가유형,
+				a.cd
+		from (
+				select 	'전국' as dongnm,
+						'00' as cd,
+						isnull(deal, 0) as deal,
+						isnull(usage_area, 0) as usage_area,
+						isnull(cont_area, 0) as cont_area,
+						floor,
+						SANGGA_TYPE as 상가유형,
+						case when #{period}  = '1' then substring(std_yyyymm, 1, 4)
+							 when #{period}  = '2' then substring(std_yyyymm, 1, 4) + cast(ceiling(cast(substring(std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							 when #{period}  = '3' then substring(std_yyyymm, 1, 4) + cast(ceiling(cast(substring(std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							 when #{period}  = '4' then substring(std_yyyymm, 1, 6)
+						end as period
+				from modu.shop_deal_all
+				where 1 = 1
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 0 	AND ${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 1000 	AND ${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 3000 	AND ${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 5000 	AND ${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 7000 	AND ${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 10000	AND ${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 15000 AND ${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 30000 AND ${areaNm} <![CDATA[<]]> 99999999999999999
+					)
+				</if>
+		) a
+		where 1 = 1
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and a.상가유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+
+		<if test="floorArr != null and floorArr.size() > 0">
+			and case when isnumeric(a.floor) = 1 and a.floor <![CDATA[>]]> 3 then '4F이상'
+					else a.floor + 'F' end in
+			<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+				#{floor}
+			</foreach>
+		</if>
+		<if test="startDate != null and startDate != ''">
+			and	a.period <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test="startYMD != null and startYMD != ''">
+			and	a.period <![CDATA[ >= ]]> #{startYMD}
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and a.period <![CDATA[ <= ]]> #{endYMD}
+		</if>
+		group by 	a.dongnm,
+					a.period,
+					a.상가유형,
+					a.cd
+		order by	a.cd
+	</select>
+
+	<select id="averageTradingDao.평균매매가시도유형별추이.select" parameterType="CmMap" resultType="CmResMap">
+		select		z.dongnm
+				,	z.period
+				,   case when sum(z.usage_area) = 0 then 0
+						 else sum(z.deal) / sum(z.usage_area)
+					end as rent_ua
+				,   case when sum(z.cont_area) = 0 then 0
+						 else sum(z.deal) / sum(z.cont_area)
+					end as rent_ca
+				,	sum(z.deal) as deal
+				,	sum(z.usage_area) as usage_area
+				, 	sum(z.cont_area) as cont_area
+				,	z.상가유형
+				,	z.cd
+				,	case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+						else z.floor + 'F' end as floor
+		from	(
+					select 	  a.sido_kor_nm as dongnm
+							, a.sido_cd as cd
+							, isnull(a.deal, 0) as deal
+							, isnull(a.usage_area, 0) as usage_area
+							, isnull(a.cont_area, 0) as cont_area
+							, a.floor
+							, a.SANGGA_TYPE as 상가유형
+							, case when #{period}  = '1' then substring(a.std_yyyymm, 1, 4)
+								   when #{period}  = '2' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+								   when #{period}  = '3' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							  end as period
+					from modu.shop_deal_sido a
+					where 1 = 1
+					<if test='jusoCd.equals("sido")'>
+						and a.sido_cd = #{pnu}
+					</if>
+					<if test='jusoCd.equals("sgg")' >
+						and	a.sido_cd = #{pnu2}
+					</if>
+					<if test='jusoCd.equals("emd")'>
+						and 1 = 2
+					</if>
+					<if test="areaArr != null and areaArr != ''">
+						and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 0 		AND a.${areaNm} <![CDATA[<]]> 1000
+						or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 1000 	AND a.${areaNm} <![CDATA[<]]> 3000
+						or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 3000 	AND a.${areaNm} <![CDATA[<]]> 5000
+						or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 5000 	AND a.${areaNm} <![CDATA[<]]> 7000
+						or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 7000 	AND a.${areaNm} <![CDATA[<]]> 10000
+						or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 10000	AND a.${areaNm} <![CDATA[<]]> 15000
+						or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 15000 	AND a.${areaNm} <![CDATA[<]]> 30000
+						or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and a.${areaNm} <![CDATA[>=]]> 30000 	AND a.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+					</if>
+					union all
+					select	  b.sgg_kor_nm	as dongnm
+							, b.sgg_cd as cd
+							, isnull(b.deal, 0) as deal
+							, isnull(b.usage_area, 0) as usage_area
+							, isnull(b.cont_area, 0) as cont_area
+							, b.floor
+							, b.SANGGA_TYPE as 상가유형
+							, case when #{period}  = '1' then substring(b.std_yyyymm, 1, 4)
+								   when #{period}  = '2' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+								   when #{period}  = '3' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							  end as period
+					from modu.shop_deal_ssg b
+					where 1 = 1
+					<if test='jusoCd.equals("sido")'>
+						and	b.sgg_cd like #{pnu} + '%'
+					</if>
+					<if test='jusoCd.equals("sgg")'>
+						and b.sgg_cd like #{pnu2} + '%'
+						and b.sgg_cd like #{pnu} + '%'
+					</if>
+					<if test='jusoCd.equals("emd")'>
+						and b.sgg_cd = #{pnu2}
+					</if>
+					<if test="areaArr != null and areaArr != ''">
+						and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 0 		AND b.${areaNm} <![CDATA[<]]> 1000
+						or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 1000 	AND b.${areaNm} <![CDATA[<]]> 3000
+						or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 3000 	AND b.${areaNm} <![CDATA[<]]> 5000
+						or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 5000 	AND b.${areaNm} <![CDATA[<]]> 7000
+						or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 7000 	AND b.${areaNm} <![CDATA[<]]> 10000
+						or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 10000	AND b.${areaNm} <![CDATA[<]]> 15000
+						or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 15000 	AND b.${areaNm} <![CDATA[<]]> 30000
+						or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 30000 	AND b.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+					</if>
+					union all
+					select	  c.emd_kor_nm	as dongnm
+							, c.emd_cd as cd
+							, isnull(c.deal, 0) as deal
+							, isnull(c.usage_area, 0) as usage_area
+							, isnull(c.cont_area, 0) as cont_area
+							, c.floor
+							, c.SANGGA_TYPE as 상가유형
+							, case when #{period}  = '1' then substring(c.std_yyyymm, 1, 4)
+								   when #{period}  = '2' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+								   when #{period}  = '3' then substring(c.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(c.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+							  end as period
+					from modu.shop_deal_emd c
+					where 1 = 1
+					<if test='jusoCd.equals("sgg")'>
+						and	1 = 2
+					</if>
+					<if test='jusoCd.equals("sido")'>
+						and 1 = 2
+					</if>
+					<if test='jusoCd.equals("emd")'>
+						and c.emd_cd like #{pnu} + '%'
+						and c.emd_cd like #{pnu2} + '%'
+					</if>
+					<if test="areaArr != null and areaArr != ''">
+						and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 0 		AND c.${areaNm} <![CDATA[<]]> 1000
+						or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 1000 	AND c.${areaNm} <![CDATA[<]]> 3000
+						or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 3000 	AND c.${areaNm} <![CDATA[<]]> 5000
+						or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 5000 	AND c.${areaNm} <![CDATA[<]]> 7000
+						or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 7000 	AND c.${areaNm} <![CDATA[<]]> 10000
+						or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 10000	AND c.${areaNm} <![CDATA[<]]> 15000
+						or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 15000 	AND c.${areaNm} <![CDATA[<]]> 30000
+						or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and c.${areaNm} <![CDATA[>=]]> 30000 	AND c.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+					</if>
+				) as z
+				where	1 = 1
+				<if test="sanggaArr != null and sanggaArr.size() > 0">
+					and z.상가유형 in
+					<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				<if test="floorArr != null and floorArr.size() > 0">
+					and	case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+							 else z.floor + 'F'
+						end in
+					<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+				</if>
+				<if test="startYYYY != null and startYYYY != ''">
+					and z.period <![CDATA[ >= ]]> #{startYYYY}
+				</if>
+				<if test="endYYYY != null and endYYYY != ''">
+					and	z.period <![CDATA[ <= ]]> #{endYYYY}
+				</if>
+				group by 	z.dongnm
+						,	z.period
+						, 	z.상가유형
+						,	z.floor
+						,	z.cd
+				order by	z.cd,
+							z.period desc
+	</select>
+
+	<!-- 전국 데이터 작업 -->
+	<select id="averageTradingDao.평균매매가전국유형별추이.select" parameterType="CmMap" resultType="CmResMap">
+		select 	z.dongnm,
+				z.period,
+				case when sum(z.usage_area) = 0 then 0
+					 else sum(z.deal) / sum(z.usage_area)
+				end as rent_ua,
+				case when sum(z.cont_area) = 0 then 0
+					 else sum(z.deal) / sum(z.cont_area)
+				end as rent_ca,
+				sum(z.deal) as deal,
+				sum(z.usage_area) as usage_area,
+				sum(z.cont_area) as cont_area,
+				z.상가유형,
+				z.cd,
+				case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+					 else z.floor + 'F'
+				end as floor
+		from (
+				select 	'전국' as dongnm,
+						'00' as cd,
+						isnull(a.deal, 0) as deal,
+						isnull(a.usage_area, 0) as usage_area,
+						isnull(a.cont_area, 0) as cont_area,
+						a.floor,
+						a.SANGGA_TYPE as 상가유형,
+						case when #{period}  = '1' then substring(a.std_yyyymm, 1, 4)
+							 when #{period}  = '2' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							 when #{period}  = '3' then substring(a.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(a.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+						end as period
+				from modu.shop_deal_all a
+				where 1 = 1
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 0 	AND ${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 1000 	AND ${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 3000 	AND ${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 5000 	AND ${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 7000 	AND ${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 10000	AND ${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 15000 AND ${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and ${areaNm} <![CDATA[>=]]> 30000 AND ${areaNm} <![CDATA[<]]> 99999999999999999
+					)
+				</if>
+				union all
+				select 	s.sido_kor_nm as dongnm,
+						s.sido_cd as cd,
+						isnull(s.deal, 0) as deal,
+						isnull(s.usage_area, 0) as usage_area,
+						isnull(s.cont_area, 0) as cont_area,
+						s.floor,
+						s.SANGGA_TYPE as 상가유형,
+						case when #{period}  = '1' then substring(s.std_yyyymm, 1, 4)
+							 when #{period}  = '2' then substring(s.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(s.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+							 when #{period}  = '3' then substring(s.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(s.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+						end as period
+				from modu.shop_deal_sido s
+				where 1 = 1
+				<if test="areaArr != null and areaArr != ''">
+					and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 0 		AND s.${areaNm} <![CDATA[<]]> 1000
+					or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 1000 	AND s.${areaNm} <![CDATA[<]]> 3000
+					or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 3000 	AND s.${areaNm} <![CDATA[<]]> 5000
+					or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 5000 	AND s.${areaNm} <![CDATA[<]]> 7000
+					or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 7000 	AND s.${areaNm} <![CDATA[<]]> 10000
+					or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 10000	AND s.${areaNm} <![CDATA[<]]> 15000
+					or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 15000 	AND s.${areaNm} <![CDATA[<]]> 30000
+					or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and s.${areaNm} <![CDATA[>=]]> 30000 	AND s.${areaNm} <![CDATA[<]]> 99999999999999999
+					)
+				</if>
+		) z
+		where 1 = 1
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and z.상가유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		<if test="floorArr != null and floorArr.size() > 0">
+			and	case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+					 else z.floor + 'F'
+			end in
+			<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+				#{floor}
+			</foreach>
+		</if>
+		<if test="startYYYY != null and startYYYY != ''">
+			and z.period <![CDATA[ >= ]]> #{startYYYY}
+		</if>
+		<if test="endYYYY != null and endYYYY != ''">
+			and	z.period <![CDATA[ <= ]]> #{endYYYY}
+		</if>
+		group by 	z.dongnm,
+					z.period,
+					z.상가유형,
+					z.floor,
+					z.cd
+		order by	z.cd,
+					Z.period desc
+	</select>
+
+
+	<select id="averageTradingDao.평균매매가추이테이블.select" parameterType="CmMap" resultType="CmResMap">
+      SELECT a.* 
+		FROM
+		(
+			  SELECT A.매물코드 
+			       , A.매물처
+				   , A.시도코드
+				   , A.도시
+				   , A.시군구코드
+				   , A.구시군
+				   , A.법정동코드
+				   , A.읍면동
+				   , A.X좌표
+				   , A.Y좌표
+				   , SUBSTRING(A.매물게시일, 1, 4) as  매물년도
+				   , A.매물게시일
+				   , substring(a.매물게시일, 1, 4) + '-' + substring(a.매물게시일, 5, 2) + '-' + substring(a.매물게시일, 7, 2) as 매물등록일
+				   , A.계약면적 
+				   , A.공급면적
+				   , A.전용면적
+				   , (A.매매가 / A.계약면적) 	as rent_ca
+				   , (A.매매가 / A.공급면적)	as 공급면적당매매가
+				   , (A.매매가 / A.전용면적)	as rent_ua
+				   , case when isnumeric(ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1))) ) = 1 and ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1)))   >  3 then '4F이상'
+				  	 	  else ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1))) + 'F'
+					 end 층정보
+				   , A.매매가
+				   , CASE WHEN A.R_상가유형 = '기타' THEN '기타상가'
+						  ELSE A.R_상가유형
+					 END as 상가유형
+				   , A.PNU코드
+				   , CASE WHEN  #{period}  = '1' then substring(a.매물게시일, 1, 4)
+					  	  WHEN  #{period}  = '2' then substring(a.매물게시일, 1, 4) + cast(ceiling(cast(substring(a.매물게시일, 5, 2) as float) / 6 ) as varchar) 
+						  WHEN  #{period}  = '3' then substring(a.매물게시일, 1, 4) + cast(ceiling(cast(substring(a.매물게시일, 5, 2) as float) / 3 ) as varchar)
+						  WHEN  #{period}  = '4' then substring(a.매물게시일, 1, 6)
+					 END AS period
+				   , A.도시 + ' ' + A.구시군 + ' ' + A.읍면동 + ' ' + 
+					 case when a.PNU코드 is null then ''  
+					 	  when right(a.PNU코드, 4) = '0000' then convert(varchar,convert(int, substring(right(a.PNU코드, 8), 0, 5))) + '번지'
+					 	 else convert(varchar,convert(int, substring(right(a.PNU코드, 8), 0, 5))) + '-' + convert(varchar,convert(int, substring(right(a.PNU코드, 8), 5, 8))) + '번지'
+					 end 주소 	 
+				   , A.건물명         
+				   , case when A.premiumPrice <![CDATA[<]]> 100 then null
+						  else A.premiumPrice
+					 end AS 권리금
+				FROM [modu].[통합_상가매물_매매정보] A
+			    WHERE 1 = 1
+					<if test="pnu != null and pnu != '' and pnu != 'all'">
+						and A.PNU코드 LIKE #{pnu} + '%'
+					</if>
+						and a.매물게시일 != ''
+						and isnull(A.매매가, 0) <![CDATA[ > ]]> 0
+					<if test="geom != null and geom != '' and pnu != 'all'">
+						and a.bizdist_id = #{bizdistseq}
+					</if>					
+	 				<if test="startYYYY != null and startYYYY != ''">
+						and a.매물게시일 >= #{startYYYY} + '0101'
+					</if>
+				
+					<if test="endYYYY != null and endYYYY != ''">
+						and a.매물게시일 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+					</if> 
+						
+					<if test="startYMD != null and startYMD != ''">
+						and a.매물게시일  <![CDATA[ >= ]]> #{startYMD}
+					</if>
+					<if test="endYMD != null and endYMD != ''">
+						and a.매물게시일 <![CDATA[ <= ]]> #{endYMD}
+					</if> 
+						
+					<if test="sanggaArr != null and sanggaArr.size() > 0">
+						and CASE WHEN A.R_상가유형 = '기타' THEN '기타상가'
+								 ELSE A.R_상가유형
+							END in
+						<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+							#{sangga}
+						</foreach>
+					</if>
+					
+					<if test="floorArr != null and floorArr.size() > 0">
+						and case when isnumeric(ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1))) ) = 1 and ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1)))   >  3 then '4F이상'
+				  	 			 else ltrim(rtrim(left(a.층정보, charindex('/', a.층정보 + '/')-1))) + 'F'
+							end in
+						<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+							#{floor}
+						</foreach>
+					</if>
+					
+					<if test="areaArr != null and areaArr.size() > 0">
+						and CASE WHEN a.전용면적 <![CDATA[ < ]]> 1000 THEN '1,000㎡ 미만'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 1000 AND a.전용면적 <![CDATA[ < ]]> 3000 THEN '1,000㎡~3,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 3000 AND a.전용면적 <![CDATA[ < ]]> 5000 THEN '3,000㎡~5,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 5000 AND a.전용면적 <![CDATA[ < ]]> 7000 THEN '5,000㎡~7,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 7000 AND a.전용면적 <![CDATA[ < ]]> 10000 THEN '7,000㎡~10,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 10000 AND a.전용면적 <![CDATA[ < ]]> 15000 THEN '10,000㎡~15,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 15000 AND a.전용면적 <![CDATA[ < ]]> 30000 THEN '15,000㎡~30,000㎡'
+								 WHEN a.전용면적 <![CDATA[ >= ]]> 30000 THEN '30,000㎡ 이상'
+				  			END in 
+						<foreach collection="areaArr" item="area" open="(" close=")" separator=",">
+							#{area}
+						</foreach>				
+					</if>
+			) a
+			WHERE 1 = 1
+			<if test="periodArr != null and periodArr.size() > 0">
+				and a.period in
+				<foreach collection="periodArr" item="prd" open="(" close=")" separator=",">
+					#{prd}
+				</foreach>
+			</if>
+	</select>  
+
+	<select id="averageTradingDao.평균매매가상권추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select	z.상권 as dongnm
+			<choose>
+				<when test="period.equals('1'.toString())">
+					, substring(z.std_yyyymm, 1, 4)
+			  	</when>
+			  	<when test="period.equals('2'.toString())">
+					, substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+				</when>
+				<when test="period.equals('3'.toString())">
+					, substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+				</when>
+			</choose>
+				as period
+					, case when sum(z.usage_area) = 0 then 0
+						  else sum(z.deal) / sum(z.usage_area)
+					  end as rent_ua
+					, case when sum(z.cont_area) = 0 then 0
+						   else sum(z.deal) / sum(z.cont_area)
+					  end as rent_ca
+					, sum(z.deal) as deal
+					, sum(z.usage_area) as usage_area
+					, sum(z.cont_area) as cont_area
+		from modu.shop_deal_bizdist z
+		where 1 = 1
+			and z.상권_순번 = #{bizdistseq}
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and z.sangga_type in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and case when isnumeric(z.floor) = 1 and z.floor <![CDATA[>]]> 3 then '4F이상'
+					     else z.floor + 'F' end in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<if test="areaArr != null and areaArr != ''">
+			 and 	(		CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 0 		AND z.${areaNm} <![CDATA[<]]> 1000
+				or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 1000 	AND z.${areaNm} <![CDATA[<]]> 3000
+				or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 3000 	AND z.${areaNm} <![CDATA[<]]> 5000
+				or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 5000 	AND z.${areaNm} <![CDATA[<]]> 7000
+				or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 7000 	AND z.${areaNm} <![CDATA[<]]> 10000
+				or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 10000	AND z.${areaNm} <![CDATA[<]]> 15000
+				or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 15000 	AND z.${areaNm} <![CDATA[<]]> 30000
+				or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and z.${areaNm} <![CDATA[>=]]> 30000 	AND z.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+			</if>
+			<if test="startDate != null and startDate != ''">
+			and	case when #{period} = '1' then substring(z.std_yyyymm, 1, 4)
+					 when #{period} = '2' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+					 when #{period} = '3' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+				end <![CDATA[ >= ]]> #{startDate}
+			</if>
+			<if test="startYMD != null and startYMD != ''">
+			and	case when #{period} = '1' then substring(z.std_yyyymm, 1, 4)
+					 when #{period} = '2' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+					 when #{period} = '3' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+				end <![CDATA[ >= ]]> #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+			and	case when #{period} = '1' then substring(z.std_yyyymm, 1, 4)
+					 when #{period} = '2' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+					 when #{period} = '3' then substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+				end <![CDATA[ <= ]]> #{endYMD}
+			</if>
+		group by z.상권,
+		<choose>
+			<when test="period.equals('1'.toString())">
+				substring(z.std_yyyymm, 1, 4)
+		  	</when>
+		  	<when test="period.equals('2'.toString())">
+				substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+		  	</when>
+		  	<when test="period.equals('3'.toString())">
+				substring(z.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(z.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+		  	</when>
+		</choose>
+	</select>
+	
+	<select id="averageTradingDao.평균매매가상권5건추이차트.select" parameterType="CmMap" resultType="CmResMap">
+	select		z.상권 as dongnm
+			,	z.period
+			,	z.상가유형
+			,   case when sum(z.usage_area) = 0 then 0
+					 else sum(z.deal) / sum(z.usage_area)
+				end as rent_ua
+			,   case when sum(z.cont_area) = 0 then 0
+					 else sum(z.deal) / sum(z.cont_area)
+				end as rent_ca
+			,	sum(z.deal) as deal
+			,	sum(z.usage_area) as usage_area
+			, 	sum(z.cont_area) as cont_area
+	from			
+	(
+		select 	  b.상권
+				, case when #{period} = '1' then substring(b.std_yyyymm, 1, 4)
+					   when #{period} = '2' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+					   when #{period} = '3' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+				  end as period
+				, isnull(b.deal, 0) as deal
+				, isnull(b.usage_area, 0) as usage_area
+				, isnull(b.cont_area, 0) as cont_area
+				, b.SANGGA_TYPE as 상가유형
+				, b.상권_순번
+		from modu.shop_deal_bizdist b
+		where	1 = 1
+			and b.상권_순번 = #{bizdistseq}
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and b.sangga_type in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+
+		<if test="floorArr != null and floorArr.size() > 0">
+		and case when isnumeric(b.floor) = 1 and b.floor <![CDATA[>]]> 3 then '4F이상'
+				 else b.floor + 'F' end in
+			<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+				#{floor}
+			</foreach>
+		</if>
+		<if test="areaArr != null and areaArr != ''">
+			and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 0 		AND b.${areaNm} <![CDATA[<]]> 1000
+			or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 1000 	AND b.${areaNm} <![CDATA[<]]> 3000
+			or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 3000 	AND b.${areaNm} <![CDATA[<]]> 5000
+			or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 5000 	AND b.${areaNm} <![CDATA[<]]> 7000
+			or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 7000 	AND b.${areaNm} <![CDATA[<]]> 10000
+			or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 10000	AND b.${areaNm} <![CDATA[<]]> 15000
+			or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 15000 	AND b.${areaNm} <![CDATA[<]]> 30000
+			or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 30000 	AND b.${areaNm} <![CDATA[<]]> 99999999999999999
+						)
+		</if>
+	) z
+	where 1 = 1
+	<if test="startDate != null and startDate != ''">
+		and	z.period <![CDATA[ >= ]]> #{startDate}
+	</if>
+	<if test="startYMD != null and startYMD != ''">
+		and	z.period <![CDATA[ >= ]]> #{startYMD}
+	</if>
+	<if test="endYMD != null and endYMD != ''">
+		and	z.period <![CDATA[ <= ]]> #{endYMD}
+	</if>
+	group by z.상권
+		   , z.period	
+		   , z.상가유형
+	</select>
+
+	<select id="averageTradingDao.평균매매가상권유형별추이.select" parameterType="CmMap" resultType="CmResMap">
+		select		z.상권 as dongnm
+				,	z.period
+				,	z.상가유형
+				,	z.floor
+				,   case when sum(z.usage_area) = 0 then 0
+				 		 else sum(z.deal) / sum(z.usage_area)
+					end as rent_ua
+				,   case when sum(z.cont_area) = 0 then 0
+						 else sum(z.deal) / sum(z.cont_area)
+					end as rent_ca
+				,	sum(z.deal) as deal
+				,	sum(z.usage_area) as usage_area
+				, 	sum(z.cont_area) as cont_area
+		from
+		(
+			select 	  b.상권
+					, case when #{period} = '1' then substring(b.std_yyyymm, 1, 4)
+						   when #{period} = '2' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 2 ) as varchar)
+						   when #{period} = '3' then substring(b.std_yyyymm, 1, 4) + cast(ceiling(cast(substring(b.std_yyyymm, 5, 2) as float) / 1 ) as varchar)
+					  end as period
+					, isnull(b.deal, 0) as deal
+					, isnull(b.usage_area, 0) as usage_area
+					, isnull(b.cont_area, 0) as cont_area
+					, b.SANGGA_TYPE as 상가유형
+					, b.상권_순번
+					, case when isnumeric(b.floor) = 1 and b.floor <![CDATA[>]]> 3 then '4F이상'
+						   else b.floor + 'F'
+					  end as floor
+			from modu.shop_deal_bizdist b
+			where 1 = 1
+				and b.상권_순번 = #{bizdistseq}
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and b.sangga_type in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and case when isnumeric(b.floor) = 1 and b.floor <![CDATA[>]]> 3 then '4F이상'
+						 else b.floor + 'F'
+					end in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<if test="areaArr != null and areaArr != ''">
+				and 	(	CHARINDEX('0', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 0 		AND b.${areaNm} <![CDATA[<]]> 1000
+				or			CHARINDEX('1', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 1000 	AND b.${areaNm} <![CDATA[<]]> 3000
+				or			CHARINDEX('2', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 3000 	AND b.${areaNm} <![CDATA[<]]> 5000
+				or			CHARINDEX('3', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 5000 	AND b.${areaNm} <![CDATA[<]]> 7000
+				or			CHARINDEX('4', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 7000 	AND b.${areaNm} <![CDATA[<]]> 10000
+				or			CHARINDEX('5', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 10000	AND b.${areaNm} <![CDATA[<]]> 15000
+				or			CHARINDEX('6', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 15000 	AND b.${areaNm} <![CDATA[<]]> 30000
+				or			CHARINDEX('7', (#{areaArr})) <![CDATA[>]]> 0 and b.${areaNm} <![CDATA[>=]]> 30000 	AND b.${areaNm} <![CDATA[<]]> 99999999999999999
+							)
+			</if>
+		) z
+		where 1 = 1
+		<if test="startDate != null and startDate != ''">
+			and z.period <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test="startYMD != null and startYMD != ''">
+			and	z.period <![CDATA[ >= ]]> #{startYMD}
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and	z.period <![CDATA[ <= ]]> #{endYMD}
+		</if>
+		group by z.상권
+			   , z.period
+			   , z.상가유형
+			   , z.floor
+	</select>
+
+</mapper>

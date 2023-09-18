@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dawulDao">
+		
+	<select id="dawulDao.zeons_map.select" parameterType="CmMap" resultType="CmResMap">
+			select
+				상태,
+				제목,
+				설명,
+				좌표X,
+				좌표Y,
+				순번,
+				저장유형,
+				CASE WHEN 저장유형 = 'block' THEN 'GIS 블럭' ELSE 'GIS 건물' END AS GIS분류,
+				(
+					select
+						stuff((
+							select
+								',' + 상세아이디
+							from
+								modu.r114_사용자_즐겨찾기_상세 d
+							where
+								a.순번 = d.순번_즐겨찾기
+							for xml path(''), type)
+						.value('.', 'varchar(MAX)'), 1, len(','), '')
+				) as 상세아이디 
+			from
+				modu.r114_사용자_즐겨찾기 a
+			where
+				a.아이디 = #{userId}
+			AND a.사용여부 = 'Y'
+			order by 순번 desc
+	</select>
+	
+	<update id="dawulDao.deleteFavorite.update" parameterType="CmMap">
+		UPDATE modu.r114_사용자_즐겨찾기
+		SET
+			사용여부 = 'N',
+			수정자아이디 = #{userId},
+			수정자아이피 = #{userIp},
+			수정시간 = GETDATE()			
+		WHERE
+			1 = 1
+			AND 순번 = #{순번}
+			AND 아이디 = #{userId}
+			AND 사용여부 = 'Y'
+	</update>	
+
+</mapper>

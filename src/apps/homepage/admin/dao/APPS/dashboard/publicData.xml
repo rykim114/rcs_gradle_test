@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="publicDataDao">
+	<select id="publicDataDao.자료최종일자.select" parameterType="CmMap" resultType="CmResMap">
+		   select substring(max(a.시점), 1, 4) 시점
+  			 from [modu].[한국부동산원_상업용_통계] a 
+	</select>
+	
+	<select id="publicDataDao.selectSidoText.select" parameterType="CmMap" resultType="CmResMap">
+		   select distinct a.지역, SUBSTRING ( b.법정동코드, 1, 2  ) as 지역코드
+		     from [modu].[한국부동산원_상업용_통계] a inner join modu.kikcd_b b on a.지역 = b.시도명
+		    where a.지역 != '전체'  
+		 order by SUBSTRING (b.법정동코드, 1, 2 )
+	</select>
+	
+	<select id="publicDataDao.selectWideAreaText.select" parameterType="CmMap" resultType="CmResMap">
+		 select  a.지역, a.광역상권
+		   from (
+		   		 select distinct a.지역, a.광역상권, case when a.광역상권 = '기타' then 2 else 1 end sort
+			 	   from [modu].[한국부동산원_상업용_통계] a
+			      where a.지역 = #{sidonm}
+			        and a.광역상권 != '전체'
+				) a
+		order by a.sort, a.광역상권
+	</select>
+
+	<select id="publicDataDao.selectAreaText.select" parameterType="CmMap" resultType="CmResMap">
+		 select a.지역, a.광역상권, a.하위상권
+		   from (
+		   select distinct a.지역, a.광역상권,  a.하위상권, case when a.하위상권 = '기타' then 2 else 1 end sort
+			 from [modu].[한국부동산원_상업용_통계] a
+		    where a.지역 = #{sidonm}
+		      and a.광역상권 = #{wideareanm}
+		      and a.하위상권 != '전체'
+				) a
+		order by a.sort, a.광역상권, a.하위상권
+	</select>
+
+	<select id="publicDataDao.상업용_상권.select" parameterType="CmMap" resultType="CmResMap">
+		  select a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  상권명
+			from (  select distinct  
+				           a.지역
+			       		 , a.광역상권
+				   		 , a.하위상권
+				   		 , a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  searchText
+				   		 , SUBSTRING (b.법정동코드, 1, 2 )  sidocd
+				   		 , case when a.지역 = '전체' then '0' when a.지역 = '기타' then 2 else 1 end sort1 
+				   		 , case when a.광역상권 = '전체' then '0' when a.광역상권 = '기타' then 2 else 1 end sort2
+				   		 , case when a.하위상권 = '전체' then '0' when a.하위상권 = '기타' then 2 else 1 end sort3
+		  			  from [modu].[한국부동산원_상업용_통계] a left join modu.kikcd_b b on a.지역 = b.시도명
+		   			 where 1=1
+					<if test="sidonm != null and sidonm != ''">
+				     and a.지역  = #{sidonm}
+				    </if> 
+				    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+			       	 and a.광역상권 = #{wideareanm}
+			     	</if> 
+			      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+			         and a.하위상권 = #{areanm}
+			      	</if>
+			        <if test="startYMD != null and startYMD != ''">
+						and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+					</if>
+					<if test="endYMD != null and endYMD != ''">
+						and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+					</if>
+					<if test="sanggaArr != null and sanggaArr.size() > 0">
+						and a.유형 in
+						<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+							#{sangga}
+						</foreach>
+					</if> ) a
+	    order by sort1, sidocd, sort2, a.광역상권, a.sort3, a.하위상권   
+	</select>
+	
+	<select id="publicDataDao.상업용_시점.select" parameterType="CmMap" resultType="CmResMap">
+		  select distinct  
+				 a.시점
+			from [modu].[한국부동산원_상업용_통계] a
+		   where 1=1
+			<if test="sidonm != null and sidonm != ''">
+		     and a.지역  = #{sidonm}
+		    </if> 
+		    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+	       	 and a.광역상권 = #{wideareanm}
+	     	</if> 
+	      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+	         and a.하위상권 = #{areanm}
+	      	</if>
+	        <if test="startYMD != null and startYMD != ''">
+				and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+			</if>
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and a.유형 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if> 
+	    order by 1
+	</select>
+
+	<select id="publicDataDao.상업용_통계.select" parameterType="CmMap" resultType="CmResMap">
+	  select a.지역
+	       , a.광역상권
+		   , a.하위상권
+		   , a.시점
+		   , a.구분
+		   , a.유형
+		   , isnull(a.비율, 0) 비율
+		   , a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  상권명
+	    from [modu].[한국부동산원_상업용_통계] a 
+	   where 1=1
+		<if test="sidonm != null and sidonm != ''">
+	     and a.지역  = #{sidonm}
+	    </if> 
+	    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+       	 and a.광역상권 = #{wideareanm}
+     	</if> 
+      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+         and a.하위상권 = #{areanm}
+      	</if>
+        <if test="startYMD != null and startYMD != ''">
+			and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+		</if>
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and a.유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if> 
+    order by a.지역
+	       , a.광역상권
+		   , a.하위상권
+		   , a.시점
+		   , a.유형
+		   , a.구분      
+	</select>
+	
+	
+	<select id="publicDataDao.selectSidoFloorText.select" parameterType="CmMap" resultType="CmResMap">
+		   select distinct a.지역, SUBSTRING ( b.법정동코드, 1, 2  ) as 지역코드, case when a.광역상권 = '전체' then '0' when a.광역상권 = '기타' then 2 else 1 end sort1
+		     from [modu].[한국부동산원_상업용_층별_통계] a inner join modu.kikcd_b b on a.지역 = b.시도명
+		    where a.지역 != '전체'  
+		 order by sort1, SUBSTRING (b.법정동코드, 1, 2 )
+	</select>
+	
+	<select id="publicDataDao.selectWideAreaFloorText.select" parameterType="CmMap" resultType="CmResMap">
+		 select  a.지역, a.광역상권
+		   from (
+		   		 select distinct a.지역, a.광역상권, case when a.광역상권 = '기타' then 2 else 1 end sort
+			 	   from [modu].[한국부동산원_상업용_층별_통계] a
+			      where a.지역 = #{sidonm}
+			        and a.광역상권 != '전체'
+				) a
+		order by a.sort, a.광역상권
+	</select>
+
+	<select id="publicDataDao.selectAreaFloorText.select" parameterType="CmMap" resultType="CmResMap">
+		 select a.지역, a.광역상권, a.하위상권
+		   from (
+		   select distinct a.지역, a.광역상권,  a.하위상권, case when a.하위상권 = '기타' then 2 else 1 end sort
+			 from [modu].[한국부동산원_상업용_층별_통계] a
+		    where a.지역 = #{sidonm}
+		      and a.광역상권 = #{wideareanm}
+		      and a.하위상권 != '전체'
+				) a
+		order by a.sort, a.광역상권, a.하위상권
+	</select>
+
+	<select id="publicDataDao.상업용_층별상권.select" parameterType="CmMap" resultType="CmResMap">
+		  select a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  상권명
+			from (  select distinct  
+				           a.지역
+			       		 , a.광역상권
+				   		 , a.하위상권
+				   		 , a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  searchText
+				   		 , SUBSTRING (b.법정동코드, 1, 2 )  sidocd
+				   		 , case when a.지역 = '전체' then '0' when a.지역 = '기타' then 2 else 1 end sort1 
+				   		 , case when a.광역상권 = '전체' then '0' when a.광역상권 = '기타' then 2 else 1 end sort2
+				   		 , case when a.하위상권 = '전체' then '0' when a.하위상권 = '기타' then 2 else 1 end sort3
+		  			  from [modu].[한국부동산원_상업용_층별_통계] a left join modu.kikcd_b b on a.지역 = b.시도명
+		   			 where 1=1
+					<if test="sidonm != null and sidonm != ''">
+				     and a.지역  = #{sidonm}
+				    </if> 
+				    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+			       	 and a.광역상권 = #{wideareanm}
+			     	</if> 
+			      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+			         and a.하위상권 = #{areanm}
+			      	</if>
+			        <if test="startYMD != null and startYMD != ''">
+						and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+					</if>
+					<if test="endYMD != null and endYMD != ''">
+						and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+					</if>
+					<if test="sanggaArr != null and sanggaArr.size() > 0">
+						and a.유형 in
+						<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+							#{sangga}
+						</foreach>
+					</if> ) a
+	    order by sort1, sidocd, sort2, a.광역상권, a.sort3, a.하위상권   
+	</select>
+	
+	<select id="publicDataDao.상업용_층별시점.select" parameterType="CmMap" resultType="CmResMap">
+		  select distinct  
+				 a.시점
+			from [modu].[한국부동산원_상업용_층별_통계] a
+		   where 1=1
+			<if test="sidonm != null and sidonm != ''">
+		     and a.지역  = #{sidonm}
+		    </if> 
+		    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+	       	 and a.광역상권 = #{wideareanm}
+	     	</if> 
+	      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+	         and a.하위상권 = #{areanm}
+	      	</if>
+	        <if test="startYMD != null and startYMD != ''">
+				and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+			</if>
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and a.유형 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if> 
+	    order by 1
+	</select>
+
+	<select id="publicDataDao.상업용_층별통계.select" parameterType="CmMap" resultType="CmResMap">
+	  select a.지역
+	       , a.광역상권
+		   , a.하위상권
+		   , a.시점
+		   , a.구분
+		   , a.유형
+		   , isnull(a.비율_B1F, 0) 비율_B1F
+		   , isnull(a.비율_1F, 0) 비율_1F
+		   , isnull(a.비율_2F, 0) 비율_2F
+		   , isnull(a.비율_3F, 0) 비율_3F
+		   , isnull(a.비율_4F, 0) 비율_4F
+		   , isnull(a.비율_5F, 0) 비율_5F
+		   , isnull(a.비율_6_10F, 0) 비율_6_10F
+		   , isnull(a.비율_11F이상, 0) 비율_11F이상
+		   , a.지역 + '-' + a.광역상권 + '-'+ a.하위상권  상권명
+	    from [modu].[한국부동산원_상업용_층별_통계] a 
+	   where 1=1
+		<if test="sidonm != null and sidonm != ''">
+	     and a.지역  = #{sidonm}
+	    </if> 
+	    <if test="wideareanm != null and wideareanm != '' and wideareanm != '전체'">
+       	 and a.광역상권 = #{wideareanm}
+     	</if> 
+      	<if test="areanm != null and areanm != '' and areanm != '전체'">
+         and a.하위상권 = #{areanm}
+      	</if>
+        <if test="startYMD != null and startYMD != ''">
+			and a.시점 <![CDATA[ >= ]]> #{startYMD} + '01'
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and a.시점 <![CDATA[ <= ]]> #{endYMD} + '04'
+		</if>
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and a.유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if> 
+    order by a.지역
+	       , a.광역상권
+		   , a.하위상권
+		   , a.시점
+		   , a.유형
+		   , a.구분      
+	</select>	
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0303Dao">
+
+	<select id="BI0303Dao.ha_msg_form_info.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select 	msg_form_id
+		, 		form_div
+		, 		basic_send_num
+		, 		msg_title
+ 		, 		msg
+		, 		kakao_service_id
+		, 		template_code
+		, 		pay_yn
+		, 		use_yn
+		, 		remark
+		, 		row_input_id
+		, 		row_input_date
+		, 		row_input_ip
+		, 		row_update_id
+		, 		row_update_date
+		, 		row_update_ip
+		from ha_msg_form_info
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		where		search(#{main_search_key_word}, msg_title,	msg)
+		</if>		
+		order by 	msg_form_id
+		,			form_div
+		,			basic_send_num
+	</select>
+
+	<select id="BI0303Dao.ha_msg_form_info.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_msg_form_info	(
+				form_div
+		, 		basic_send_num
+		, 		msg_title
+		, 		msg
+		, 		kakao_service_id
+		, 		template_code
+		, 		pay_yn
+		, 		use_yn
+		, 		remark
+		, 		row_input_id
+		, 		row_input_date
+		, 		row_input_ip
+		)
+		values	(
+			#{form_div}
+		, 	#{basic_send_num}
+		, 	#{msg_title}
+		, 	#{msg}
+		, 	#{kakao_service_id}
+		, 	#{template_code}
+		, 	#{pay_yn}
+		, 	#{use_yn}
+		, 	#{remark}
+		, 	#{use_yn}
+		,	#{userId}
+		,	now()
+		,	#{userIp}		
+		)
+	</select>
+	
+	<select id="BI0303Dao.ha_msg_form_info.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_msg_form_info
+		where	msg_form_id		=	#{msg_form_id}::bigint
+	</select>
+	
+	<select id="BI0303Dao.ha_msg_form_info.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_msg_form_info
+		set	form_div			=	#{form_div}
+		,	basic_send_num		=	#{basic_send_num}
+		,	msg_title			=	#{msg_title}		
+		,	msg					=	#{msg}
+		,	kakao_service_id	=	#{kakao_service_id}
+		,	template_code		=	#{template_code}
+		,	pay_yn				=	#{pay_yn}
+		,	use_yn				=	#{use_yn}
+		,	remark				=	#{remark}			
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	msg_form_id		=	#{msg_form_id}::bigint
+	</select>	
+
+</mapper>

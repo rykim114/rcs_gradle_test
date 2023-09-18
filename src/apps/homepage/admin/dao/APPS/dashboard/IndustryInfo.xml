@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="IndustryInfoDao">
+
+	<select id="IndustryInfoDao.업종분포현황추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		<if test="geom != null and geom != ''">
+			select
+				'' as sggnm,
+				'' as dongnm,
+				d.상권업종수,
+				d.상권업종대분류명,
+				d.기준년월,
+				d.기준년,
+				d.std_yyyymm,
+				d.id
+			from
+			(
+				select
+					a.id,
+					a.sdt_yyyymm as 기준년월,
+					case when LEN(sdt_yyyymm) > 4 then left(sdt_yyyymm, 4)
+						 else sdt_yyyymm
+					end as 기준년,
+					case when LEN(sdt_yyyymm) > 4 then substring(sdt_yyyymm, 5, 2)
+						 else sdt_yyyymm
+					end as std_yyyymm,
+					a.관광여가오락 as '관광/여가/오락',
+					a.부동산,
+					a.생활서비스,
+					a.소매,
+					a.숙박,
+					a.스포츠,
+					a.음식,
+					a.학문교육 as '학문/교육'
+				from
+					modu.sqr_100_store_cnt a
+				where
+					a.id in
+				(
+					select
+						s.id
+					from modu.sqr_100 s
+					where
+						geometry::STGeomFromText('POLYGON ((126.887640617589 37.4821639213473, 126.889229239842 37.4802506075802, 126.889362234932 37.4804320658663, 126.889869625504 37.4805269333619, 126.889987600073 37.4801946527704, 126.890264107552 37.479845838408, 126.889918050282 37.4795452456905, 126.889201852149 37.4798088370113, 126.888461573105 37.4801713129159, 126.887797887416 37.4807057033085, 126.886992525381 37.4816442282296, 126.886987987134 37.4819505416141, 126.88726207525 37.4825297904627, 126.887386699719 37.482512941771, 126.887640617589 37.4821639213473))', 4326).STOverlaps(s.geom) = 1
+				)
+				<if test="startYYYY != null and startYYYY != ''">
+					and a.sdt_yyyymm >= #{startYYYY} + '0101'
+				</if>
+
+				<if test="endYYYY != null and endYYYY != ''">
+					and a.sdt_yyyymm <![CDATA[ <= ]]> #{endYYYY} + '1231'
+				</if>
+
+				<if test="startYMD != null and startYMD != ''">
+					and a.sdt_yyyymm >= #{startYMD}
+				</if>
+				<if test="endYMD != null and endYMD != ''">
+					and a.sdt_yyyymm <![CDATA[ <= ]]> #{endYMD}
+				</if>
+			) a
+			unpivot
+			(
+				상권업종수 for 상권업종대분류명 in
+				([관광/여가/오락], 부동산, 생활서비스, 소매, 숙박, 스포츠, 음식, [학문/교육])
+			) d
+			where
+				1 = 1
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and 상권업종대분류명 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+			order by
+				d.기준년월 asc, d.상권업종대분류명 asc
+		</if>
+		<if test="geom == null or geom == ''">
+			select
+			<choose>
+				<when test="pnu == 'all'">
+					시도명 as sidonm
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						  시군구명 as sggnm
+						, 법정동명 as dongnm
+					</if>
+					<if test="'emd' != jusoCd">
+						  시도명 as sggnm
+						, 시군구명 as dongnm
+					</if>
+				</otherwise>
+			</choose>
+				, 상권업종대분류명
+				, 기준년월
+				, case when LEN(기준년월) > 4 then left(기준년월, 4)
+					   else 기준년월
+				  end as 기준년
+				, case when LEN(기준년월) > 4 then substring(기준년월, 5, 2)
+					   else 기준년월
+				  end as std_yyyymm
+				, sum(cnt) as 상권업종수
+			from modu.소상공인_상가정보_업종대분류_통계
+			where
+				1 = 1
+				and 상권업종대분류명 in (
+					select
+						상권업종대분류명
+					from modu.소상공인_상가정보_업종분류
+					where 구분 = #{industryCode}
+					group by 상권업종대분류명
+				)
+				and (시군구명 is not null and 시군구명 != '')
+				and (법정동명 is not null and 법정동명 != '')
+
+			<if test="pnu != null and pnu != '' and pnu != 'all'">
+				and 법정동코드 LIKE #{pnu} + '%'
+			</if>
+
+			<if test="startYYYY != null and startYYYY != ''">
+				and 기준년월 >= #{startYYYY} + '0101'
+			</if>
+
+			<if test="endYYYY != null and endYYYY != ''">
+				and 기준년월 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+			</if>
+
+			<if test="startYMD != null and startYMD != ''">
+				and 기준년월 >= #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and 기준년월 <![CDATA[ <= ]]> #{endYMD}
+			</if>
+
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and 상권업종대분류명 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and (case
+						when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+						when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+						when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+						when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+						when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+						else '4F이상' end) in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<choose>
+				<when test="pnu == 'all'">
+					group by 시도명, 상권업종대분류명, 기준년월
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						group by 시군구명, 법정동명, 상권업종대분류명, 기준년월
+					</if>
+					<if test="'emd' != jusoCd">
+						group by 시도명, 시군구명, 상권업종대분류명, 기준년월
+					</if>
+				</otherwise>
+			</choose>
+			order by
+				기준년월 asc
+		</if>
+	</select>
+	
+	<select id="IndustryInfoDao.업종분포추이데이터.select" parameterType="CmMap" resultType="CmResMap">
+		<if test="geom != null and geom != ''">
+			select
+			<choose>
+				<when test="pnu == 'all'">
+					시도명 as sidonm
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						시군구명 as sggnm
+						, 법정동명 as dongnm
+					</if>
+					<if test="'emd' != jusoCd">
+						시도명 as sggnm
+						, 시군구명 as dongnm
+					</if>
+				</otherwise>
+			</choose>
+				, 상권업종대분류명
+				, 상권업종중분류명
+				, case
+					when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+					when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+					when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+					when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+					when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+					else '4F이상'
+				  end as 층정보
+				, case when LEN(std_yyyymm) > 4 then left(std_yyyymm, 4)
+					   else std_yyyymm
+				  end as 기준년
+				, std_yyyymm as 기준년월
+				, case when LEN(std_yyyymm) > 4 then substring(std_yyyymm, 5, 2)
+					   else std_yyyymm
+				  end as std_yyyymm
+				, count(1) as 상권업종수
+			from modu.소상공인_상가정보_원본
+			where
+				1 = 1
+				and 상권업종대분류명 in (
+					select
+						상권업종대분류명
+					from modu.소상공인_상가정보_업종분류
+					where 구분 = #{industryCode}
+					group by 상권업종대분류명
+				)
+				and (시군구명 is not null and 시군구명 != '')
+				and (법정동명 is not null and 법정동명 != '')
+			<if test="pnu != null and pnu != ''">
+				and pnu LIKE #{pnu} + '%'
+			</if>
+			<if test="geom != null and geom != ''">
+				and isnumeric(경도) = 1
+				and isnumeric(위도) = 1
+				and geometry::STGeomFromText(#{geom}, 4326).STContains(geometry::STPointFromText('POINT(' + 경도 + ' ' + 위도 + ')', 4326)) = 1
+				and (경도 between #{west} and #{east})
+				and (위도 between #{south} and #{north})
+			</if>
+
+			<if test="startYYYY != null and startYYYY != ''">
+				and std_yyyymm >= #{startYYYY} + '0101'
+			</if>
+
+			<if test="endYYYY != null and endYYYY != ''">
+				and std_yyyymm <![CDATA[ <= ]]> #{endYYYY} + '1231'
+			</if>
+
+			<if test="startYMD != null and startYMD != ''">
+				and std_yyyymm >= #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and std_yyyymm <![CDATA[ <= ]]> #{endYMD}
+			</if>
+
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and 상권업종대분류명 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and (case
+						when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+						when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+						when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+						when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+						when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+						else '4F이상' end) in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<choose>
+				<when test="pnu == 'all'">
+					group by 시도명, 상권업종대분류명, 상권업종중분류명, std_yyyymm
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						group by 시군구명, 법정동명, 상권업종대분류명, 상권업종중분류명, std_yyyymm
+					</if>
+					<if test="'emd' != jusoCd">
+						group by 시도명, 시군구명, 상권업종대분류명, 상권업종중분류명, std_yyyymm
+					</if>
+				</otherwise>
+			</choose>
+			, case
+					when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+					when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+					when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+					when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+					when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+					else '4F이상' end
+			<choose>
+				<when test="pnu == 'all'">
+					order by	시도명, std_yyyymm asc, 상권업종대분류명, 상권업종중분류명, 층정보
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						order by	시군구명, 법정동명, std_yyyymm asc, 상권업종대분류명, 상권업종중분류명, 층정보
+					</if>
+					<if test="'emd' != jusoCd">
+						order by	시도명, 시군구명, std_yyyymm asc, 상권업종대분류명, 상권업종중분류명, 층정보
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	
+		<if test="geom == null or geom == ''">
+			select
+			<choose>
+				<when test="pnu == 'all'">
+					시도명 as sidonm
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						  시군구명 as sggnm
+						, 법정동명 as dongnm
+					</if>
+					<if test="'emd' != jusoCd">
+						  시도명 as sggnm
+						, 시군구명 as dongnm
+					</if>
+				</otherwise>
+			</choose>
+				, 상권업종대분류명
+				, 상권업종중분류명
+				, case
+						when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+						when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+						when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+						when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+						when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+						else '4F이상' end as 층정보
+				, case when LEN(기준년월) > 4 then left(기준년월, 4) else 기준년월 end as 기준년
+				, case when LEN(기준년월) > 4 then substring(기준년월, 5, 2) else 기준년월 end as std_yyyymm
+				, 기준년월
+				, sum(cnt) as 상권업종수
+			from modu.소상공인_상가정보_업종중분류_통계
+			where
+				1 = 1
+				and 상권업종대분류명 in (
+					select
+						상권업종대분류명
+					from modu.소상공인_상가정보_업종분류
+					where 구분 = #{industryCode}
+					group by 상권업종대분류명
+				)
+				and (시군구명 is not null and 시군구명 != '')
+				and (법정동명 is not null and 법정동명 != '')
+			<if test="pnu != null and pnu != '' and pnu != 'all'">
+				and 법정동코드 LIKE #{pnu} + '%'
+			</if>
+			<if test="startYYYY != null and startYYYY != ''">
+				and 기준년월 >= #{startYYYY} + '0101'
+			</if>
+
+			<if test="endYYYY != null and endYYYY != ''">
+				and 기준년월 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+			</if>
+			<if test="startYMD != null and startYMD != ''">
+				and 기준년월 >= #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and 기준년월 <![CDATA[ <= ]]> #{endYMD}
+			</if>
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and 상권업종대분류명 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+
+			<if test="floorArr != null and floorArr.size() > 0">
+				and (case
+						when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+						when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+						when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+						when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+						when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+						else '4F이상' end) in
+				<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+					#{floor}
+				</foreach>
+			</if>
+			<choose>
+				<when test="pnu == 'all'">
+					group by 시도명, 상권업종대분류명, 상권업종중분류명, 기준년월
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						group by 시군구명, 법정동명, 상권업종대분류명, 상권업종중분류명, 기준년월
+					</if>
+					<if test="'emd' != jusoCd">
+						group by 시도명, 시군구명, 상권업종대분류명, 상권업종중분류명, 기준년월
+					</if>
+				</otherwise>
+			</choose>
+			, case
+					when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+					when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+					when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+					when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+					when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+					else '4F이상' end
+			order by
+			<choose>
+				<when test="pnu == 'all'">
+					시도명, 상권업종대분류명, 상권업종중분류명, 층정보, 기준년월 asc
+				</when>
+				<otherwise>
+					<if test="'emd' == jusoCd">
+						시군구명, 법정동명, 상권업종대분류명, 상권업종중분류명, 층정보, 기준년월 asc
+					</if>
+					<if test="'emd' != jusoCd">
+						시도명, 시군구명, 상권업종대분류명, 상권업종중분류명, 층정보, 기준년월 asc
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<select id="IndustryInfoDao.업종대중분류.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			상권업종대분류명,
+			업종분류
+		from
+			modu.소상공인_상가정보_업종분류
+		where 구분 = #{industryCode}
+		order by
+			상권업종대분류명,
+			업종분류
+	</select>
+	
+	
+	<select id="IndustryInfoDao.업종분포추이상세데이터.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			TOP 100000
+		<if test="'emd' == jusoCd">
+			  시군구명 as sggnm
+			, 법정동명 as dongnm
+		</if>
+		<if test="'emd' != jusoCd">
+			  시도명 as sggnm
+			, 시군구명 as dongnm
+		</if>
+			, 상권업종대분류명
+			, 상권업종중분류명
+			, 상권업종소분류명
+			, 층정보
+			, std_yyyymm
+			, 상권업종대분류명 +'@' + 상권업종중분류명 as 업종분류
+		from modu.소상공인_상가정보_원본
+		where
+			1 = 1
+			and 상권업종대분류명 in (
+				select
+					상권업종대분류명
+				from modu.소상공인_상가정보_업종분류
+				where 구분 = #{industryCode}
+				group by 상권업종대분류명
+			)
+			and (시군구명 is not null and 시군구명 != '')
+			and (법정동명 is not null and 법정동명 != '')
+
+		<if test="pnu != null and pnu != ''">
+			and pnu LIKE #{pnu} + '%'
+		</if>
+		<if test="geom != null and geom != ''">
+			and isnumeric(경도) = 1
+			and isnumeric(위도) = 1
+			and geometry::STGeomFromText(#{geom}, 4326).STContains(geometry::STPointFromText('POINT(' + 경도 + ' ' + 위도 + ')', 4326)) = 1
+			and (경도 between #{west} and #{east})
+			and (위도 between #{south} and #{north})
+		</if>
+
+		<if test="startYYYY != null and startYYYY != ''">
+			and std_yyyymm >= #{startYYYY} + '0101'
+		</if>
+
+		<if test="endYYYY != null and endYYYY != ''">
+			and std_yyyymm <![CDATA[ <= ]]> #{endYYYY} + '1231'
+		</if>
+
+		<if test="startYMD != null and startYMD != ''">
+			and std_yyyymm >= #{startYMD}
+		</if>
+		<if test="endYMD != null and endYMD != ''">
+			and std_yyyymm <![CDATA[ <= ]]> #{endYMD}
+		</if>
+
+		<if test="sanggaArr != null and sanggaArr.size() > 0">
+			and 상권업종대분류명 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+
+		<if test="floorArr != null and floorArr.size() > 0">
+			and (case
+					when 층정보 = '지' or 층정보 = '-1' or 층정보 = 'B1' or 층정보 = 'B1F' then 'B1F'
+					when 층정보 = '1층' or 층정보 = '1' or 층정보 = '1F' then '1F'
+					when 층정보 = '2층' or 층정보 = '2' or 층정보 = '2F' then '2F'
+					when 층정보 = '3층' or 층정보 = '3' or 층정보 = '3F' then '3F'
+					when 층정보 = '4층' or 층정보 = '4' or 층정보 = '4F' then '4F이상'
+					else '4F이상' end) in
+			<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+				#{floor}
+			</foreach>
+		</if>
+	</select>
+
+</mapper>

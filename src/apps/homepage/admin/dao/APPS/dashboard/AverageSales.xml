@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AverageSalesDao">
+
+	<select id="AverageSalesDao.평균분양가상세.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT a.*
+		FROM
+		(
+			SELECT
+					 a.pnu
+					,h.상가코드
+					,CASE WHEN h.층 LIKE '%B%' THEN 'B1 이하'
+						  WHEN h.층 NOT LIKE '%B%'AND REPLACE(h.층, SUBSTRING(h.층, PatIndex('%[^0-9]%',h.층) , 1), '') >= 4 THEN '4F 이상'
+						  ELSE h.층
+					 END AS 층
+					,a.상가유형
+					,a.상가명
+					,a.도시
+					,rtrim(a.구시군 + ' ' + a.구)				as sggnm
+					,a.읍면동									as dongnm
+					,a.입주일
+					,substring(a.입주일, 1, 4)    			as 입주연도
+					,a.분양일
+					,substring(a.분양일, 1, 4)    			as 분양연도
+					,h.분양면적								as 계약면적
+					,h.전용면적
+					,h.분양가
+					,(h.분양가 / h.분양면적)					as 계약면적당분양가
+					,(h.분양가 / h.전용면적)					as 전용면적당분양가
+					,a.연면적
+					,a.X
+					,a.Y
+					,CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '1,000㎡ 미만'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1,000㎡~3,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3,000㎡~5,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5,000㎡~7,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7,000㎡~10,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10,000㎡~15,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15,000㎡~30,000㎡'
+						  WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30,000㎡ 이상'
+				  	 END AS 연면적코드
+				  	,CASE WHEN #{period}  = '1' then substring(a.분양일, 1, 4)
+						  WHEN #{period}  = '2' then substring(a.분양일, 1, 4) + cast(ceiling(cast(substring(a.분양일, 5, 2) as float) / 6 ) as varchar) 
+						  WHEN #{period}  = '3' then substring(a.분양일, 1, 4) + cast(ceiling(cast(substring(a.분양일, 5, 2) as float) / 3 ) as varchar)
+						  WHEN #{period}  = '4' then substring(a.분양일, 1, 6)
+					 END AS period
+			FROM modu.P_SANGGA a 
+			LEFT OUTER JOIN 
+				modu.P_SANGGAHO h
+			ON a.상가코드 = h.상가코드
+			WHERE 1 = 1
+				<if test="pnu != null and pnu != 'all' and pnu != ''">
+					and a.pnu LIKE #{pnu} + '%'
+				</if>
+					and a.분양일 != ''
+					and isnull(h.분양면적, 0) <![CDATA[ > ]]> 0
+					and isnull(h.전용면적, 0) <![CDATA[ > ]]> 0
+					and isnull(h.분양가, 0) <![CDATA[ > ]]> 0
+					and isnull(a.연면적, 0) <![CDATA[ > ]]> 0
+				<if test="geom != null and geom != '' and pnu != 'all'">
+					and a.bizdist_id = #{bizdistseq}
+				</if>
+				<if test="startYYYY != null and startYYYY != ''">
+					and a.분양일 >= #{startYYYY} + '0101'
+				</if>
+				<if test="endYYYY != null and endYYYY != ''">
+					and a.분양일 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+				</if>
+				<if test="startYMD != null and startYMD != ''">
+					and a.분양일  <![CDATA[ >= ]]> #{startYMD}
+				</if>
+				<if test="endYMD != null and endYMD != ''">
+					and a.분양일 <![CDATA[ <= ]]> #{endYMD}
+				</if>
+				<if test="sanggaArr != null and sanggaArr.size() > 0">
+					and a.상가유형 in
+					<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				<if test="floorArr != null and floorArr.size() > 0">
+					and CASE WHEN h.층 LIKE '%B%' THEN 'B1 이하'
+							 WHEN h.층 NOT LIKE '%B%'AND REPLACE(h.층, SUBSTRING(h.층, PatIndex('%[^0-9]%',h.층) , 1), '') >= 4 THEN '4F 이상'
+							 ELSE h.층
+						END in
+					<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+				</if>
+				<if test="areaArr != null and areaArr.size() > 0">
+					and CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '1,000㎡ 미만'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1,000㎡~3,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3,000㎡~5,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5,000㎡~7,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7,000㎡~10,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10,000㎡~15,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15,000㎡~30,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30,000㎡ 이상'
+						END in
+					<foreach collection="areaArr" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>
+				</if>
+			) a
+			WHERE
+				1 = 1
+			<if test="periodArr != null and periodArr.size() > 0">
+				and a.period in
+				<foreach collection="periodArr" item="prd" open="(" close=")" separator=",">
+					#{prd}
+				</foreach>
+			</if>
+				
+	</select>	
+	
+	<select id="AverageSalesDao.평균분양가상세테이블.select" parameterType="CmMap" resultType="CmResMap">
+		select
+				a.pnu,
+				a.상가코드,
+				a.상가명,
+				a.도시,
+				a.구시군,
+				a.읍면동,
+				a.번지,
+				a.지하총층,
+				a.지상총층,
+				a.대지면적,
+				a.연면적,
+				a.총점포수,
+				a.입주일		as 입주연월,
+				a.분양일		as 분양연월,
+				substring(a.분양일, 1, 4) as 분양년도,
+				a.X,
+				a.Y,
+				COALESCE(AVG(CASE WHEN a.분양면적 > 0 THEN (a.전용면적 / a.분양면적 * 100) ELSE NULL END), -1) AS '전용율',
+				COALESCE(SUM(CASE WHEN a.층 = '1F' THEN 1 ELSE NULL END), -1) AS '1f점포수',
+				COALESCE(AVG(CASE WHEN a.층 = '1F' AND a.분양면적 > 0 THEN (a.분양가 / a.분양면적 * 3.3058) ELSE NULL END), -1) AS '1f계약평당가',
+				COALESCE(AVG(CASE WHEN a.층 = '1F' AND a.전용면적 > 0 THEN (a.분양가 / a.전용면적 * 3.3058) ELSE NULL END), -1) AS '1f전용평당가'
+		from
+		(
+			select
+					a.pnu,
+					a.상가코드,
+					a.상가명,
+					a.상가유형,
+					a.도시,
+					a.구시군,
+					a.읍면동,
+					a.행정동,
+					a.주소상세,
+					a.번지,
+					a.지하총층,
+					a.지상총층,
+					a.대지면적,
+					a.연면적,
+					a.총점포수,
+					a.전용면적률,
+					a.입주일,
+					a.분양일,
+					a.X,
+					a.Y,
+					h.층,
+					h.호수,
+					h.분양면적,
+					h.전용면적,
+					h.분양가
+			from
+				modu.P_SANGGA a
+			left outer join
+				modu.P_SANGGAHO h
+			on
+				a.상가코드 = h.상가코드			
+			where
+				1 = 1
+				<if test="pnu != null and pnu != 'all' and pnu != ''">
+					and a.pnu LIKE #{pnu} + '%'
+				</if>
+					and a.분양일 != ''
+					and isnull(h.분양면적, 0) <![CDATA[ > ]]> 0
+					and isnull(h.전용면적, 0) <![CDATA[ > ]]> 0
+					and isnull(h.분양가, 0) <![CDATA[ > ]]> 0
+					and isnull(a.연면적, 0) <![CDATA[ > ]]> 0
+				<if test="geom != null and geom != '' and pnu != 'all'">
+					and a.bizdist_id = #{bizdistseq}
+				</if>
+ 				<if test="startYYYY != null and startYYYY != ''">
+					and a.분양일 >= #{startYYYY} + '0101'
+				</if>
+				<if test="endYYYY != null and endYYYY != ''">
+					and a.분양일 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+				</if> 
+				<if test="startYMD != null and startYMD != ''">
+					and a.분양일  <![CDATA[ >= ]]> #{startYMD}
+				</if>
+				<if test="endYMD != null and endYMD != ''">
+					and a.분양일 <![CDATA[ <= ]]> #{endYMD}
+				</if> 
+				<if test="sanggaArr != null and sanggaArr.size() > 0">
+					and a.상가유형 in 
+					<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				<if test="floorArr != null and floorArr.size() > 0">
+					and CASE WHEN h.층 LIKE '%B%' THEN 'B1 이하'
+							 WHEN h.층 NOT LIKE '%B%'AND REPLACE(h.층, SUBSTRING(h.층, PatIndex('%[^0-9]%',h.층) , 1), '') >= 4 THEN '4F 이상'
+							 ELSE h.층
+						END in
+					<foreach collection="floorArr" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+				</if>
+				
+				<if test="areaArr != null and areaArr.size() > 0">
+					and CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '1,000㎡ 미만'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1,000㎡~3,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3,000㎡~5,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5,000㎡~7,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7,000㎡~10,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10,000㎡~15,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15,000㎡~30,000㎡'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30,000㎡ 이상'
+			  			END in 
+					<foreach collection="areaArr" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>				
+				</if>
+		) a
+		group by
+			a.pnu,
+			a.상가코드,
+			a.상가명,
+			a.도시,
+			a.구시군,
+			a.읍면동,
+			a.번지,
+			a.지하총층,
+			a.지상총층,
+			a.대지면적,
+			a.연면적,
+			a.총점포수,
+			a.전용면적률,
+			a.입주일,
+			a.분양일,
+			a.X,
+			a.Y
+		order by 
+			a.분양일
+	</select>		
+
+</mapper>

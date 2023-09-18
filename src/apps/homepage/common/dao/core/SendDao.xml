@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SendDao">
+ 	<select id="SendDao.selectEmailSendHistory" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select EMAIL_SEQ
+			 , EMAIL_TITLE as EMAIL_SUBJECT
+			 , CONTENTS as EMAIL_NOTE
+			 , to_char(to_date(SEND_DATE, 'YYYY-MM-DD'), 'YYYY-MM-DD') as SEND_DATE
+			 , COMPANY_CODE
+			 , '' as PROJ_CODE
+			 , '' as SELL_CODE 
+             , ATTCH_FILE_YN
+             , SEND_EMAIL
+			 , to_char(ROW_INPUT_DATE, 'YYYYMMDD hh:mm:ss') as ROW_INPUT_DATE
+			 , ROW_INPUT_ID
+			 , ROW_INPUT_IP
+		  from ha_email_send_info
+		 <if test="s_date != null and s_date != ''">
+		   and to_char(ROW_INPUT_DATE,'YYYYMMDD') = #{s_date}
+		 </if>
+	</select>
+
+ 	<select id="SendDao.selectSmSSendHistory" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select send_id
+		     , send_date
+		     , rs_date
+		     , msg_type
+		     , msg_title
+		     , msg_content
+		     , send_num
+		     , recv_num
+		     , send_stat
+		     , send_result
+		     , sms_key
+		     , ex_col1
+		     , ex_col2
+		     , ex_col3
+		     , case when msg_type = '1'
+		            then 'SMS'
+		            when msg_type = '2'
+		            then 'LMS'
+		        end as msg_type_name
+		  from cf_msg_send
+		 <if test="s_date != null and s_date != ''">
+		   and to_char(send_date,'YYYYMMDD') = #{s_date}
+		 </if>
+	</select>
+	 	
+</mapper>

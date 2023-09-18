@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"	
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+  		http://www.springframework.org/schema/aop 
+  		http://www.springframework.org/schema/aop/spring-aop.xsd
+ 		http://www.springframework.org/schema/context 
+ 		http://www.springframework.org/schema/context/spring-context.xsd
+  		http://www.springframework.org/schema/tx 
+  		http://www.springframework.org/schema/tx/spring-tx.xsd
+  		http://www.springframework.org/schema/util 
+  		http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+
+	<annotation-driven>
+		<argument-resolvers>
+			<beans:bean class="org.springframework.mobile.device.DeviceWebArgumentResolver" />
+		</argument-resolvers>
+	</annotation-driven>
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<resources mapping="/UPLOAD/**" location="/UPLOAD/" />
+
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/view/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	
+	<context:component-scan base-package="apps.*" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Component"/>
+    </context:component-scan>
+    
+
+	
+	<!-- ============================================================= -->
+    <!--  Request Value Interceptor Config                             -->
+    <!-- ============================================================= -->
+	<beans:bean id="requestValueInterceptor" class="apps.framework.interceptor.RequestValueInterceptor" />
+
+<!--     <beans:bean id="defaultAdvisorAutoProxyCreator" class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" /> -->
+
+    <beans:bean id="requestValueAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+		<beans:property name="advice" ref="requestValueInterceptor" />
+		<beans:property name="pattern" value=".*controller.*" />
+    </beans:bean>
+	
+	
+    <!-- ============================================================= -->
+    <!--  View Resolver Config                                         -->
+    <!-- ============================================================= --> 
+    <beans:bean id="beanNameViewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0" /> 
+
+	
+	<!-- ============================================================= -->
+    <!--  View Config                                                  -->
+    <!-- ============================================================= -->
+	<beans:bean id="excelView" 		class="apps.framework.utils.view.ExcelView"/>	
+	<beans:bean id="xmlView" 		class="apps.framework.utils.view.XmlView"/>
+	<beans:bean id="jsonView" 		class="apps.framework.utils.view.JsonView"/>
+	<beans:bean id="htmlView" 		class="apps.framework.utils.view.HtmlView"/>
+		
+	<!-- aop:config> 
+		<aop:pointcut id="requestValuePointcut" expression="execution(public * *..*.*Controller.*(..))" />
+		<aop:advisor advice-ref="requestValueInterceptor" pointcut-ref="requestValuePointcut" />
+	</aop:config-->
+	
+    <!-- ============================================================= -->
+	<!--  Interceptor setting                                          -->
+	<!-- ============================================================= -->
+	<interceptors>
+		<interceptor>
+			<mapping path="/**/*.do"/>
+			<beans:bean class="org.springframework.mobile.device.DeviceResolverHandlerInterceptor" />
+		</interceptor> 
+		<interceptor>
+			<mapping path="/**/*.do"/>			
+			<beans:bean class="apps.framework.interceptor.CmInterceptor" />
+		</interceptor>
+		<interceptor>
+			<mapping path="/**/*.do"/>
+			<beans:bean class="apps.framework.interceptor.CmLoginInterceptor" />
+		</interceptor>
+				
+<!-- 		<beans:bean id="localeChangeInterceptor" class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<beans:property name="paramName" value="lang" />
+		</beans:bean> -->
+				
+	</interceptors>
+	
+	
+	<!-- ============================================================= -->
+    <!--  Multipart Upload Config                                      -->
+    <!-- ============================================================= -->
+    <beans:bean id="multipartResolver" class="apps.framework.utils.fileupload.AjaxMultipartResolver">
+    	<beans:property name="maxInMemorySize">
+			<beans:value>10240</beans:value>
+		</beans:property>
+		<beans:property name="maxUploadSize">
+			<beans:value>1099511627776</beans:value>	<!-- 1024 ^ 4 = 1TB -->
+		</beans:property>
+    </beans:bean>
+	
+	<beans:bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+	     <beans:property name="corePoolSize" value="5" />
+	     <beans:property name="maxPoolSize" value="10" />
+	     <beans:property name="queueCapacity" value="25" />
+	     <beans:property name="waitForTasksToCompleteOnShutdown" value="true" />
+	</beans:bean>
+		
+</beans:beans>

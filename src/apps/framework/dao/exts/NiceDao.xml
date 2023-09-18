@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NiceDao">
+	<insert id="NiceDao.insertNiceRequest" parameterType="CmMap" >		
+		INSERT 
+			INTO HOMEPAGE.RE_NICE_REQUEST_HISTORY
+			(
+				SESSION_ID
+				, STATE				
+				, ROW_INPUT_ID
+				, ROW_INPUT_DATE
+				, ROW_INPUT_IP
+			)VALUES(
+				#{session_id}
+				, #{state}				
+				, #{userId}
+				, NOW()
+				, #{regIp}
+				)
+			
+	</insert>
+	
+	<update id="NiceDao.updateNiceRequest" parameterType="CmMap" >	
+		UPDATE HOMEPAGE.RE_NICE_REQUEST_HISTORY
+			SET
+				STATE = #{state}
+				, ROW_UPDATE_ID = #{userId}
+				, ROW_UPDATE_DATE = NOW()
+				, ROW_UPDATE_IP = #{regIp}
+			WHERE 
+				SESSION_ID = #{session_id}
+	</update>
+	
+</mapper>

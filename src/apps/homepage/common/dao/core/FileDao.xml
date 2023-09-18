@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FileDao">
+	
+	<select id="FileDao.selectFileInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+ 		<![CDATA[
+			SELECT 
+				ATCH_FILE_ID, FILE_CN, FILE_SN, FILE_STRE_COURS, STRE_FILE_NM,
+				FILE_EXTSN, ORIGNL_FILE_NM, FILE_SIZE, FILE_STRE_URL
+			FROM
+				hp_admin.ha_comm_file_detail
+			WHERE
+				ATCH_FILE_ID = '${atchFileId}'
+			AND 
+				FILE_SN = ${fileSn}
+ 		]]>
+ 	</select>
+
+	<select id="FileDao.selectFileMstInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+ 		<![CDATA[
+			SELECT SYS_ID
+					, ATCH_FILE_ID
+					, CREAT_DT
+					, USE_AT
+					, USER_ID
+					, CLIENT_IP
+			FROM
+				hp_admin.ha_comm_file
+			WHERE
+				ATCH_FILE_ID = '${atchFileId}'
+ 		]]>
+ 	</select>
+ 	
+ 
+ 	<insert id="FileDao.insertFileMaster" parameterType="CmMap" >	
+			INSERT INTO modu.r114_첨부파일마스터
+			( 등록일자, 등록자아이피, 등록자아이디)
+			VALUES
+			( getdate(), #{userIp}, #{userId})
+		 	<selectKey resultType="string" keyProperty="masterSeq" order="AFTER">
+		 		SELECT @@IDENTITY
+		 	</selectKey>			
+	</insert>
+	
+	<insert id="FileDao.insertFileDetail" parameterType="CmMap" >		
+			INSERT INTO modu.r114_첨부파일상세
+			( 첨부파일ID, 순번, 파일저장경로, 파일저장명, 
+			  원본파일명, 파일확장자, 파일사이즈, 파일저장URL, 파일내용, 등록일자, 등록자아이피, 등록자아이디)
+			VALUES
+			( #{masterSeq}, #{순번}, #{파일저장경로}, #{파일저장명},
+			 #{원본파일명}, #{파일확장자}, #{파일사이즈}, #{파일저장URL}, #{파일내용}, getdate(), #{userIp}, #{userId})					
+	</insert>
+		
+		
+	<delete id="FileDao.deleteFileDetail" parameterType="CmMap" >
+		
+			DELETE FROM modu.r114_첨부파일상세
+			WHERE
+				첨부파일ID = #{masterSeq}
+			AND	
+				순번 = #{detailSeq}
+	</delete>
+	
+	<delete id="FileDao.deleteFileMaster" parameterType="CmMap" >
+		
+			DELETE FROM modu.r114_첨부파일마스터
+			WHERE
+				첨부파일ID = #{masterSeq}
+	</delete>
+	
+ 	
+	<select id="FileDao.selectFileList" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+ 		<![CDATA[
+			SELECT 
+				ATCH_FILE_ID, FILE_CN, FILE_SN, FILE_STRE_COURS, STRE_FILE_NM,
+				FILE_EXTSN, ORIGNL_FILE_NM, FILE_SIZE, FILE_STRE_URL
+			FROM
+				hp_admin.ha_comm_file_detail
+			WHERE
+				ATCH_FILE_ID = #{atchFileId}
+ 		]]>
+ 	</select>
+ 	
+ 	<select id="FileDao.selectFileInf" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+			SELECT 
+				첨부파일ID, 순번, 파일저장경로, 파일저장명, 원본파일명,
+				파일확장자, 파일사이즈, 파일저장URL, 파일내용,
+				파일저장경로 as file_stre_cours,
+				파일저장명 as stre_file_nm,
+				원본파일명 as orignl_file_nm
+			FROM
+				modu.r114_첨부파일상세
+			WHERE
+				첨부파일ID = #{masterSeq}
+			<if test ="detailSeq != null and detailSeq != ''">
+			
+			AND 
+				순번 = #{detailSeq} 
+			</if>	
+ 	</select>
+ 	
+	
+	<select id="FileDao.getMaxFileSN" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COALESCE(MAX(FILE_SN),0)+1 AS FILE_SN
+			FROM modu.r114_첨부파일상세
+			WHERE ATCH_FILE_ID =  #{atchFileId}		
+		]]>
+	</select>
+	
+	<select id="FileDao.getDeleteCount" parameterType="CmMap" resultType="java.lang.Integer" >
+		select 	isnull(count(순번), 0) as count
+		from 	modu.r114_첨부파일상세
+		where 	첨부파일ID = #{masterSeq}
+	</select>	
+</mapper>

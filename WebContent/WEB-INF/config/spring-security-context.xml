@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns="http://www.springframework.org/schema/security" 
+		xmlns:util="http://www.springframework.org/schema/util"
+		xsi:schemaLocation="http://www.springframework.org/schema/security 
+							http://www.springframework.org/schema/security/spring-security.xsd
+							http://www.springframework.org/schema/beans 
+							http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+							http://www.springframework.org/schema/util 
+							http://www.springframework.org/schema/util/spring-util.xsd">
+
+
+	<http pattern="/resources/**" security="none" />	
+	<http pattern="/common/core/conncheck.do" security="none" />	
+	<http pattern="/batch/**" security="none" />	
+	<http pattern="/email/**" security="none" />
+	
+	<http pattern="/front/main/**" security="none" />		
+	<http pattern="/front/barnd/**" security="none" />
+	<http pattern="/front/info/**" security="none" />
+	<http pattern="/front/stay1/**" security="none" />
+	<http pattern="/front/service/**" security="none" />
+	<http pattern="/front/policy/**" security="none" />
+	
+	
+	
+	<http-firewall ref="allowHttpFirewall"/>
+	<beans:bean id="allowHttpFirewall" class="org.springframework.security.web.firewall.DefaultHttpFirewall"> 
+        <beans:property name="allowUrlEncodedSlash" value="true"/>        
+	</beans:bean>
+	
+	<http pattern="/front/**" auto-config='true'  use-expressions="true" create-session="ifRequired" authentication-manager-ref="userAuthnticationManager">
+       
+		<intercept-url pattern="/front/"   access="permitAll" />
+        <intercept-url pattern="/front/**" access="permitAll" />
+        <intercept-url pattern="/front/**/*" access="permitAll" />
+        
+        <form-login login-page="/front/member/login.do"
+                    username-parameter="id"
+                    password-parameter="password"    
+                    login-processing-url="/front/member/actionLogin.do"
+                    default-target-url="/front/member/actionLogin.do"
+                    authentication-failure-url="/front/member/loginFailure.do"
+                    always-use-default-target='true'
+                    />
+         
+		<logout invalidate-session="false" logout-url="/front/member/actionLogout.do" success-handler-ref="CustomLogoutSuccessHandler"  />
+        	
+                           
+		<csrf disabled="true"/>
+		
+    	<headers defaults-disabled="true"> 
+    		<hsts include-subdomains="true" />    
+	    	<frame-options policy="SAMEORIGIN" /> 
+	    </headers>
+	    
+	 	<!-- <custom-filter position="CONCURRENT_SESSION_FILTER" ref="concurrencyFilter" />	 	
+		<session-management session-authentication-strategy-ref="sas" /> -->
+    </http>
+    
+    <http pattern="/admin/**" auto-config='true'  use-expressions="true" create-session="ifRequired" authentication-manager-ref="adminAuthnticationManager">
+        
+        <intercept-url pattern="/admin/"   access="permitAll" />
+        <intercept-url pattern="/admin/**" access="permitAll" />
+        <intercept-url pattern="/admin/**/*" access="permitAll" />
+        
+        <form-login login-page="/admin/member/aLogin.do"
+                    username-parameter="id"
+                    password-parameter="password"    
+                    login-processing-url="/admin/member/adminActionLogin.do"
+                    default-target-url="/admin/member/adminActionLogin.do"
+                    authentication-failure-url="/admin/member/adminLoginFailure.do"
+                    always-use-default-target='true'
+                    />
+         
+		<logout invalidate-session="false" logout-url="/admin/member/adminActionLogout.do" success-handler-ref="CustomLogoutSuccessHandler"  />
+        	
+                           
+		<csrf disabled="true"/>
+		
+    	<headers defaults-disabled="true"> 
+    		<hsts include-subdomains="true" />    
+	    	<frame-options policy="SAMEORIGIN" /> 
+	    </headers>
+	    
+	 	<!-- <custom-filter position="CONCURRENT_SESSION_FILTER" ref="concurrencyFilter" />	 	
+		<session-management session-authentication-strategy-ref="sas" /> -->
+    </http> 
+    
+   
+    <beans:bean class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"/>
+     
+    <authentication-manager erase-credentials="true" id="userAuthnticationManager">
+        <authentication-provider ref="customAuthenticationProvider"/>
+    </authentication-manager>
+    
+    <authentication-manager erase-credentials="true" id="adminAuthnticationManager">
+        <authentication-provider ref="customAuthenticationProvider"/>
+    </authentication-manager>
+     
+    <beans:bean id="customAuthenticationProvider" class="apps.homepage.common.security.CustomAuthenticationProvider"/> 
+    <beans:bean id="CustomLogoutSuccessHandler" class="apps.homepage.common.security.CustomLogoutSuccessHandler"/>
+	
+<!-- 	<beans:bean id="concurrencyFilter" class="org.springframework.security.web.session.ConcurrentSessionFilter">
+  		<beans:constructor-arg name="sessionRegistry" ref="sessionRegistry" />
+		<beans:constructor-arg name="sessionInformationExpiredStrategy" ref="redirectSessionInformationExpiredStrategy" />
+	</beans:bean>
+	
+	<beans:bean id="redirectSessionInformationExpiredStrategy" class="org.springframework.security.web.session.SimpleRedirectSessionInformationExpiredStrategy">
+		<beans:constructor-arg name="invalidSessionUrl" value="/front/member/login.do" />
+	</beans:bean>
+
+    <beans:bean id="sas" class="org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy">
+  		<beans:constructor-arg>
+    	<beans:list>
+      		<beans:bean class="org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy">
+        		<beans:constructor-arg ref="sessionRegistry"/>
+        		<beans:property name="maximumSessions" value="1" />
+        		<beans:property name="exceptionIfMaximumExceeded" value="false" />
+			</beans:bean>
+			<beans:bean class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy" />
+			<beans:bean class="org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy">
+        		<beans:constructor-arg ref="sessionRegistry"/>
+      		</beans:bean>
+		</beans:list>
+  		</beans:constructor-arg>
+	</beans:bean>
+	<beans:bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" /> -->
+	
+</beans:beans>

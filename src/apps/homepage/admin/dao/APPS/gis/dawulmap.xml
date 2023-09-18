@@ -1,0 +1,1980 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dawulmapDao">
+
+	<select id="dawulmapDao.zeons_마커생성.select" parameterType="CmMap" resultType="CmResMap">
+		select	 case	when	y.분양명			like	'%분양%'				then	y.분양명
+						when	y.임대료명			like	'%임대료%'			then	y.임대료명
+						when	y.매매명			like	'%매매%'				then	y.매매명
+						when	y.실거래명			like	'%실거래%'			then	y.실거래명	end	임대료명
+			,	y.x_lat
+			,	y.y_lng
+			,	y.xy
+			,	y.w_name
+			,	isnull(case	when	y.pnu	=	'0'	then	'0'	else	y.pnu	end,0)	as	pnu
+			,	substring(substring(y.w_date,0,9),0,5) + '.' + substring(substring(y.w_date,0,9),5,2) + case when substring(substring(y.w_date,0,9),7,2) != '' then '.' + substring(substring(y.w_date,0,9),7,2) else '' end as	w_date
+			,	substring(substring(y.w_date,0,9),0,5)	as	w_year
+			,	y.z_status
+			,	y.상가유형
+			,	y.번지	as	bunji
+			,	y.totarea
+			, 	y.saleyn
+			,   y.wyear
+			,	(CASE WHEN EXISTS (SELECT PNU코드 FROM modu.R114_REMAX_통합매물정보 WHERE PNU코드 = y.pnu) THEN 'Y' ELSE 'N' END) AS 리맥스매물유무	<!-- 리맥스 매물 존재 유무 -->
+		from
+		(
+			select	case	when	z.z_status	=	'분양'		then	z.x_lat		end	as	분양_x
+			,		case	when	z.z_status	=	'분양'		then	z.y_lng		end	as	분양_y
+			,		case	when	z.z_status	=	'분양'		then	z.y_lng + z.x_lat		end	as	분양_좌표
+			,		case	when	z.z_status	=	'분양'		then	<![CDATA['<label><em>분양</em></label>']]>end	as	분양명			
+			,		case	when	z.z_status	=	'임대료'		then	z.x_lat		end	as	임대료_x
+			,		case	when	z.z_status	=	'임대료'		then	z.y_lng		end	as	임대료_y
+			,		case	when	z.z_status	=	'임대료'		then	z.y_lng + z.x_lat		end	as	임대료_좌표
+			,		case	when	z.z_status	=	'임대료'		then	<![CDATA['<label><em>임대료</em></label>']]>	end	as	임대료명			
+			,		case	when	z.z_status	=	'매매'		then	z.x_lat		end	as	매매_x
+			,		case	when	z.z_status	=	'매매'		then	z.y_lng		end	as	매매_y
+			,		case	when	z.z_status	=	'매매'		then	z.y_lng + z.x_lat		end	as	매매_좌표
+			,		case	when	z.z_status	=	'매매'		then	<![CDATA['<label><em>매매</em></label>']]>	end	as	매매명			
+			,		case	when	z.z_status	=	'실거래'		then	z.x_lat		end	as	실거래_x
+			,		case	when	z.z_status	=	'실거래'		then	z.y_lng		end	as	실거래_y
+			,		case	when	z.z_status	=	'실거래'		then	z.y_lng + z.x_lat		end	as	실거래_좌표
+			,		case	when	z.z_status	=	'실거래'		then	<![CDATA['<label><em>실거래</em></label>']]>	end	as	실거래명			
+			,		z.x_lat
+			,		z.y_lng
+			,		replace(z.x_lat + z.y_lng,'.','') as xy		
+			,		z.w_name
+			,		z.pnu
+			,		z.w_date
+			,		z.z_status
+			,		z.상가유형
+			,		z.번지
+			,		case when isnull(z.연면적, 0) <![CDATA[>]]> 0 and isnull(z.연면적, 0) <![CDATA[<]]> 1000 then 'tarea01' 
+			             when isnull(z.연면적, 0) <![CDATA[>=]]>  1000 and isnull(z.연면적, 0) <![CDATA[<]]>  3000 then 'tarea02'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]>  3000 and isnull(z.연면적, 0) <![CDATA[<]]>  5000 then 'tarea03'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]>  5000 and isnull(z.연면적, 0) <![CDATA[<]]>  7000 then 'tarea04'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]>  7000 and isnull(z.연면적, 0) <![CDATA[<]]> 10000 then 'tarea05'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]> 10000 and isnull(z.연면적, 0) <![CDATA[<]]> 15000 then 'tarea06'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]> 30000 and isnull(z.연면적, 0) <![CDATA[<]]> 30000 then 'tarea07'
+			             when isnull(z.연면적, 0) <![CDATA[>=]]> 30000 then 'tarea08' end as totarea 
+			, 		case when isnull(z.분양가, 0) <![CDATA[>]]> 0  then 'saleyn_y' else 'saleyn_n' end as saleyn
+			,		'w' + substring(z.w_date, 1, 4) as wyear  
+			from	
+			(
+				select	substring(max(a.X),1,10) as x_lat
+				,		substring(max(a.Y),1,10) as y_lng
+				,		a.pnu	 as pnu
+				,		'분양'	 as	z_status
+				, 		0 gbn
+				,		max(a.읍면동) + ' ' + max(a.주소상세)	+ ' ' + max(a.번지) as w_name
+				,		max(a.분양일)	as	w_date
+				,		max(a.상가유형)	as	상가유형
+				,		''	as	번지
+				,		max(a.연면적) as 연면적
+				,		max(isnull(b.분양가, 0)) as 분양가 
+				 from	modu.P_SANGGA a	with(nolock) left join modu.P_SANGGAHO b with(nolock) on a.상가코드	=	b.상가코드
+				where	a.X  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				and		a.X  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				and		a.Y  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				and		a.Y  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				and		1 =	#{sale}
+				<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="saleyn != null and saleyn !=''">
+				and		case when isnull(b.분양가, 0) <![CDATA[>]]> 0  then 1 else 0 end <![CDATA[>=]]> #{saleyn}
+				</if>
+				<if test="ls_year_length != null and ls_year_length.size() > 0">
+				and		substring(a.분양일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+			 			#{item}
+					</foreach>
+				</if>	
+				<if test="ls_area_length != null and ls_area_length.size() > 0">
+					and CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '0'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15000'
+							 WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30000'
+					  	END in 
+					<foreach collection="ls_area_length" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>				
+				</if>	
+				<if test="ls_floor_length != null and ls_floor_length.size() > 0">
+					and ((#{saleyn} = 1) and (CASE WHEN b.층 LIKE '%B%' THEN 'B1F'
+						WHEN b.층 NOT LIKE '%B%'AND REPLACE(b.층, SUBSTRING(b.층, PatIndex('%[^0-9]%', b.층) , 1), '') >= 4 THEN '4F'
+						ELSE b.층 END in 
+					<foreach collection="ls_floor_length" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+					) or  (#{saleyn} = 0))
+				</if>			
+				<if test="ls_sangga_length != null and ls_sangga_length.size() > 0">
+					and a.상가유형 in
+					<foreach collection="ls_sangga_length" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				<if test='groupCode != null and groupCode.equals("41")'>
+				and		isnull(a.도시, '') = #{demoSidonm}
+				and		isnull(a.구시군, '') = #{demoSggnm}
+				</if>
+				group	by	a.pnu
+				union	all			
+				select	z.x_lat as x_lat
+				,		z.y_lng as y_lng
+				,		b.pnu_cd as pnu_cd
+				,		max(z_status) as z_status
+				, 		3 gbn
+				,		max(z.w_name) as w_name
+				,		max(z.w_date) as w_date
+				,		''	as	상가유형
+				,		max(b.BUNJI) as	번지
+				,		max(c.총_동_연면적m2) as 연면적
+				,		0 as 분양가 
+				from modu.MOLIT_NRG_TRD_MAP_RESULT	b	with(nolock)	inner	join
+														(
+															select	substring(a.X,1,10)	 as x_lat
+															,		substring(a.Y,1,10)	 as y_lng
+															,		a.m_pnu_cd	 as pnu
+															,		'실거래'	 as	z_status
+															,		max(a.RDNM)	+	' ' +	max(a.m_jibun)	 as	w_name
+															,		max(a.trd_yymm)	as w_date
+															from	modu.MOLIT_NRG_TRD a with(nolock)
+															where	a.X  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+															and		a.X  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+															and		a.Y  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+															and		a.Y  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+															and		1	=	#{realtran}
+															<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+															<if test="ls_article_type_length != null">
+																<choose>
+																	<when test="ls_article_type_length.size() > 0">
+																		and a.articleTypeCode in
+																		<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+																			#{article_type}
+																		</foreach>
+																	</when>
+																	<otherwise>and 1 = 2</otherwise>
+																</choose>		
+															</if>	
+															<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+															<if test='groupCode != null and groupCode.equals("41")'>
+															and		isnull(a.SGG_NM, '') like #{demoSidonm} + ' ' + #{demoSggnm} + '%'
+															</if>
+															and		substring(a.trd_yymm,1,4) in	
+															<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+													 			#{item}
+															</foreach>
+															<if test="ls_floor_length != null and ls_floor_length.size() > 0">
+																and  case when isnumeric(left(a.FLR, charindex('/', a.FLR + '/')-1)) = 1 and left(a.FLR, charindex('/', a.FLR + '/')-1) <![CDATA[>]]> 3 then '4F'
+																	when a.FLR = '' then '4F'
+														  	 	 	else left(a.FLR, charindex('/', a.FLR + '/')-1) + 'F' end in
+																<foreach collection="ls_floor_length" item="floor" open="(" close=")" separator=",">
+																	#{floor}
+																</foreach>
+															</if>
+															<if test="ls_sangga_length != null and ls_sangga_length.size() > 0">
+																and (a.R_상가유형 in
+																<foreach collection="ls_sangga_length" item="sangga" open="(" close=")" separator=",">
+																	#{sangga}
+																</foreach>
+																
+																<foreach collection="ls_sangga_length" item="sangga">
+																	<if test='sangga.equals("기타상가")'>
+																		or (a.R_상가유형 is null and a.R_건물명 is not null)
+																		or (a.R_상가유형 is null and a.R_건물명 is null and a.M_PNU_CD is not null)
+																	</if>
+																</foreach>
+																)
+																
+															</if>
+															group	by	substring(a.X,1,10)
+															,			substring(a.Y,1,10)
+															,			a.m_pnu_cd
+														)	z	on	b.PNU_CD	=	z.pnu
+													 left join modu.건축물대장_표제부 c on b.pnu_cd = c.pnu 					
+				<if test="ls_area_length != null and ls_area_length.size() > 0">
+				  where CASE WHEN c.총_동_연면적m2 <![CDATA[ < ]]> 1000 THEN '0'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 1000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 3000 THEN '1000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 3000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 5000 THEN '3000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 5000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 7000 THEN '5000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 7000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 10000 THEN '7000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 10000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 15000 THEN '10000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 15000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 30000 THEN '15000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 30000 THEN '30000'
+					  	END in 
+					<foreach collection="ls_area_length" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>				
+				</if>
+				group by z.x_lat
+					,	 z.y_lng
+					,	 b.pnu_cd
+				union	all
+				 select	max(substring(a.X좌표,1,10))	as	x_lat
+				 ,		max(substring(a.Y좌표,1,10))	as	y_lng
+				 ,		a.PNU코드	as	pnu
+				 ,		'임대료'	as	z_status
+				 , 		1 gbn
+				 ,		max(b.읍면동명)	+	' ' + max(case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+													  then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+													  else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+													  end)	as	w_name
+				 ,		max(a.매물게시일)	as	w_date
+				 ,		max(R_상가유형)	as	상가유형
+				 ,		max(case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+							then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+							else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+							end)	as	번지
+				 ,		max(c.총_동_연면적m2) as 연면적
+				 ,		0 as 분양가 
+				 from modu.통합_상가매물정보	a	inner join modu.kikcd_b	b on	a.법정동코드	=	b.법정동코드
+											 left join modu.건축물대장_표제부 c on a.PNU코드 = c.pnu 
+				 where	a.PNU코드 is not null
+				 and	a.PNU코드	!=	''
+				 and	a.X좌표		!=	''
+				 and	a.X좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				 and	a.X좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				 and	a.Y좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				 and	a.Y좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				 and	1	=	#{rent}			
+				<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_area_length != null and ls_area_length.size() > 0">
+				  and CASE WHEN c.총_동_연면적m2 <![CDATA[ < ]]> 1000 THEN '0'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 1000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 3000 THEN '1000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 3000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 5000 THEN '3000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 5000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 7000 THEN '5000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 7000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 10000 THEN '7000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 10000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 15000 THEN '10000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 15000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 30000 THEN '15000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 30000 THEN '30000'
+					  	END in 
+					<foreach collection="ls_area_length" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>				
+				</if>			
+				<if test="ls_floor_length != null and ls_floor_length.size() > 0">
+					and  case when isnumeric(left(a.층정보, charindex('/', a.층정보 + '/')-1)) = 1 and left(a.층정보, charindex('/', a.층정보 + '/')-1) <![CDATA[>]]> 3 then '4F'
+			  	 	 	else left(a.층정보, charindex('/', a.층정보 + '/')-1) + 'F' end in
+					<foreach collection="ls_floor_length" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+				</if>			
+				<if test="ls_sangga_length != null and ls_sangga_length.size() > 0">
+					and a.R_상가유형 in
+					<foreach collection="ls_sangga_length" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				 <if test='groupCode != null and groupCode.equals("41")'>
+				 and	isnull(b.시도명, '') = #{demoSidonm}
+				 and	isnull(b.시군구명, '') = #{demoSggnm}
+				 </if>	
+				 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+			 		#{item}
+					</foreach>	 
+				 group	by	a.PNU코드	
+				 union all	
+				 select	max(substring(a.X좌표,1,10))	as	x_lat
+				 ,		max(substring(a.Y좌표,1,10))	as	y_lng
+				 ,		a.PNU코드	as	pnu
+				 ,		'매매'	as	z_status
+				 , 		2 gbn
+				 ,		max(b.읍면동명)	+	' ' + max(case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+													  then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+													  else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+													  end)	as	w_name
+				 ,		max(a.매물게시일)	as	w_date
+				 ,		max(R_상가유형)	as	상가유형
+				 ,		max(case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+							then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+							else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+							end)	as	번지
+				 ,		max(c.총_동_연면적m2) as 연면적
+				 ,		0 as 분양가 
+				 from modu.통합_상가매물_매매정보	a	inner	join modu.kikcd_b	b on a.법정동코드	=	b.법정동코드
+												 left join modu.건축물대장_표제부 c on a.PNU코드 = c.pnu 
+				 where	a.PNU코드 is not null
+				 and	a.PNU코드	!=	''
+				 and	a.X좌표		!=	''
+				 and	a.X좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				 and	a.X좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				 and	a.Y좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				 and	a.Y좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				 and	1	=	#{trading}
+				 <!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				 <if test="ls_area_length != null and ls_area_length.size() > 0">
+				  and CASE WHEN c.총_동_연면적m2 <![CDATA[ < ]]> 1000 THEN '0'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 1000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 3000 THEN '1000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 3000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 5000 THEN '3000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 5000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 7000 THEN '5000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 7000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 10000 THEN '7000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 10000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 15000 THEN '10000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 15000 AND c.총_동_연면적m2 <![CDATA[ < ]]> 30000 THEN '15000'
+							 WHEN c.총_동_연면적m2 <![CDATA[ >= ]]> 30000 THEN '30000'
+					  	END in 
+					<foreach collection="ls_area_length" item="area" open="(" close=")" separator=",">
+						#{area}
+					</foreach>				
+				</if>			
+				<if test="ls_floor_length != null and ls_floor_length.size() > 0">
+					and  case when isnumeric(left(a.층정보, charindex('/', a.층정보 + '/')-1)) = 1 and left(a.층정보, charindex('/', a.층정보 + '/')-1) <![CDATA[>]]> 3 then '4F'
+			  	 	 	else left(a.층정보, charindex('/', a.층정보 + '/')-1) + 'F' end in
+					<foreach collection="ls_floor_length" item="floor" open="(" close=")" separator=",">
+						#{floor}
+					</foreach>
+				</if>			
+				<if test="ls_sangga_length != null and ls_sangga_length.size() > 0">
+					and a.R_상가유형 in
+					<foreach collection="ls_sangga_length" item="sangga" open="(" close=")" separator=",">
+						#{sangga}
+					</foreach>
+				</if>
+				<if test='groupCode != null and groupCode.equals("41")'>
+				and		isnull(b.시도명, '') = #{demoSidonm}
+				and		isnull(b.시군구명, '') = #{demoSggnm}
+				</if>	
+				and		substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+			 		#{item}
+					</foreach>	 	 
+				 group	by	a.PNU코드				
+			)	z 
+			
+			inner join
+			
+			( select	z.pnu
+			,		min(case when z.z_status = '분양' then 0 
+							 when z.z_status = '임대료' then 1
+							 when z.z_status = '매매' then 2
+							 when z.z_status = '실거래' then 3 end)  as gbn
+			from	
+			(
+				select	a.pnu	 as pnu
+				,		'분양'	 as	z_status
+				from	modu.P_SANGGA a	with(nolock) left join modu.P_SANGGAHO b with(nolock)
+										on a.상가코드	=	b.상가코드
+				where	a.X  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				and		a.X  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				and		a.Y  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				and		a.Y  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				and		1	=	#{sale}
+				<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				and		substring(a.분양일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+			 		#{item}
+					</foreach>	 
+				<if test='groupCode != null and groupCode.equals("41")'>
+				and		isnull(a.도시, '') = #{demoSidonm}
+				and		isnull(a.구시군, '') = #{demoSggnm}
+				</if>
+				group	by	a.pnu
+				union	all			
+				select	distinct 
+						b.pnu_cd
+				,		z_status
+				from modu.MOLIT_NRG_TRD_MAP_RESULT	b	with(nolock)	inner	join
+				(
+					select	a.m_pnu_cd	 as pnu
+					,		'실거래'	 as	z_status
+					from	modu.MOLIT_NRG_TRD a with(nolock)
+					where	a.X  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+					and		a.X  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+					and		a.Y  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+					and		a.Y  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+					and		1	=	#{realtran}
+					<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+					<if test="ls_article_type_length != null">
+						<choose>
+							<when test="ls_article_type_length.size() > 0">
+								and a.articleTypeCode in
+								<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+									#{article_type}
+								</foreach>
+							</when>
+							<otherwise>and 1 = 2</otherwise>
+						</choose>		
+					</if>	
+					<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+					<if test='groupCode != null and groupCode.equals("41")'>
+					and		isnull(a.SGG_NM, '') like #{demoSidonm} + ' ' + #{demoSggnm} + '%'
+					</if>
+					and		substring(a.trd_yymm,1,4) in	
+						<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 		#{item}
+						</foreach>	 
+					group	by	a.m_pnu_cd
+				)	z	on	b.PNU_CD	=	z.pnu
+				union	all
+				 select	a.PNU코드	as	pnu
+				 ,		'임대료'	as	z_status
+				 from modu.통합_상가매물정보	a	inner	join modu.kikcd_b	b
+																	on	a.법정동코드	=	b.법정동코드
+				 where	a.PNU코드 is not null
+				 and	a.PNU코드	!=	''
+				 and	a.X좌표		!=	''
+				 and	a.X좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				 and	a.X좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				 and	a.Y좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				 and	a.Y좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				 and	1	=	#{rent}
+				<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test='groupCode != null and groupCode.equals("41")'>
+				and		isnull(b.시도명, '') = #{demoSidonm}
+				and		isnull(b.시군구명, '') = #{demoSggnm}
+				</if>	
+				and		substring(a.매물게시일,1,4) in	
+						<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 		#{item}
+						</foreach>		 
+				 group	by	a.PNU코드	
+				 union all	
+				 select	a.PNU코드	as	pnu
+				 ,		'매매'	as	z_status
+				 from modu.통합_상가매물_매매정보	a	inner	join modu.kikcd_b	b
+																	on	a.법정동코드	=	b.법정동코드
+				 where	a.PNU코드 is not null
+				 and	a.PNU코드	!=	''
+				 and	a.X좌표		!=	''
+				 and	a.X좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLng})
+				 and	a.X좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLng})
+				 and	a.Y좌표  <![CDATA[<=]]> CONVERT(varchar, #{neLat})
+				 and	a.Y좌표  <![CDATA[>=]]> CONVERT(varchar, #{swLat})
+				 and	1	=	#{trading}
+				<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test='groupCode != null and groupCode.equals("41")'>
+				and		isnull(b.시도명, '') = #{demoSidonm}
+				and		isnull(b.시군구명, '') = #{demoSggnm}
+				</if>	
+				and		substring(a.매물게시일,1,4) in	
+						<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 		#{item}
+						</foreach>		 
+				 group	by	a.PNU코드
+				) z	
+				group by z.pnu			
+			)	y on z.pnu = y.pnu and z.gbn = y.gbn
+		)	y               
+	</select>
+	
+	<select id="dawulmapDao.zeons_마커생성_dong.select" parameterType="CmMap" resultType="CmResMap">
+			 select	max(z.x)	as	x
+			 ,		max(z.y)	as	y
+			 ,		z.시도명
+			 ,		z.시군구명
+			 ,		z.읍면동명
+			 ,		isnull(max(case	when	z.w_name	=	'분양'	then	z.cnt	end),0)	as	분양_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'임대료'	then	z.cnt	end),0)	as	임대료_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'매매'	then	z.cnt	end),0)	as	매매_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'실거래'	then	z.cnt	end),0)	as	실거래_cnt
+			 ,		replace(max(z.x) + max(z.y) ,'.','') as xy
+			 from	(
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		b.시군구명
+			 ,		b.읍면동명
+			 ,		'임대료'			as	w_name
+			 from	modu.통합_상가매물정보	a	inner	join modu.kikcd_b	b
+														  on	a.법정동코드	=	b.법정동코드
+			 where	PNU코드	is	not	null
+			 and	b.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	b.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	b.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	b.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{rent}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 ,			b.시군구명
+			 ,			b.읍면동명
+			 union	all
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		b.시군구명
+			 ,		b.읍면동명
+			 ,		'매매'			as	w_name
+			 from	modu.통합_상가매물_매매정보	a	inner	join modu.kikcd_b	b
+														  on	a.법정동코드	=	b.법정동코드
+			 where	PNU코드	is	not	null
+			 and	b.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	b.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	b.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	b.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{trading}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 ,			b.시군구명
+			 ,			b.읍면동명
+			 union	all
+			 select	sum(cnt)	as	cnt
+			 ,		max(c.X좌표)			as	x
+			 ,		max(c.Y좌표)			as	y
+			 ,		c.시도명
+			 ,		c.시군구명
+			 ,		c.읍면동명
+			 ,		'실거래'			as	w_name
+			 from (select substring(a.m_pnu_cd, 1, 10) m_pnu_cd
+						, count(*) cnt
+					 from modu.MOLIT_NRG_TRD a
+					where substring(a.trd_yymm,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			    group by substring(a.m_pnu_cd, 1, 10)) a inner	join	modu.kikcd_b	c on	a.m_pnu_cd like c.법정동코드+'%'
+			 where	c.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	c.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	c.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	c.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{realtran}
+			 group	by	c.시도명
+			 ,			c.시군구명
+			 ,			c.읍면동명
+			 union	all
+			 select	count(a.pnu)	as	cnt
+			 ,		max(c.X좌표)		as	x
+			 ,		max(c.Y좌표)		as	y
+			 ,		c.시도명
+			 ,		c.시군구명
+			 ,		c.읍면동명
+			 ,		'분양'			as	w_name
+			 from	modu.P_SANGGA a	with(nolock)	inner	join	modu.P_SANGGAHO b with(nolock)
+															  on a.상가코드	=	b.상가코드
+													inner	join	modu.kikcd_b	c
+															   on	a.pnu like c.법정동코드+'%'
+			 where	c.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	c.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	c.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	c.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{sale}
+			 and	substring(a.분양일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	c.시도명
+			 ,			c.시군구명
+			 ,			c.읍면동명
+			 )	z
+			 group	by	z.시도명
+			 ,			z.시군구명
+			 ,			z.읍면동명
+	</select>
+	
+	<select id="dawulmapDao.zeons_마커생성_sigun.select" parameterType="CmMap" resultType="CmResMap">
+			 select	max(z.x)	as	x
+			 ,		max(z.y)	as	y
+			 ,		z.시도명
+			 ,		z.시군구명
+			 ,		isnull(max(case	when	z.w_name	=	'임대료'	then	z.cnt	end),0)	as	임대료_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'매매'	then	z.cnt	end),0)	as	매매_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'실거래'	then	z.cnt	end),0)	as	실거래_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'분양'	then	z.cnt	end),0)	as	분양_cnt
+			 ,		replace(max(z.x) + max(z.y) ,'.','') as xy
+			 from	(
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		b.시군구명
+			 ,		'임대료'			as	w_name
+			 from	modu.통합_상가매물정보	a	inner	join (	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,5)	as	시군구코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,5))	b
+														  on	a.시군구코드	=	b.시군구코드
+			 where	PNU코드	is	not	null
+			 and	b.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	b.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	b.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	b.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{rent}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 ,			b.시군구명
+			 union	all
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		b.시군구명
+			 ,		'매매'			as	w_name
+			 from	modu.통합_상가매물_매매정보	a	inner	join (	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,5)	as	시군구코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,5))	b
+														  on	a.시군구코드	=	b.시군구코드
+			 where	PNU코드	is	not	null
+			 and	b.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	b.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	b.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	b.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{trading}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 ,			b.시군구명
+			 union	all
+			 select	sum(cnt)	as	cnt
+			 ,		max(c.X좌표)			as	x
+			 ,		max(c.Y좌표)			as	y
+			 ,		c.시도명
+			 ,		c.시군구명
+			 ,		'실거래'			as	w_name
+			 from (select substring(a.m_pnu_cd, 1, 10) m_pnu_cd
+						, count(*) cnt
+					 from modu.MOLIT_NRG_TRD a
+					where substring(a.trd_yymm,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			    group by substring(a.m_pnu_cd, 1, 10)) a inner	join	modu.kikcd_b	c on	a.m_pnu_cd like c.법정동코드+'%'
+			 where	c.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	c.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	c.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	c.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{realtran}
+			 group	by	c.시도명
+			 ,			c.시군구명
+			 union	all
+			 select	count(a.pnu)	as	cnt
+			 ,		max(c.X좌표)		as	x
+			 ,		max(c.Y좌표)		as	y
+			 ,		c.시도명
+			 ,		c.시군구명
+			 ,		'분양'			as	w_name
+			 from	modu.P_SANGGA a	with(nolock)	inner	join	modu.P_SANGGAHO b with(nolock)
+															  on a.상가코드	=	b.상가코드
+													inner	join	(	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,5)	as	법정동코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,5))	c
+															   on	a.pnu like c.법정동코드+'%'
+			 where	c.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	c.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	c.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	c.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{sale}
+			 and	substring(a.분양일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	c.시도명
+			 ,			c.시군구명
+			 )	z
+			 group	by	z.시도명
+			 ,			z.시군구명
+	</select>
+	
+	<select id="dawulmapDao.zeons_마커생성_si.select" parameterType="CmMap" resultType="CmResMap">
+			select	min(z.x)	as	x
+			 ,		min(z.y)	as	y
+			 ,		z.시도명
+			 ,		isnull(max(case	when	z.w_name	=	'임대료'	then	z.cnt	end),0)	as	임대료_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'매매'	then	z.cnt	end),0)	as	매매_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'실거래'	then	z.cnt	end),0)	as	실거래_cnt
+			 ,		isnull(max(case	when	z.w_name	=	'분양'	then	z.cnt	end),0)	as	분양_cnt
+			 ,		replace(max(z.x) + max(z.y) ,'.','') as xy
+			 from	(
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		'임대료'			as	w_name
+			 from	modu.통합_상가매물정보	a	inner	join (	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,2)	as	시도코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,2))	b
+														  on	a.시도코드	=	b.시도코드
+			 where	PNU코드	is	not	null
+			 and	1	=	#{rent}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 union	all
+			 select	count(a.PNU코드)	as	cnt	
+			 ,		max(b.X좌표)		as	x
+			 ,		max(b.Y좌표)		as	y
+			 ,		b.시도명
+			 ,		'매매'			as	w_name
+			 from	modu.통합_상가매물_매매정보	a	inner	join (	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,2)	as	시도코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,2))	b
+														  on	a.시도코드	=	b.시도코드
+			 where	PNU코드	is	not	null
+			 and	1	=	#{trading}
+			 and	substring(a.매물게시일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	b.시도명
+			 union	all
+			 select	sum(cnt)	as	cnt
+			 ,		max(c.X좌표)			as	x
+			 ,		max(c.Y좌표)			as	y
+			 ,		c.시도명
+			 ,		'실거래'			as	w_name
+			 from (select substring(a.m_pnu_cd, 1, 10) m_pnu_cd
+						, count(*) cnt
+					 from modu.MOLIT_NRG_TRD a
+					where substring(a.trd_yymm,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			    group by substring(a.m_pnu_cd, 1, 10)) a inner	join	modu.kikcd_b	c on	a.m_pnu_cd like c.법정동코드+'%'
+			 where	c.X좌표  <![CDATA[<=]]> #{neLng}
+			 and	c.X좌표  <![CDATA[>=]]> #{swLng}
+			 and	c.Y좌표  <![CDATA[<=]]> #{neLat}
+			 and	c.Y좌표  <![CDATA[>=]]> #{swLat}
+			 and	1	=	#{realtran}
+			 group	by	c.시도명
+			 union	all
+			 select	count(a.pnu)	as	cnt
+			 ,		max(c.X좌표)		as	x
+			 ,		max(c.Y좌표)		as	y
+			 ,		c.시도명
+			 ,		'분양'			as	w_name
+			 from	modu.P_SANGGA a	with(nolock)	inner	join	modu.P_SANGGAHO b with(nolock)
+															  on a.상가코드	=	b.상가코드
+													inner	join	(	select	max(시도명)		as	시도명
+																	 ,		max(시군구명)	as	시군구명
+																	 ,		avg(convert(float,X좌표))		as	X좌표
+																	 ,		avg(convert(float,Y좌표))		as	Y좌표
+																	 ,		SUBSTRING(법정동코드 , 1,2)	as	시도코드
+																	 from	modu.kikcd_b
+																	 group	by	SUBSTRING(법정동코드 , 1,2))	c
+															   on	a.pnu like c.시도코드+'%'
+			 where	1	=	#{sale}
+			 and	substring(a.분양일,1,4) in	
+					<foreach collection="ls_year_length" item="item" index="index" open="(" close=")" separator=",">
+				 	#{item}
+					</foreach>	
+			 group	by	c.시도명
+			 )	z
+			 group	by	z.시도명
+	</select>		
+	
+	<select id="dawulmapDao.zeons_건물_상세정보.select" parameterType="CmMap" resultType="CmResMap">		
+		select max(a.위치) 위치
+		     , max(a.건물명) 건물명
+		     , max(a.사용승인일) 사용승인일
+			 , max(a.대지면적) 대지면적
+			 , max(a.건축면적) 건축면적
+			 , max(a.연면적) 연면적
+		     , max(a.주용도) 주용도
+			 , max(a.건폐율) 건폐율
+			 , max(a.용적율) 용적율
+			 , max(a.지상층수) 지상층수
+			 , max(a.지하층수) 지하층수
+			 , sum(a.옥내자주식) 옥내자주식
+			 , sum(a.옥외자주식) 옥외자주식
+			 , sum(a.옥내기계식) 옥내기계식
+			 , sum(a.옥외기계식) 옥외기계식
+			 , sum(a.주차장) 주차장
+			 , sum(a.승강기) 승강기
+			 , max(a.m_pnu_cd) m_pnu_cd
+			 , sum(a.승용_승강기_수) 승용_승강기_수
+			 , sum(a.비상용_승강기_수) 비상용_승강기_수 
+			 , max(a.cnt) cnt
+		  from (
+		select		isnull(b.대지_위치,'데이터 없음')		as 위치
+			,		isnull(b.건물_명,'데이터 없음')		as 건물명
+			,		substring(substring(b.사용승인_일,0,9),0,5) + '.' + substring(substring(b.사용승인_일,0,9),5,2) + '.' + substring(substring(b.사용승인_일,0,9),7,2)		as 사용승인일
+			,		isnull(round(convert(varchar,b.대지_면적m2),2),1)	as	대지면적
+			,		isnull(round(convert(varchar,b.건축_면적m2),2),1)	as	건축면적
+			,		isnull(round(convert(varchar,b.연면적m2),2),1)		as	연면적
+			,		isnull(b.주_용도_코드_명,'')	as	주용도
+			,		isnull(round(convert(varchar,b.건폐_율),2),1)		as	건폐율
+			,		isnull(round(convert(varchar,b.용적_률),2),1)		as	용적율
+			,		isnull(b.지상_층_수,0)	as	지상층수
+			,		isnull(b.지하_층_수,0)	as	지하층수
+			,		isnull(b.옥내_자주식_대수,0)	as	옥내자주식
+			,		isnull(b.옥외_자주식_대수,0)	as	옥외자주식
+			,		isnull(b.옥내_기계식_대수,0)	as	옥내기계식
+			,		isnull(b.옥외_기계식_대수,0)	as	옥외기계식
+			,		isnull(b.옥내_자주식_대수,0) + isnull(b.옥외_자주식_대수,0) + isnull(b.옥내_기계식_대수,0) + isnull(b.옥외_기계식_대수,0) as 주차장
+			,		isnull(b.승용_승강기_수,0) + isnull(b.비상용_승강기_수,0) as 승강기
+			,		isnull(b.pnu,0)	as	m_pnu_cd
+			,		isnull(b.승용_승강기_수,0)	as	승용_승강기_수
+			,		isnull(b.비상용_승강기_수,0)	as	비상용_승강기_수
+			<choose>
+				<when test="xy != null and xy != ''">
+					, (select	count(*)	as	cnt	from modu.r114_사용자_즐겨찾기	where	저장유형	=	'build'	and		사용여부	=	'Y'	and		replace(좌표X + 좌표Y,'.','')	=	#{xy})	as	cnt
+				</when>
+				<otherwise>
+					, 0 cnt
+				</otherwise>
+			</choose>
+			from modu.건축물대장_표제부 b with(nolock)
+			where	b.pnu	=	#{pnu} ) a
+	</select>
+	
+	<select id="dawulmapDao.zeons_임대료_상세정보.select" parameterType="CmMap" resultType="CmResMap">		
+		select		isnull(max(y.위치),'')		as	위치
+			,		isnull(max(y.대지면적)	,'')	as	대지면적
+			,		max(y.건축면적)	as	건축면적
+			,		max(y.연면적)	as	연면적
+			,		max(y.건물명) + '  /  ' + max(y.주용도)	as	주용도
+			,		max(y.건폐율)	as	건폐율
+			,		max(y.용적율)	as	용적율
+			,		max(y.사용승인_일)	as	사용승인_일
+			,		max(y.지상층수)	as	지상층수
+			,		max(y.지하층수)	as	지하층수
+			,		sum(y.옥내자주식)	as	옥내자주식
+			,		sum(y.옥외자주식)	as	옥외자주식
+			,		sum(y.옥내기계식)	as	옥내기계식
+			,		sum(y.옥외기계식)	as	옥외기계식
+			,		sum(y.옥내자주식) + sum(y.옥외자주식)	as	자주식
+			,		sum(y.옥내기계식) + sum(y.옥외기계식)	as	기계식			
+			,		sum(y.주차장)	as	주차장
+			,		sum(y.승강기)	as	승강기
+			,		max(y.m_pnu_cd)	as	m_pnu_cd
+			,		sum(y.승용_승강기_수)	as	승용_승강기_수
+			,		sum(y.비상용_승강기_수)	as	비상용_승강기_수
+			,		max(y.해당층)	as	해당층
+			,		max(y.호)	as	호
+			,		max(y.보증금)	as	보증금
+			,		max(y.월세)	as	월세
+			,		max(y.수정일)	as	수정일
+			<choose>
+				<when test="xy != null and xy != ''">
+					, (select	count(*)	as	cnt	from modu.r114_사용자_즐겨찾기	where	저장유형	=	'build'	and		사용여부	=	'Y'	and		replace(좌표X + 좌표Y,'.','')	=	#{xy})	as	cnt
+				</when>
+				<otherwise>
+					, 0 cnt
+				</otherwise>
+			</choose>
+		from	(
+		select		isnull(b.대지_위치,'데이터 없음')		as 위치
+			,		isnull(round(convert(varchar,b.대지_면적m2),2),1)	as	대지면적
+			,		isnull(round(convert(varchar,b.건축_면적m2),2),1)	as	건축면적
+			,		isnull(round(convert(varchar,b.연면적m2),2),1)		as	연면적
+			,		isnull(b.주_용도_코드_명,'')	as	주용도
+			,		isnull(round(convert(varchar,b.건폐_율),2),1)		as	건폐율
+			,		isnull(round(convert(varchar,b.용적_률),2),1)		as	용적율
+			,		substring(substring(b.사용승인_일,0,9),0,5) + '.' + substring(substring(b.사용승인_일,0,9),5,2) + '.' + substring(substring(b.사용승인_일,0,9),7,2)		as	사용승인_일
+			,		isnull(b.지상_층_수,0)	as	지상층수
+			,		isnull(b.지하_층_수,0)	as	지하층수
+			,		isnull(b.옥내_자주식_대수,0)	as	옥내자주식
+			,		isnull(b.옥외_자주식_대수,0)	as	옥외자주식
+			,		isnull(b.옥내_기계식_대수,0)	as	옥내기계식
+			,		isnull(b.옥외_기계식_대수,0)	as	옥외기계식
+			,		isnull(b.옥내_자주식_대수,0) + isnull(b.옥외_자주식_대수,0) + isnull(b.옥내_기계식_대수,0) + isnull(b.옥외_기계식_대수,0) as 주차장
+			,		isnull(b.승용_승강기_수,0) + isnull(b.비상용_승강기_수,0) as 승강기
+			,		isnull(b.pnu,0)	as	m_pnu_cd
+			,		isnull(b.승용_승강기_수,0)	as	승용_승강기_수
+			,		isnull(b.비상용_승강기_수,0)	as	비상용_승강기_수
+			,		''	as	해당층
+			,		''	as	호
+			,		0	as	보증금
+			,		0	as	월세
+			,		''	as	수정일
+			,		''  as  건물명
+			from modu.건축물대장_표제부 b with(nolock)
+			where	b.pnu	=	#{pnu}
+			union	all
+			select	top	1	''		as 위치
+			,		0	as	대지면적
+			,		0	as	건축면적
+			,		0	as	연면적
+			,		''	as	주용도
+			,		0	as	건폐율
+			,		0	as	용적율
+			,		''	as	사용승인_일
+			,		0	as	지상층수
+			,		0	as	지하층수
+			,		0	as	옥내자주식
+			,		0	as	옥외자주식
+			,		0	as	옥내기계식
+			,		0	as	옥외기계식
+			,		0	as 주차장
+			,		0	as 승강기
+			,		''	as	m_pnu_cd
+			,		0	as	승용_승강기_수
+			,		0	as	비상용_승강기_수
+			,		z.해당층
+			,		z.호
+			,		z.보증금
+			,		z.월세
+			,		substring(substring(z.수정일,0,9),0,5) + '.' + substring(substring(z.수정일,0,9),5,2) + '.' + substring(substring(z.수정일,0,9),7,2)	as	수정일
+			, 	 	z.건물명
+			from	(
+			select	top 1	a.층정보	as	해당층
+			,		'-'		as	호
+			,		a.보증금	as	보증금
+			,		a.월세가	as	월세
+			,		a.매물게시일	as	수정일
+		    , 	 	a.건물명 as 건물명
+			from modu.통합_상가매물정보	a	with(nolock)
+			where a.PNU코드 = #{pnu}	
+			and	a.PNU코드		!=	''
+			and	a.X좌표		!=	''			
+			order	by	a.매물게시일	desc
+			)	z
+			)	y
+	</select>
+	
+	<select id="dawulmapDao.zeons_매매_상세정보.select" parameterType="CmMap" resultType="CmResMap">		
+		select		isnull(max(y.위치),'')		as	위치
+			,		isnull(max(y.대지면적)	,'')	as	대지면적
+			,		max(y.건축면적)	as	건축면적
+			,		max(y.연면적)	as	연면적
+			,		max(y.건물명) + '  /  ' + max(y.주용도)	as	주용도
+			,		max(y.건폐율)	as	건폐율
+			,		max(y.용적율)	as	용적율
+			,		max(y.사용승인_일)	as	사용승인_일
+			,		max(y.지상층수)	as	지상층수
+			,		max(y.지하층수)	as	지하층수
+			,		sum(y.옥내자주식)	as	옥내자주식
+			,		sum(y.옥외자주식)	as	옥외자주식
+			,		sum(y.옥내기계식)	as	옥내기계식
+			,		sum(y.옥외기계식)	as	옥외기계식
+			,		sum(y.옥내자주식) + sum(y.옥외자주식)	as	자주식
+			,		sum(y.옥내기계식) + sum(y.옥외기계식)	as	기계식			
+			,		sum(y.주차장)	as	주차장
+			,		sum(y.승강기)	as	승강기
+			,		max(y.m_pnu_cd)	as	m_pnu_cd
+			,		sum(y.승용_승강기_수)	as	승용_승강기_수
+			,		sum(y.비상용_승강기_수)	as	비상용_승강기_수
+			,		max(y.해당층)	as	해당층
+			,		max(y.호)	as	호
+			,		max(y.매매가)	as	매매가
+			,		max(y.수정일)	as	수정일
+			<choose>
+				<when test="xy != null and xy != ''">
+					, (select	count(*)	as	cnt	from modu.r114_사용자_즐겨찾기	where	저장유형	=	'build'	and		사용여부	=	'Y'	and		replace(좌표X + 좌표Y,'.','')	=	#{xy})	as	cnt
+				</when>
+				<otherwise>
+					, 0 cnt
+				</otherwise>
+			</choose>
+		from	(
+		select		isnull(b.대지_위치,'데이터 없음')		as 위치
+			,		isnull(round(convert(varchar,b.대지_면적m2),2),1)	as	대지면적
+			,		isnull(round(convert(varchar,b.건축_면적m2),2),1)	as	건축면적
+			,		isnull(round(convert(varchar,b.연면적m2),2),1)		as	연면적
+			,		isnull(b.주_용도_코드_명,'')	as	주용도
+			,		isnull(round(convert(varchar,b.건폐_율),2),1)		as	건폐율
+			,		isnull(round(convert(varchar,b.용적_률),2),1)		as	용적율
+			,		substring(substring(b.사용승인_일,0,9),0,5) + '.' + substring(substring(b.사용승인_일,0,9),5,2) + '.' + substring(substring(b.사용승인_일,0,9),7,2)		as	사용승인_일
+			,		isnull(b.지상_층_수,0)	as	지상층수
+			,		isnull(b.지하_층_수,0)	as	지하층수
+			,		isnull(b.옥내_자주식_대수,0)	as	옥내자주식
+			,		isnull(b.옥외_자주식_대수,0)	as	옥외자주식
+			,		isnull(b.옥내_기계식_대수,0)	as	옥내기계식
+			,		isnull(b.옥외_기계식_대수,0)	as	옥외기계식
+			,		isnull(b.옥내_자주식_대수,0) + isnull(b.옥외_자주식_대수,0) + isnull(b.옥내_기계식_대수,0) + isnull(b.옥외_기계식_대수,0) as 주차장
+			,		isnull(b.승용_승강기_수,0) + isnull(b.비상용_승강기_수,0) as 승강기
+			,		isnull(b.pnu,0)	as	m_pnu_cd
+			,		isnull(b.승용_승강기_수,0)	as	승용_승강기_수
+			,		isnull(b.비상용_승강기_수,0)	as	비상용_승강기_수
+			,		''	as	해당층
+			,		''	as	호
+			,		0	as	매매가
+			,		''	as	수정일
+			,		''  as  건물명
+			from modu.건축물대장_표제부 b with(nolock)
+			where	b.pnu	=	#{pnu}
+			union	all
+			select	top	1	''		as 위치
+			,		0	as	대지면적
+			,		0	as	건축면적
+			,		0	as	연면적
+			,		''	as	주용도
+			,		0	as	건폐율
+			,		0	as	용적율
+			,		''	as	사용승인_일
+			,		0	as	지상층수
+			,		0	as	지하층수
+			,		0	as	옥내자주식
+			,		0	as	옥외자주식
+			,		0	as	옥내기계식
+			,		0	as	옥외기계식
+			,		0	as 주차장
+			,		0	as 승강기
+			,		''	as	m_pnu_cd
+			,		0	as	승용_승강기_수
+			,		0	as	비상용_승강기_수
+			,		z.해당층
+			,		z.호
+			,		z.매매가
+			,		substring(substring(z.수정일,0,9),0,5) + '.' + substring(substring(z.수정일,0,9),5,2) + '.' + substring(substring(z.수정일,0,9),7,2)	as	수정일
+		    , 	 	z.건물명
+			from	(  
+			select	top 1	a.층정보	as	해당층
+			,		'-'		as	호
+			,		a.매매가	as	매매가
+			,		a.매물게시일	as	수정일
+		    , 	 	a.건물명 as 건물명
+			from modu.통합_상가매물_매매정보	a	with(nolock)
+			where a.PNU코드 = #{pnu}	
+			and	a.PNU코드		!=	''
+			and	a.X좌표		!=	''			
+			order	by	a.매물게시일	desc
+			)	z
+			)	y
+	</select>
+	
+	<select id="dawulmapDao.zeons_실거래가_상세정보.select" parameterType="CmMap" resultType="CmResMap">
+				select		isnull(max(y.위치),'')	as	위치
+			,		isnull(max(y.대지면적),'')		as	대지면적
+			,		max(y.건축면적)	as	건축면적
+			,		max(y.연면적)	as	연면적
+			,		max(y.주용도)	as	주용도
+			,		max(y.건폐율)	as	건폐율
+			,		max(y.용적율)	as	용적율
+			,		max(y.사용승인_일)	as	사용승인_일
+			,		max(y.지상층수)	as	지상층수
+			,		max(y.지하층수)	as	지하층수
+			,		sum(y.옥내자주식)	as	옥내자주식
+			,		sum(y.옥외자주식)	as	옥외자주식
+			,		sum(y.옥내기계식)	as	옥내기계식
+			,		sum(y.옥외기계식)	as	옥외기계식
+			,		sum(y.옥내자주식) + sum(y.옥외자주식)	as	자주식
+			,		sum(y.옥내기계식) + sum(y.옥외기계식)	as	기계식			
+			,		sum(y.주차장)	as	주차장
+			,		sum(y.승강기)	as	승강기
+			,		max(y.m_pnu_cd)	as	m_pnu_cd
+			,		sum(y.승용_승강기_수)	as	승용_승강기_수
+			,		sum(y.비상용_승강기_수)	as	비상용_승강기_수
+			,		max(y.층)	as	층
+			,		substring(substring(max(y.계약일),0,9),0,5) + '.' + substring(substring(max(y.계약일),0,9),5,2) + case when substring(substring(max(y.계약일),0,9),7,2) != '' then '.' + substring(substring(max(y.계약일),0,9),7,2) else '' end as	계약일
+			,		max(y.면적)	as	면적
+			,		max(y.금액)	as	금액
+			<choose>
+				<when test="xy != null and xy != ''">
+					, (select	count(*)	as	cnt	from modu.r114_사용자_즐겨찾기	where	저장유형	=	'build'	and		사용여부	=	'Y'	and		replace(좌표X + 좌표Y,'.','')	=	#{xy})	as	cnt
+				</when>
+				<otherwise>
+					, 0 cnt
+				</otherwise>
+			</choose>
+		from	(
+		select		isnull(b.대지_위치,'데이터 없음')		as 위치
+			,		isnull(round(convert(varchar,b.대지_면적m2),2),1)	as	대지면적
+			,		isnull(round(convert(varchar,b.건축_면적m2),2),1)	as	건축면적
+			,		isnull(round(convert(varchar,b.연면적m2),2),1)		as	연면적
+			,		isnull(b.주_용도_코드_명,'')	as	주용도
+			,		isnull(round(convert(varchar,b.건폐_율),2),1)		as	건폐율
+			,		isnull(round(convert(varchar,b.용적_률),2),1)		as	용적율
+			,		substring(substring(b.사용승인_일,0,9),0,5) + '.' + substring(substring(b.사용승인_일,0,9),5,2) + '.' + substring(substring(b.사용승인_일,0,9),7,2)		as	사용승인_일
+			,		isnull(b.지상_층_수,0)	as	지상층수
+			,		isnull(b.지하_층_수,0)	as	지하층수
+			,		isnull(b.옥내_자주식_대수,0)	as	옥내자주식
+			,		isnull(b.옥외_자주식_대수,0)	as	옥외자주식
+			,		isnull(b.옥내_기계식_대수,0)	as	옥내기계식
+			,		isnull(b.옥외_기계식_대수,0)	as	옥외기계식
+			,		isnull(b.옥내_자주식_대수,0) + isnull(b.옥외_자주식_대수,0) + isnull(b.옥내_기계식_대수,0) + isnull(b.옥외_기계식_대수,0) as 주차장
+			,		isnull(b.승용_승강기_수,0) + isnull(b.비상용_승강기_수,0) as 승강기
+			,		isnull(b.pnu,0)	as	m_pnu_cd
+			,		isnull(b.승용_승강기_수,0)	as	승용_승강기_수
+			,		isnull(b.비상용_승강기_수,0)	as	비상용_승강기_수
+			,		''	as	층
+			,		''	as	계약일
+			,		0	as	면적
+			,		0	as	금액
+			from modu.건축물대장_표제부 b with(nolock)
+			where	b.pnu	=	#{pnu}
+			union	all
+	select	top	1	''		as 위치
+			,		0	as	대지면적
+			,		0	as	건축면적
+			,		0	as	연면적
+			,		''	as	주용도
+			,		0	as	건폐율
+			,		0	as	용적율
+			,		''	as	사용승인_일
+			,		0	as	지상층수
+			,		0	as	지하층수
+			,		0	as	옥내자주식
+			,		0	as	옥외자주식
+			,		0	as	옥내기계식
+			,		0	as	옥외기계식
+			,		0	as 주차장
+			,		0	as 승강기
+			,		''	as	m_pnu_cd
+			,		0	as	승용_승강기_수
+			,		0	as	비상용_승강기_수
+			,		z.층
+			,		z.계약일
+			,		z.면적
+			,		z.금액
+			from modu.MOLIT_NRG_TRD_MAP_RESULT	b	with(nolock)	inner	join
+			(
+			select	a.flr	as	층
+			,		a.trd_yymm	as	계약일
+			,		cast(a.exps_grs_arsz	as	decimal(10,2))	as	 면적
+			,		a.tx_cost	as	금액
+			,		a.m_pnu_cd	as	pnu
+			from	modu.MOLIT_NRG_TRD a with(nolock)
+			where	a.m_pnu_cd		=	#{pnu}
+			)	z	on	b.PNU_CD	=	z.pnu
+			order	by	z.계약일	desc
+			)	y
+		</select>
+		
+		
+	<select id="dawulmapDao.zeons_분양_상세정보.select" parameterType="CmMap" resultType="CmResMap">
+		select max(a.건물명) 건물명
+		     , max(a.위치) 위치
+			 , max(a.상가유형) 상가유형
+			 , max(a.지상층수) 지상층수
+			 , max(a.지하층수) 지하층수
+			 , max(a.대지면적) 대지면적
+			 , max(a.연면적) 연면적
+			 , max(a.전용평당가) 전용평당가
+			 , max(a.계약평당가) 계약평당가
+			 , max(a.분양일) 분양일
+			 , max(a.입주일) 입주일
+			 , max(a.건폐율) 건폐율
+			 , max(a.용적율) 용적율
+			 , sum(a.주차장) 주차장
+			 , sum(a.승강기) 승강기
+			 , sum(a.승용_승강기_수) 승용_승강기_수
+			 , sum(a.비상용_승강기_수) 비상용_승강기_수 
+			 , max(a.pnu) pnu
+			 , max(a.점포수) 점포수
+			 , max(a.시행사) 시행사
+			 , max(a.cnt) cnt
+			 , max(a.img_url) img_url
+		  from (
+			select  a.상가명	as	건물명
+			,		a.도시	+	' '	+	a.구시군	+	' '	+	읍면동	+	' '	+	번지	as	위치
+			,		a.상가유형
+			,		a.지상총층	 as	지상층수
+			,		a.지하총층	 as	지하층수
+			,		a.대지면적
+			,		a.연면적
+			,		convert(int,isnull((select ((sum(b.분양가)	/	count(*))	 / (sum(b.전용면적)	/	count(*)))	* 3.305785	from modu.p_sangga	a	inner	join	modu.p_sanggaho	b	on	a.상가코드	=	b.상가코드 where pnu	=	#{pnu} and	  b.층  = '1F'),0))	as	'전용평당가'
+			,		convert(int,isnull((select ((sum(b.분양가)	/	count(*))	 / (sum(b.분양면적)	/	count(*)))	* 3.305785	from modu.p_sangga	a	inner	join	modu.p_sanggaho	b	on	a.상가코드	=	b.상가코드 where pnu	=	#{pnu} and	  b.층  = '1F'),0))	as	'계약평당가'
+			,		case	when	a.분양일 = '' then '-' else substring(a.분양일,0,5) + '.' + substring(a.분양일,5,2)	end	as	분양일
+			,		case	when	a.입주일 = '' then '-' else substring(a.입주일,0,5) + '.' + substring(a.입주일,5,2)	end	as	입주일
+			,		a.건폐율
+			,		a.용적률	as	용적율
+			,		isnull(c.옥내_자주식_대수,0) + isnull(c.옥외_자주식_대수,0) + isnull(c.옥내_기계식_대수,0) + isnull(c.옥외_기계식_대수,0) as 주차장
+			,		isnull(c.승용_승강기_수,0) + isnull(c.비상용_승강기_수,0) as 승강기
+			,		isnull(c.승용_승강기_수,0)	as	승용_승강기_수
+			,		isnull(c.비상용_승강기_수,0)	as	비상용_승강기_수
+			,		a.pnu
+			,		a.총점포수	as	점포수
+			,		case	when	a.시행사	=	''	then	'-'	else	a.시행사	end	as	시행사
+			,		(select	count(*) as	cnt	from modu.r114_사용자_즐겨찾기	where	저장유형	=	'build'	and		사용여부	=	'Y'	and		replace(좌표X + 좌표Y,'.','')	=	#{xy})	as	cnt
+			,		STUFF((select ',' + d.url from modu.P_SANGGA_IMG d where a.상가코드 = d.상가코드 FOR XML PATH('')), 1, 1, '') as img_url
+			from	modu.p_sangga a	with(nolock) left	join	modu.건축물대장_표제부 c on a.pnu	=	c.pnu
+			where	a.pnu	=	#{pnu}
+			and	분양일 != ''
+			and	분양일 is not null	) a		
+	</select>		
+		
+	<select id="dawulmapDao.zeons_상가연면적.select" parameterType="CmMap" resultType="CmResMap">
+			select	distinct	b.층 as	층
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, sum(b.전용면적)), 1), '.00', '') as	전용면적 
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, sum(b.분양면적)), 1), '.00', '') as	분양면적
+			,		cast(round(sum(b.전용면적)	/	sum(b.분양면적) * 100,2)	as	decimal(10,2))	as	전용율
+			from	modu.p_sangga	a	with(nolock) inner join modu.p_sanggaho	b with(nolock)
+										on	a.상가코드	=	b.상가코드
+			where	a.pnu	=	#{pnu}
+			group	by	b.층
+			order	by	b.층
+		</select>
+		
+		<select id="dawulmapDao.zeons_건축물현황.select" parameterType="CmMap" resultType="CmResMap">
+			select	max(층_번호_명)			as	구분
+			,		max(층_구분_코드)	as	층_구분_코드
+			,		max(층_번호)		as	층_번호
+			,		max(주_용도_코드_명)		as	용도
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, max(면적m2)), 1), '.00', '')	as	면적						
+			from modu.건축물대장_층별개요 with(nolock)
+			where pnu = #{pnu}
+			group	by	층_구분_코드
+			,			층_번호
+			order	by	층_구분_코드	desc	,	case when 층_구분_코드 = '10' then CAST(층_번호 as int) * -1 else CAST(층_번호 as int)  end	desc			
+		</select>
+				
+		<select id="dawulmapDao.zeons_임대매물정보_지번.select" parameterType="CmMap" resultType="CmResMap">
+			select
+					a.층정보	as	층
+			 ,		case when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+						 then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+						 else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+					end	as	번지
+			,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.계약면적), 1), '.00', '')	as	면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.전용면적), 1), '.00', '')	as	전용면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.보증금), 1), '.00', '')	as	보증금
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.월세가), 1), '.00', '')	as	월세
+			 ,		substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),0,5) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),5,2) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),7,2)		as	등록일
+			 ,		b.시도명	as	도시
+			 ,		b.시군구명	as	구시군
+			 ,		b.읍면동명	as	읍면동
+			 , 		a.건물명 as 건물명
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.premiumPrice), 1), '.00', '')	as	권리금
+			   from modu.통합_상가매물정보	a	inner	join modu.kikcd_b	b on a.법정동코드	=	b.법정동코드
+			  where	a.PNU코드 is not null
+			    and ltrim(rtrim(a.PNU코드)) != ''
+			    and	a.X좌표		!=	''
+			    and	a.PNU코드		=	#{pnu}
+			    and	SUBSTRING(a.매물게시일,1,4) > '2017'
+			    <!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+				<if test="ls_article_type_length != null">
+					<choose>
+						<when test="ls_article_type_length.size() > 0">
+							and a.articleTypeCode in
+							<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+								#{article_type}
+							</foreach>
+						</when>
+						<otherwise>and 1 = 2</otherwise>
+					</choose>		
+				</if>	
+				<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+		   order by	a.매물게시일	desc
+		</select>
+		
+		<select id="dawulmapDao.zeons_임대매물정보_동.select" parameterType="CmMap" resultType="CmResMap">
+			select
+			 		row_number() over(order by SUBSTRING(a.매물게시일,2,13) desc) as rownum
+			 ,		a.층정보	as	층
+			 ,		case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+						then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+						else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+						end	as	번지
+			 ,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.계약면적), 1), '.00', '')	as	면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.전용면적), 1), '.00', '')	as	전용면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.보증금), 1), '.00', '')	as	보증금
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.월세가), 1), '.00', '')	as	월세
+			 ,		substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),0,5) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),5,2) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),7,2)		as	등록일
+			 ,		b.시도명	as	도시
+			 ,		b.시군구명	as	구시군
+			 ,		b.읍면동명	as	읍면동
+			 , 		a.건물명 as 건물명
+			 , 		a.premiumPrice as 권리금
+			 from 	modu.통합_상가매물정보 a inner join modu.kikcd_b b on	a.법정동코드 = b.법정동코드
+			 where	a.PNU코드 is not null
+			 and 	ltrim(rtrim(a.PNU코드)) != ''
+			 and	a.X좌표		!=	''
+			 and	SUBSTRING(a.매물게시일,1,4) > '2017'
+			 and	a.PNU코드 like substring(#{pnu}, 1, 8) + '%'
+			<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+			<if test="ls_article_type_length != null">
+				<choose>
+					<when test="ls_article_type_length.size() > 0">
+						and a.articleTypeCode in
+						<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+							#{article_type}
+						</foreach>
+					</when>
+					<otherwise>and 1 = 2</otherwise>
+				</choose>		
+			</if>	
+			<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+			 order	by	a.매물게시일	desc
+		</select>	
+		
+		<select id="dawulmapDao.zeons_매매매물정보_동.select" parameterType="CmMap" resultType="CmResMap">
+			select
+			 		row_number() over(order by SUBSTRING(a.매물게시일,2,13) desc) as rownum
+			 ,		a.층정보	as	층
+			 ,		case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+						then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+						else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+						end	as	번지
+			 ,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.계약면적), 1), '.00', '')	as	면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.전용면적), 1), '.00', '')	as	전용면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.매매가), 1), '.00', '')	as	매매가
+			 ,		a.임대수익률	as	수익률
+			 ,		substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),0,5) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),5,2) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),7,2)		as	등록일
+			 ,		b.시도명	as	도시
+			 ,		b.시군구명	as	구시군
+			 ,		b.읍면동명	as	읍면동
+			 , 		a.건물명 as 건물명
+			 ,		a.premiumPrice as 권리금
+			 from 	modu.통합_상가매물_매매정보 a inner join modu.kikcd_b b on	a.법정동코드 = b.법정동코드
+			 where	a.PNU코드 is not null
+			 and 	ltrim(rtrim(a.PNU코드)) != ''
+			 and	a.X좌표		!=	''
+			 and	SUBSTRING(a.매물게시일,1,4) > '2017'
+			 and	a.PNU코드 like substring(#{pnu}, 1, 8) + '%'
+			 <!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+			<if test="ls_article_type_length != null">
+				<choose>
+					<when test="ls_article_type_length.size() > 0">
+						and a.articleTypeCode in
+						<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+							#{article_type}
+						</foreach>
+					</when>
+					<otherwise>and 1 = 2</otherwise>
+				</choose>		
+			</if>	
+			<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+			 order	by	a.매물게시일	desc
+		</select>
+		
+		<select id="dawulmapDao.zeons_매매매물정보_지번.select" parameterType="CmMap" resultType="CmResMap">
+			select
+			 		a.층정보	as	층
+			 ,		case	when	replace(substring(a.PNU코드,16,4),'0','')	=	'' 
+						then	convert(varchar,convert(int,substring(a.PNU코드,12,4)))	
+						else	convert(varchar,convert(int,substring(a.PNU코드,12,4))) + '-' + convert(varchar,convert(int,substring(a.PNU코드,16,4)))
+						end	as	번지
+			 ,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.계약면적), 1), '.00', '')	as	면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.전용면적), 1), '.00', '')	as	전용면적
+			 ,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.매매가), 1), '.00', '')	as	매매가
+			 ,		a.임대수익률	as	수익률
+			 ,		substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),0,5) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),5,2) + '.' + substring(substring(SUBSTRING(a.매물게시일,1,13),0,9),7,2)		as	등록일
+			 ,		b.시도명	as	도시
+			 ,		b.시군구명	as	구시군
+			 ,		b.읍면동명	as	읍면동
+			 , 		a.건물명 as 건물명
+			 ,		a.premiumPrice as 권리금
+			 from modu.통합_상가매물_매매정보	a	inner	join modu.kikcd_b	b on a.법정동코드	=	b.법정동코드
+			 where	a.PNU코드 is not null
+			 and 	ltrim(rtrim(a.PNU코드)) != ''
+			 and	a.X좌표		!=	''
+			 and	a.PNU코드		=	#{pnu}
+			 and	SUBSTRING(a.매물게시일,1,4) > '2017'
+			<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+			<if test="ls_article_type_length != null">
+				<choose>
+					<when test="ls_article_type_length.size() > 0">
+						and a.articleTypeCode in
+						<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+							#{article_type}
+						</foreach>
+					</when>
+					<otherwise>and 1 = 2</otherwise>
+				</choose>		
+			</if>	
+			<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+			 order	by	a.매물게시일	desc
+		</select>	
+		
+		<select id="dawulmapDao.zeons_매매실거래가정보_동.select" parameterType="CmMap" resultType="CmResMap">
+			select
+					distinct sgg_nm	as	주소
+			,		a.R_건물명 as 건물명
+			,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.R_건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			,		substring(a.trd_yymm,1,4)	+	'.'	+	substring(a.trd_yymm,5,2)	+	'.'	+	case when len(a.trd_dd) = '1' then '0'+a.trd_dd else a.trd_dd end	as	계약일
+			,		case when a.flr = '' then '-' else a.flr end	as	층
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.tx_cost), 1), '.00', '')	as	거래금액
+			,		a.bldg_usg_nm	as	주용도
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.EXPS_GRS_ARSZ), 1), '.00', '')	as	전용면적
+			,		a.m_pnu_cd
+			,		a.trd_yymm
+			,		b.bunji	as	번지
+			from modu.MOLIT_NRG_TRD	a	with(nolock) inner join	modu.MOLIT_NRG_TRD_MAP_RESULT	b	with(nolock)
+										on	a.m_pnu_cd	=	b.pnu_cd
+			where	a.m_pnu_cd like substring(#{pnu}, 1, 8) + '%'
+			and		substring(a.trd_yymm,1,4)	>	'2017'		
+			<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+			<if test="ls_article_type_length != null">
+				<choose>
+					<when test="ls_article_type_length.size() > 0">
+						and a.articleTypeCode in
+						<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+							#{article_type}
+						</foreach>
+					</when>
+					<otherwise>and 1 = 2</otherwise>
+				</choose>		
+			</if>	
+			<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->	
+			order	by	substring(a.trd_yymm,1,4)	+	'.'	+	substring(a.trd_yymm,5,2)	+	'.'	+	case when len(a.trd_dd) = '1' then '0'+a.trd_dd else a.trd_dd end	desc
+		</select>
+		
+		<select id="dawulmapDao.zeons_매매실거래가정보_지번.select" parameterType="CmMap" resultType="CmResMap">
+			select
+					distinct sgg_nm	as	주소
+			,		a.R_건물명 as 건물명
+			,		CASE
+						WHEN a.articleTypeCode != 'D02' THEN '-'
+						WHEN a.R_건물명 IS NOT NULL AND a.R_상가유형 IS NULL THEN '기타상가'
+						ELSE a.R_상가유형
+					END AS 상가유형
+			,		substring(a.trd_yymm,1,4)	+	'.'	+	substring(a.trd_yymm,5,2)	+	'.'	+	case when len(a.trd_dd) = '1' then '0'+a.trd_dd else a.trd_dd end	as	계약일
+			,		case when a.flr = '' then '-' else a.flr end	as	층
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.tx_cost), 1), '.00', '')	as	거래금액
+			,		a.bldg_usg_nm	as	주용도
+			,		REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, a.EXPS_GRS_ARSZ), 1), '.00', '')	as	전용면적
+			,		a.m_pnu_cd
+			,		a.trd_yymm
+			,		b.bunji	as	번지
+			from modu.MOLIT_NRG_TRD	a	with(nolock)	inner	join	modu.MOLIT_NRG_TRD_MAP_RESULT	b	with(nolock)
+										on	a.m_pnu_cd	=	b.pnu_cd
+			where	a.m_pnu_cd = #{pnu}
+			and		substring(a.trd_yymm,1,4)	>	'2017'		
+			<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+			<if test="ls_article_type_length != null">
+				<choose>
+					<when test="ls_article_type_length.size() > 0">
+						and a.articleTypeCode in
+						<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+							#{article_type}
+						</foreach>
+					</when>
+					<otherwise>and 1 = 2</otherwise>
+				</choose>		
+			</if>	
+			<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->	
+			order	by	substring(a.trd_yymm,1,4)	+	'.'	+	substring(a.trd_yymm,5,2)	+	'.'	+	case when len(a.trd_dd) = '1' then '0'+a.trd_dd else a.trd_dd end	desc
+		</select>		
+		
+		<select id="dawulmapDao.zeons_상가업소정보.select" parameterType="CmMap" resultType="CmResMap">
+			select	distinct	a.상호명	as	상가업소명
+			,		a.층정보	as	층
+			,		a.상권업종대분류명	as	업종대분류
+			,		a.상권업종중분류명	as	업종중분류
+			,		a.상권업종소분류명	as	업종소분류
+			from	modu.소상공인_상가정보 a 
+			where	a.pnu코드  = #{pnu}
+			order	by	a.층정보	desc
+		</select>		
+		
+		<select id="dawulmapDao.zeons_남여주거인구.select" parameterType="CmMap" resultType="CmResMap">
+			select	isnull(z.yyyymm,0)	as yyyymm
+			,		isnull(y.man_cnt,0)	as man_cnt
+			,		isnull(y.wman_cnt,0) as wman_cnt
+			from
+			(보
+			select	convert(varchar(4) , dateadd(year,0,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-1,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-2,getdate()) ,112)	as	yyyymm
+			)	z left join		(
+								select round((round(sum(a.MAN_DWL_POP_CNT_10GL) / count(1),0,1) + round(sum(a.MAN_DWL_POP_CNT_10G) / count(1),0,1) + round(sum(a.MAN_DWL_POP_CNT_20G) / count(1),0,1) + round(sum(a.MAN_DWL_POP_CNT_30G ) / count(1),0,1) 
+								     + round(sum(a.MAN_DWL_POP_CNT_40G) / count(1),0,1) + round(sum(a.MAN_DWL_POP_CNT_50G) / count(1),0,1) + round(sum(a.MAN_DWL_POP_CNT_60GU) / count(1),0,1)) / 7,0,1) as	man_cnt	--남자직장인구	
+								    ,  round((round(sum(a.WMAN_DWL_POP_CNT_10GL) / count(1),0,1) + round(sum(a.WMAN_DWL_POP_CNT_10G) / count(1),0,1) + round(sum(a.WMAN_DWL_POP_CNT_20G) / count(1),0,1) + round(sum(a.WMAN_DWL_POP_CNT_30G ) / count(1),0,1) 
+									 + round(sum(a.WMAN_DWL_POP_CNT_40G) / count(1),0,1) + round(sum(a.WMAN_DWL_POP_CNT_50G) / count(1),0,1) + round(sum(a.WMAN_DWL_POP_CNT_60GU) / count(1),0,1))/ 7,0,1) as	wman_cnt	--여자직장인구	
+									,  substring(std_ym,1,4) as	yyyymm
+								  from modu.MMB_MAIN_BLOCK_통계 a with(nolock) 
+								 where a.ldong_cd like substring(#{pnu}, 1, 8) + '%' 
+								   and MAN_DWL_POP_CNT_10GL is not null
+							  group by std_ym
+								)	y	on z.yyyymm	=	y.yyyymm
+			order by z.yyyymm asc
+		</select>
+		
+		<select id="dawulmapDao.zeons_남여직장인구.select" parameterType="CmMap" resultType="CmResMap">
+			select	isnull(z.yyyymm,0)	as yyyymm
+			,		isnull(y.man_cnt,0)	as man_cnt
+			,		isnull(y.wman_cnt,0) as wman_cnt
+			from
+			(
+			select	convert(varchar(4) , dateadd(year,0,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-1,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-2,getdate()) ,112)	as	yyyymm
+			)	z left join		(
+								select round(round(sum(a.MAN_WK_PLC_POP_CNT_20G) / count(1),0,1) + round(sum(a.MAN_WK_PLC_POP_CNT_30G ) / count(1),0,1) 
+								     + round(sum(a.MAN_WK_PLC_POP_CNT_40G) / count(1),0,1) + round(sum(a.MAN_WK_PLC_POP_CNT_50G) / count(1),0,1) + round(sum(a.MAN_WK_PLC_POP_CNT_60GU) / count(1),0,1)) / 5,0,1) as	man_cnt	--남자직장인구	
+								    ,  round((round(sum(a.WMAN_WK_PLC_POP_CNT_20G) / count(1),0,1) + round(sum(a.WMAN_WK_PLC_POP_CNT_30G) / count(1),0,1) 
+									 + round(sum(a.WMAN_WK_PLC_POP_CNT_40G) / count(1),0,1) + round(sum(a.WMAN_WK_PLC_POP_CNT_50G) / count(1),0,1) + round(sum(a.WMAN_WK_PLC_POP_CNT_60GU) / count(1),0,1))/ 5,0,1) as	wman_cnt	--여자직장인구	
+									,  substring(std_ym,1,4) as	yyyymm
+								  from modu.MMB_MAIN_BLOCK_통계 a with(nolock) 
+								 where a.ldong_cd like substring(#{pnu}, 1, 8) + '%' 
+								   and MAN_WK_PLC_POP_CNT_20G is not null
+							  group by std_ym
+								)	y	on z.yyyymm	=	y.yyyymm
+			order by z.yyyymm asc			
+		</select>
+		
+		<select id="dawulmapDao.zeons_남여거주직장인구.select" parameterType="CmMap" resultType="CmResMap">
+			select	sum(a.MAN_DWL_POP_CNT_10GL	+	a.MAN_DWL_POP_CNT_10G	+	a.MAN_DWL_POP_CNT_20G	+	a.MAN_DWL_POP_CNT_30G	+	a.MAN_DWL_POP_CNT_40G	+	a.MAN_DWL_POP_CNT_50G	+	a.MAN_DWL_POP_CNT_60GU)	as	man_cnt	--남자직장인구	
+			,		sum(a.WMAN_DWL_POP_CNT_10GL	+	a.WMAN_DWL_POP_CNT_10G	+	a.WMAN_DWL_POP_CNT_20G	+	a.WMAN_DWL_POP_CNT_30G	+	a.WMAN_DWL_POP_CNT_40G	+	a.wman_dwl_pop_cnt_50g	+	a.WMAN_DWL_POP_CNT_60GU) as	wman_cnt --여자직장인구
+			,		sum(a.MAN_WK_PLC_POP_CNT_20G	+	a.MAN_WK_PLC_POP_CNT_30G	+	a.MAN_WK_PLC_POP_CNT_40G	+	a.MAN_WK_PLC_POP_CNT_50G	+	a.MAN_WK_PLC_POP_CNT_60GU)	as	man_cnt	--남자 주거 인구
+			,		sum(a.WMAN_WK_PLC_POP_CNT_20G	+	a.WMAN_WK_PLC_POP_CNT_30G	+	a.WMAN_WK_PLC_POP_CNT_40G	+	a.wman_WK_PLC_pop_cnt_50g	+	a.WMAN_WK_PLC_POP_CNT_60GU) as	wman_cnt	--여자 주거	인구
+			from	modu.MMB_MAIN_BLOCK	a	with(nolock) inner join modu.block	b	with(nolock) on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+			where MAN_DWL_POP_CNT_10GL is not null
+			group	by	std_ym
+		</select>
+		
+		<select id="dawulmapDao.zeons_성별연령별.select" parameterType="CmMap" resultType="CmResMap">
+			select	'거주인구(남)'	as	성별
+			,		sum(a.MAN_DWL_POP_CNT_10GL)	as	십대미만-- 10대미만 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_10G)	as	십대-- 10대 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_20G)	as	이십대-- 20대 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_30G)	as	삼십대-- 30대 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_40G)	as	사십대-- 40대 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_50G)	as	오십대-- 50대 남 주거인구
+			,		sum(a.MAN_DWL_POP_CNT_60GU)	as	육십대-- 60대 남 주거인구
+			from	modu.MMB_MAIN_BLOCK	a	with(nolock) inner join modu.block	b	with(nolock) on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+			where MAN_DWL_POP_CNT_10GL is not null
+			union all
+			select	'거주인구(여)'	as	성별
+			,		sum(a.WMAN_DWL_POP_CNT_10GL)	as	십대미만	-- 10대미만 여 주거인구
+			,		sum(a.WMAN_DWL_POP_CNT_10G)	as	십대-- 10대 여 주거인구
+			,		sum(a.WMAN_DWL_POP_CNT_20G)	as	이십대-- 20대 여 주거인구
+			,		sum(a.WMAN_DWL_POP_CNT_30G)	as	삼십대-- 30대 여 주거인구
+			,		sum(a.WMAN_DWL_POP_CNT_40G)	as	사십대-- 40대 여 주거인구
+			,		sum(a.wman_dwl_pop_cnt_50g)	as	오십대-- 50대 여 주거인구
+			,		sum(a.WMAN_DWL_POP_CNT_60GU)	as	육십대-- 60대 여 주거인구
+			from	modu.MMB_MAIN_BLOCK	a	with(nolock) inner join modu.block	b	with(nolock) on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+			where MAN_DWL_POP_CNT_10GL is not null
+			union all
+			select	'직장인구(남)'	as	성별
+			,		0	as	십대미만
+			,		0	as	십대
+			,		sum(a.MAN_WK_PLC_POP_CNT_20G)	as	이십대-- 20대 남 직장인구	
+			,		sum(a.MAN_WK_PLC_POP_CNT_30G)	as	삼십대-- 30대 남 직장인구	
+			,		sum(a.MAN_WK_PLC_POP_CNT_40G)	as	사십대-- 40대 남 직장인구	
+			,		sum(a.MAN_WK_PLC_POP_CNT_50G)	as	오십대-- 50대 남 직장인구	
+			,		sum(a.MAN_WK_PLC_POP_CNT_60GU)	as	육십대-- 60대 남 직장인구	
+			from	modu.MMB_MAIN_BLOCK	a	with(nolock) inner join modu.block	b	with(nolock) on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+			where MAN_DWL_POP_CNT_10GL is not null
+			union all
+			select	'직장인구(여)'	as	성별
+			,		0	as	십대미만
+			,		0	as	십대
+			,		sum(a.WMAN_WK_PLC_POP_CNT_20G)	as	이십대-- 20대 여 직장인구	
+			,		sum(a.WMAN_WK_PLC_POP_CNT_30G)	as	삼십대-- 30대 여 직장인구	
+			,		sum(a.WMAN_WK_PLC_POP_CNT_40G)	as	사십대-- 40대 여 직장인구	
+			,		sum(a.wman_WK_PLC_pop_cnt_50g)	as	오십대-- 50대 여 직장인구	
+			,		sum(a.WMAN_WK_PLC_POP_CNT_60GU)	as	육십대-- 60대 여 직장인구	
+			from	modu.MMB_MAIN_BLOCK	a	with(nolock) inner join modu.block	b	with(nolock) on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+			where MAN_DWL_POP_CNT_10GL is not null
+		</select>
+		
+		<!-- 조회조건 필요 -->
+		<select id="dawulmapDao.zeons_업종분포.select" parameterType="CmMap" resultType="CmResMap">
+			select	y.sdt_yyyymm	as	기준월
+			,		b.대분류명	as	대분류명
+			,		count(*)	as	지점수
+			from	modu.소상공인_상가정보_원본	y with(nolock) inner join modu.소상공인_상가정보_업종코드 b on y.상권업종대분류명 = b.대분류명
+			where	y.시도명		=	#{sidonm}
+			and		y.시군구명		like	#{sggnm} + '%'
+			and		y.법정동명		=	#{dongnm}
+			group	by	y.sdt_yyyymm
+			,			b.대분류명
+		</select>
+
+		<select id="dawulmapDao.zeons_업종분포V2.select" parameterType="CmMap" resultType="CmResMap">
+			select	y.기준년월	as	기준월
+			,		y.상권업종대분류명	as	대분류명
+			,		sum(cnt)	as	지점수
+			from	modu.소상공인_상가정보_업종대분류_통계	y
+			where	y.시도명		=	#{sidonm}
+			and		y.시군구명		like	#{sggnm} + '%'
+			and		y.법정동명		=	#{dongnm}
+			and     (y.기준년월 between #{startYMD} and #{endYMD})
+			group	by	y.기준년월
+			,			y.상권업종대분류명
+		</select>
+		
+		<select id="dawulmapDao.zeons_총매출추이.select" parameterType="CmMap" resultType="CmResMap">
+			select	isnull(z.yyyymm,0)	as yyyymm
+			,		isnull(y.amt_total,0)	as amt_total	--총매출
+			from
+			(
+			select	convert(varchar(4) , dateadd(year,0,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-1,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-2,getdate()) ,112)	as	yyyymm
+			)	z left join		(
+								select	sum(1)	as	amt_total	--총매출
+								,		substring(std_ym,1,4) as	yyyymm
+								from	modu.mmb_lobz_scls_block	a	with(nolock) inner join modu.block	b	with(nolock)	on	a.block_cd	=	b.block_cd	
+																		and	b.sido_nm	=	#{sidonm}
+																		and	b.sgng_nm	=	#{sggnm}
+																		and	b.ldong_nm	=	#{dongnm}
+								group	by	std_ym
+								)	y	on z.yyyymm	=	y.yyyymm
+			order by z.yyyymm asc
+		</select>
+		
+		<select id="dawulmapDao.zeons_업종별매출추이.select" parameterType="CmMap" resultType="CmResMap">
+			select	y.block_cd
+			,		y.bz_lobz_lcls_cd	as '업종코드'
+			,		isnull(y.yyyymm,0)	as '년도'
+			,		isnull(y.amt_total,0)	as '매출'
+			,		isnull(y.cnt,0)	as '건'
+			,		isnull(y.amt,0)	as '카드매출'
+			from
+			(
+								select	sum(b.SALE_AMT_M)	as	amt_total	--매출
+								,		substring(b.std_ym,1,4) as	yyyymm
+								,		a.bz_lobz_lcls_nm
+								,		a.bz_lobz_lcls_cd
+								,		max(b.block_cd)	as	block_cd
+								,		SUM(
+											ISNULL(b.cduse_amt_20g, 0)
+											+ ISNULL(b.cduse_amt_30g, 0)
+											+ ISNULL(b.cduse_amt_40g, 0)
+											+ ISNULL(b.cduse_amt_50g, 0)
+											+ ISNULL(b.cduse_amt_60gu, 0)
+										) AS amt
+								,		SUM(
+											ISNULL(b.cduse_cnt_20g, 0)
+											+ ISNULL(b.cduse_cnt_30g, 0)
+											+ ISNULL(b.cduse_cnt_40g, 0)
+											+ ISNULL(b.cduse_cnt_50g, 0)
+											+ ISNULL(b.cduse_cnt_60gu, 0)
+										) AS cnt
+								from	modu.MMC_BZ_CATE_S	a	with(nolock)	inner join modu.MMB_LOBZ_SCLS_BLOCK	b	with(nolock)	on	a.BZ_LOBZ_SCLS_CD	=	b.BZ_LOBZ_SCLS_CD
+																inner join modu.block	c	with(nolock)	on	b.BLOCK_CD	=	c.BLOCK_CD
+																		and	c.sido_nm	=	#{sidonm}
+																		and	c.sgng_nm	=	#{sggnm}
+																		and	c.ldong_nm	=	#{dongnm}								
+								group	by	a.bz_lobz_lcls_nm
+								,			b.std_ym
+								,			a.bz_lobz_lcls_cd
+			)	y
+			where	y.bz_lobz_lcls_nm	is	not	null
+			and		SUBSTRING(y.yyyymm, 1, 4) >= #{minYear}
+			order by y.yyyymm asc
+		</select>		
+		
+		<!-- 조회조건 필요 -->
+		<select id="dawulmapDao.zeons_평균임대료.select" parameterType="CmMap" resultType="CmResMap">
+			select	isnull(z.yyyymm,0)	as yyyymm
+			,		isnull(y.상가유형,'데이터없음') as 상가유형
+			,		isnull(y.rent,0) as rent
+			from	(
+						select	convert(varchar(4) , dateadd(year,0,getdate()) ,112)	as	yyyymm
+						union	all
+						select	convert(varchar(4) , dateadd(year,-1,getdate()) ,112)	as	yyyymm
+						union	all
+						select	convert(varchar(4) , dateadd(year,-2,getdate()) ,112)	as	yyyymm
+						union	all
+						select	convert(varchar(4) , dateadd(year,-3,getdate()) ,112)	as	yyyymm
+					)	z	left outer join 
+											(
+												select	substring(a.std_yyyymm,1,4)	as	std_yyyymm
+												,		a.상가유형
+												,		avg(a.rent) as rent
+												from modu.shop_rent_sgg a	with(nolock)	left outer join   modu.shop_rent_sido b with(nolock)
+																			on	b.ctprvn_cd	= substring(a.sig_cd, 1, 2)
+																			and   b.STD_YYYYMM  = a.STD_YYYYMM 
+																			and   b.floor		= a.floor
+																			left outer join	modu.shop_rent_emd	c	with(nolock)
+																			on	a.sig_cd	=	substring(c.emd_cd, 1, 5)
+												group	by	substring(a.std_yyyymm,1,4)
+												,			a.상가유형
+											) y	on	z.yyyymm	=	y.std_yyyymm
+			order	by	yyyymm desc	,	y.상가유형
+		</select>
+		
+		<select id="dawulmapDao.zeons_평균분양가.select" parameterType="CmMap" resultType="CmResMap">
+			select	isnull(z.yyyymm,0)	as yyyymm
+			,		isnull(y.분양가,0)	as 분양가
+			,		isnull(y.상가유형,'')	as	상가유형
+			from
+			(
+			select	convert(varchar(4) , dateadd(year,0,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-1,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-2,getdate()) ,112)	as	yyyymm
+			union	all
+			select	convert(varchar(4) , dateadd(year,-3,getdate()) ,112)	as	yyyymm
+			) z	left outer join (
+								select	avg(b.분양가)	as 분양가
+								,		substring(a.분양일,1,4) as 분양일
+								,		a.상가유형		
+								from	modu.P_SANGGA	a	with(nolock)	inner	join	modu.P_SANGGAho	b	with(nolock)
+														on	a.상가코드	=	b.상가코드
+								where	a.읍면동	like	'%'
+								and		b.분양가 != 0
+								group	by	substring(a.분양일,1,4)
+								,			a.상가유형
+								) y	on z.yyyymm	=	y.분양일
+		</select>
+		
+	<select id="dawulmapDao.상권영역.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.순번,
+			a.상권,
+			a.법정동코드,
+			a.geom.STAsText() AS geom
+		FROM
+			modu.bizdist a
+		WHERE
+			1 = 1
+		ORDER BY a.순번 ASC
+	</select>
+	
+	<select id="dawulmapDao.호구분별분양가.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT DISTINCT
+			modu.UDF_REMOVE_LEFT_FROM_STRING(b.동정보, '0') AS 동,
+			b.층,
+			b.호수 AS 호,
+			b.전용면적,
+			b.분양면적,
+			REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, b.분양가), 1), '.00', '') AS 분양가,
+			REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, CAST(ROUND(분양가 / (b.분양면적 * 0.3025), 2) AS decimal(10,2))), 1), '.00', '') AS 평단가,
+			CAST(ROUND(b.전용면적 / b.분양면적 * 100, 2) AS DECIMAL(10,2)) AS 전용율,
+			REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, b.낙찰가), 1), '.00', '') AS 낙찰가,
+			b.기타호정보 
+		FROM
+			modu.p_sangga a WITH(NOLOCK) INNER JOIN modu.p_sanggaho b WITH(NOLOCK) ON a.상가코드 = b.상가코드
+		WHERE
+			a.pnu = #{pnu}
+		<!-- 상품유형(상가/지식산업센터/오피스) 필터 -->
+		<if test="ls_article_type_length != null">
+			<choose>
+				<when test="ls_article_type_length.size() > 0">
+					AND a.articleTypeCode IN
+					<foreach collection="ls_article_type_length" item="article_type" open="(" close=")" separator=",">
+						#{article_type}
+					</foreach>
+				</when>
+				<otherwise>AND 1 = 2</otherwise>
+			</choose>		
+		</if>	
+		<!-- // 상품유형(상가/지식산업센터/오피스) 필터 -->
+		ORDER BY
+			b.층, b.호수
+	</select>	
+	
+	<select id="dawulmapDao.인구정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.std_ym AS '기준월',
+			a.dwl_pop_tot_cnt AS '거주_전체',
+			a.flow_pop_tot_cnt AS '유동_전체',
+			a.wk_plc_pop_tot_cnt AS '직장_전체',
+			a.man_dwl_pop_cnt_10gl AS '거주_남성_10l',
+			a.man_dwl_pop_cnt_10g AS '거주_남성_10',
+			a.man_dwl_pop_cnt_20g AS '거주_남성_20',
+			a.man_dwl_pop_cnt_30g AS '거주_남성_30',
+			a.man_dwl_pop_cnt_40g AS '거주_남성_40',
+			a.man_dwl_pop_cnt_50g AS '거주_남성_50',
+			a.man_dwl_pop_cnt_60gu AS '거주_남성_60u',
+			a.wman_dwl_pop_cnt_10gl AS '거주_여성_10l',
+			a.wman_dwl_pop_cnt_10g AS '거주_여성_10',
+			a.wman_dwl_pop_cnt_20g AS '거주_여성_20',
+			a.wman_dwl_pop_cnt_30g AS '거주_여성_30',
+			a.wman_dwl_pop_cnt_40g AS '거주_여성_40',
+			a.wman_dwl_pop_cnt_50g AS '거주_여성_50',
+			a.wman_dwl_pop_cnt_60gu AS '거주_여성_60u',
+			a.man_wk_plc_pop_cnt_20g AS '직장_남성_20',
+			a.man_wk_plc_pop_cnt_30g AS '직장_남성_30',
+			a.man_wk_plc_pop_cnt_40g AS '직장_남성_40',
+			a.man_wk_plc_pop_cnt_50g AS '직장_남성_50',
+			a.man_wk_plc_pop_cnt_60gu AS '직장_남성_60u',
+			a.wman_wk_plc_pop_cnt_20g AS '직장_여성_20',
+			a.wman_wk_plc_pop_cnt_30g AS '직장_여성_30',
+			a.wman_wk_plc_pop_cnt_40g AS '직장_여성_40',
+			a.wman_wk_plc_pop_cnt_50g AS '직장_여성_50',
+			a.wman_wk_plc_pop_cnt_60gu AS '직장_여성_60u',
+			a.man_flow_pop_cnt_10g AS '유동_남성_10',
+			a.man_flow_pop_cnt_20g AS '유동_남성_20',
+			a.man_flow_pop_cnt_30g AS '유동_남성_30',
+			a.man_flow_pop_cnt_40g AS '유동_남성_40',
+			a.man_flow_pop_cnt_50g AS '유동_남성_50',
+			a.man_flow_pop_cnt_60gu AS '유동_남성_60u',
+			a.wman_flow_pop_cnt_10g AS '유동_여성_10',
+			a.wman_flow_pop_cnt_20g AS '유동_여성_20',
+			a.wman_flow_pop_cnt_30g AS '유동_여성_30',
+			a.wman_flow_pop_cnt_40g AS '유동_여성_40',
+			a.wman_flow_pop_cnt_50g AS '유동_여성_50',
+			a.wman_flow_pop_cnt_60gu AS '유동_여성_60u'
+		from
+			modu.MMB_MAIN_BLOCK_통계 a	with(nolock)
+		where
+			a.sido_nm	=	#{sidonm}
+		and	a.sgng_nm	=	#{sggnm}
+		and	a.ldong_nm	=	#{dongnm}
+		and (a.std_ym between #{startYMD} and #{endYMD})
+	</select>					
+	
+	<select id="dawulmapDao.리맥스_매물정보.select" parameterType="CmMap" resultType="CmResMap">		
+		SELECT
+			A.매물코드 AS 매물코드,
+			A.매물구분 AS 매물구분,
+			A.PNU코드 AS PNU코드,
+			A.주소 AS 주소,
+			A.번지 AS 번지,
+			A.건물명 AS 건물명,
+			A.층정보 AS 층정보,
+			A.면적 AS 면적,
+			ISNULL(A.전용면적, 0) AS 전용면적,
+			A.주변환경 AS 주변환경,
+			A.매물제목 AS 매물제목,
+			A.상세내용 AS 상세내용,
+			A.입주예정일 AS 입주예정일,
+			ISNULL(A.매매가, 0) AS 매매가,
+			ISNULL(A.보증금, 0) AS 보증금,
+			ISNULL(A.임대료, 0) AS 임대료,
+			ISNULL(A.권리금, 0) AS 권리금,
+			ISNULL(A.관리비유형, '') AS 관리비유형,
+			ISNULL(A.관리비, 0) AS 관리비,
+			ISNULL(A.평당관리비, 0) AS 평당관리비,
+			ISNULL(A.담당자, '') AS 담당자,
+			ISNULL(A.담당자연락처, '') AS 담당자연락처,
+			ISNULL(A.담당자이메일, '') AS 담당자이메일,
+			ISNULL(A.가맹점명, '') AS 가맹점명,
+			ISNULL(A.중개법인명, '') AS 중개법인명,
+			ISNULL(A.중개법인대표번호, '') AS 중개법인대표번호,
+			ISNULL(A.중개법인주소, '') AS 중개법인주소,
+			A.이미지여부 AS 이미지여부,
+			A.X좌표 AS X좌표,
+			A.Y좌표 AS Y좌표,
+			ISNULL(A.매물등록일자, '') AS 매물등록일자
+		FROM
+			modu.R114_REMAX_통합매물정보 AS A
+		WHERE
+			A.PNU코드 = #{pnu}
+		ORDER BY
+			A.매물등록일자 DESC, A.매물코드 DESC
+	</select>
+	
+	<select id="dawulmapDao.리맥스_매물사진정보.select" parameterType="CmMap" resultType="CmResMap">		
+		SELECT
+			A.이미지정보 AS 이미지정보
+		FROM
+			modu.R114_REMAX_통합매물_이미지정보 AS A
+		WHERE
+			A.매물코드 = #{code}
+			AND A.매물구분 = #{type}
+		ORDER BY
+			A.이미지순번 ASC
+	</select>
+</mapper>

@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DashboardDao">
+
+   	<select id="DashboardDao.zeons_지역상권현황.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+		<if test="null != sidocd and '' != sidocd">
+				a.sggcd,
+				a.sggnm,
+			<if test="null != sggcd and '' != sggcd">
+				substring(a.adm_cd, 1, 8) dongcd,
+				a.dongnm,
+			</if>
+		</if>
+				a.sidocd,
+				a.sidonm
+		FROM
+		(
+			SELECT
+				a.adm_nm,
+				a.adm_cd,
+			<if test="null == sidocd or '' == sidocd">
+				ROW_NUMBER() OVER (PARTITION BY sidonm ORDER BY adm_cd) AS rownum,
+			</if>
+			<if test="null != sidocd and '' != sidocd">
+				a.sggnm,
+				a.sggcd,
+				<if test="null == sggcd or '' == sggcd">
+					ROW_NUMBER() OVER (PARTITION BY sggnm ORDER BY adm_cd) AS rownum,
+				</if>
+				<if test="null != sggcd and '' != sggcd">
+					dongnm,
+					ROW_NUMBER() OVER (PARTITION BY dongnm ORDER BY adm_cd) AS rownum,
+				</if>
+			</if>
+				a.sidonm,
+				a.sidocd
+			FROM
+			(
+				SELECT
+					a.시도명 AS sidonm,
+					substring(a.법정동코드, 1, 2) as sidocd,   
+					a.시군구명 AS sggnm,
+					substring(a.법정동코드, 1, 5) as sggcd, 
+					a.읍면동명 AS dongnm,
+					a.법정동코드 AS adm_cd,
+					'' AS adm_nm
+				FROM
+					modu.kikcd_b a
+				WHERE
+					1 = 1
+				<if test="null != sidocd and '' != sidocd">
+					AND a.법정동코드 like #{sidocd} + '%'
+					<if test="null != sggcd and '' != sggcd and null != sidocd and '' != sidocd">
+						AND a.법정동코드 like #{sggcd} + '%'
+					</if>										
+				</if>
+			) a
+		) a
+		WHERE
+			rownum = 1
+		ORDER BY substring(adm_cd, 1, 2) ASC
+		<if test="null != sidonm and '' != sidonm">
+				, sggnm ASC
+			<if test="null != sggnm and '' != sggmm">
+				, dongnm ASC
+			</if>
+		</if>
+	</select>	
+  	
+  	<select id="DashboardDao.공급동향_1.select" parameterType="CmMap" resultType="CmResMap">   	
+		select
+				 a.상가코드
+			   , a.pnu
+			   , a.상가명
+			   , a.연면적
+			   , a.읍면동
+			   , a.구시군
+			   , a.상가유형
+			   , substring(a.분양일, 1, 4) as '년도'
+			   , a.총점포수 as 총점포수
+			   , sum(case when h.상가코드 is not null then 1 else 0 end) as 상가호수
+	  	from modu.P_SANGGA a
+		left outer join modu.P_SANGGAHO h
+		on a.상가코드 = h.상가코드
+		where 1 = 1
+			 and a.분양일 != ''
+		<if test="sidocd != '00'">
+			 and a.pnu LIKE #{sidocd} + '%'
+		</if>
+			 and a.pnu LIKE #{sggcd} + '%'
+			 and a.pnu LIKE #{dongcd} + '%'
+			 and substring(a.분양일, 1, 4)  <![CDATA[ >= ]]>  #{year} - 2
+		group by
+				 a.상가코드
+			   , a.pnu
+			   , a.상가유형
+			   , substring(a.분양일, 1, 4), a.총점포수
+			   , a.상가명
+			   , a.연면적
+			   , a.읍면동
+			   , a.구시군
+		order by 년도 asc
+				,상가유형 desc
+
+  	</select>
+  	
+  	<select id="DashboardDao.연면적별공급동향.select" parameterType="CmMap" resultType="CmResMap">   	
+		select
+			  substring(a.분양일, 1, 4) as '년도'
+			, a.상가코드
+			, a.상가명
+			, a.상가유형
+			, a.분양일
+			, a.연면적
+			, a.총점포수
+			,CASE 	WHEN a.연면적   <![CDATA[ <= ]]>   1000 THEN '1,000㎡ 미만'
+					WHEN a.연면적   <![CDATA[ >= ]]>   1000 AND a.연면적   <![CDATA[ < ]]>   3000 THEN '1,000㎡~3,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   3000 AND a.연면적   <![CDATA[ < ]]>   5000 THEN '3,000㎡~5,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   5000 AND a.연면적   <![CDATA[ < ]]>   7000 THEN '5,000㎡~7,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   7000 AND a.연면적   <![CDATA[ < ]]>   10000 THEN '7,000㎡~10,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   10000 AND a.연면적   <![CDATA[ < ]]>   15000 THEN '10,000㎡~15,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   15000 AND a.연면적   <![CDATA[ < ]]>   30000 THEN '15,000㎡~30,000㎡'
+					WHEN a.연면적   <![CDATA[ >= ]]>   30000 THEN '30,000㎡ 이상'
+			end AS 연면적코드
+		from modu.p_sangga a
+		where 1 = 1
+		<if test="sidocd != '00'">
+			and 	a.pnu LIKE #{sidocd} + '%'
+		</if>
+			and 	a.pnu LIKE #{sggcd} + '%'
+			and 	a.pnu LIKE #{dongcd} + '%'
+			and 	a.분양일 != ''
+			and 	substring(a.분양일, 1, 4)  <![CDATA[ >= ]]>  #{year} - 2
+			and		substring(a.분양일, 1, 4)  <![CDATA[ < ]]> #{year} + 1
+  	</select>   	  	
+  	
+    <select id="DashboardDao.평균분양가_1.select" parameterType="CmMap" resultType="CmResMap">   	
+        select a.상가유형  
+             , substring(a.분양일, 1, 4) as '년도'
+             , h.분양가
+             , h.전용면적
+        from modu.P_SANGGA a LEFT OUTER JOIN modu.P_SANGGAHO h ON a.상가코드 = h.상가코드
+        where a.분양일 != ''
+			and isnull(h.분양면적, 0)  <![CDATA[ > ]]>  0
+           	and isnull(h.전용면적, 0)  <![CDATA[ > ]]>  0
+           	and isnull(h.분양가, 0)  <![CDATA[ > ]]>  0
+		<if test="sidocd != '00' || pnu != '00'">
+			and a.pnu LIKE #{sidocd} + '%'
+		</if>
+           	and a.pnu LIKE #{sggcd} + '%'
+           	and a.pnu LIKE #{dongcd} + '%'
+           	and substring(a.분양일, 1, 4)  <![CDATA[ >= ]]>  #{year} - 2
+	</select>
+  	
+  	<select id="DashboardDao.상가유형별평균임대료.select" parameterType="CmMap" resultType="CmResMap">   	
+		select		z.dongnm
+				,	z.period
+				,   case when sum(z.usage_area) = 0 then 0
+						 else sum(z.rent) / sum(z.usage_area)
+					end as rent_ua
+				,   case when sum(z.cont_area) = 0 then 0
+						 else sum(z.rent) / sum(z.cont_area)
+					end as rent_ca
+				,	z.상가유형
+				, 	z.cd
+				,	z.floor
+		from
+			(
+			<if test='jusoCd.equals("sido")'>
+				select 	  a.ctp_kor_nm as dongnm
+						, a.ctprvn_cd as cd
+						, isnull(a.rent, 0) as rent
+						, isnull(a.usage_area, 0) as usage_area
+						, isnull(a.cont_area, 0) as cont_area
+						, a.floor
+						, a.SANGGA_TYPE as 상가유형
+						, substring(a.std_yyyymm, 1, 4) as period
+				from modu.shop_rent_sido a
+				where 1 = 1
+				<if test="pnu != '00' || sidocd != '00'">
+					and a.ctprvn_cd = #{pnu}
+				</if>
+			</if>
+			<if test='jusoCd.equals("sgg")' >
+				select	  b.sig_kor_nm	as dongnm
+						, b.sig_cd as cd
+						, isnull(b.rent, 0) as rent
+						, isnull(b.usage_area, 0) as usage_area
+						, isnull(b.cont_area, 0) as cont_area
+						, b.floor
+						, b.SANGGA_TYPE as 상가유형
+						, substring(b.std_yyyymm, 1, 4) as period
+			from modu.shop_rent_sgg b
+			where 1 = 1
+				and b.sig_cd like #{pnu} + '%'
+			</if>
+			<if test='jusoCd.equals("emd")'>
+				select	  c.emd_kor_nm	as dongnm
+						, c.emd_cd as cd
+						, isnull(c.rent, 0) as rent
+						, isnull(c.usage_area, 0) as usage_area
+						, isnull(c.cont_area, 0) as cont_area
+						, c.floor
+						, c.SANGGA_TYPE as 상가유형
+						, substring(c.std_yyyymm, 1, 4) as period
+				from modu.shop_rent_emd c
+				where 1 = 1
+					and c.emd_cd like #{pnu} + '%'
+			</if>
+			) as z
+			where 1 = 1
+				and z.floor = '1'
+				<if test="startYMD != null and startYMD != ''">
+				and	z.period <![CDATA[ >= ]]> #{startYMD}
+				</if>
+				<if test="endYMD != null and endYMD != ''">
+				and	z.period <![CDATA[ <= ]]> #{endYMD}
+				</if>
+			group by 	z.dongnm
+					,	z.period
+					, 	z.상가유형
+					,	z.cd
+					,	z.floor
+			order by	z.cd
+  	</select>  
+	
+  	<select id="DashboardDao.매출정보추이_1.select" parameterType="CmMap" resultType="CmResMap">   
+		select a.년도
+			 , sum(a.유동인구) as '유동인구'
+			 , sum(a.매출액) as '매출액'
+		from
+		(
+			select 	  substring(b.std_ym, 1, 4) as '년도'
+					, sum(b.flow_pop_tot_cnt) as '유동인구'
+					, 0 as '매출액'
+			from [modu].[block] a inner join [modu].[MMB_MAIN_BLOCK] b on a.block_cd = b.block_cd
+			where   a.ldong_cd like #{sidocd} + '%'
+				and a.ldong_cd like #{sggcd} + '%'
+				and a.ldong_cd like #{dongcd} + '%'
+				and substring(b.STD_YM, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+			group by substring(b.std_ym, 1, 4)
+			union all
+			select 	  substring(b.std_ym, 1, 4)
+					, 0
+					, sum(b.sale_amt_m) as '매출액'
+			from [modu].[block] a inner join [modu].[MMB_LOBZ_SCLS_BLOCK] b on a.block_cd = b.block_cd
+			where   a.ldong_cd like #{sidocd} + '%'
+				and a.ldong_cd like #{sggcd} + '%'
+				and a.ldong_cd like #{dongcd} + '%'
+				and substring(b.STD_YM, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+			group by substring(b.std_ym, 1, 4)
+		) a
+		group by a.년도
+    </select>     
+    
+    
+	<select id="DashboardDao.매출정보추이_1_NEW.select" parameterType="CmMap" resultType="CmResMap">
+      	select 	a.년도,
+				sum(a.유동인구) as 유동인구,
+				sum(a.매출액) as '매출액'
+		from
+		(
+			select  t.년도,
+					sum(t.유동인구_총계) as '유동인구',
+					0 as 매출액
+			from
+            (
+				select		z.시도코드
+						,	z.구코드
+						,	z.동코드
+						,	z.sggnm
+						,	z.dongnm
+						, 	substring(z.std_ym,1,4) as '년도'
+						,	round(sum(z.유동인구_남10) / count(1),0,1) + round(sum(z.유동인구_남20) / count(1),0,1) + round(sum(z.유동인구_남30) / count(1),0,1) +
+							round(sum(z.유동인구_남40) / count(1),0,1) + round(sum(z.유동인구_남50) / count(1),0,1) + round(sum(z.유동인구_남60) / count(1),0,1) +
+							round(sum(z.유동인구_여10) / count(1),0,1) + round(sum(z.유동인구_여20) / count(1),0,1) + round(sum(z.유동인구_여30) / count(1),0,1) +
+							round(sum(z.유동인구_여40) / count(1),0,1) + round(sum(z.유동인구_여50) / count(1),0,1) + round(sum(z.유동인구_여60) / count(1),0,1)  as 유동인구_총계
+				from
+				(
+					select    a.sido_cd as '시도코드'
+							, a.sgng_cd  as '구코드'
+							, a.ldong_cd as '동코드'
+							, a.sgng_nm  as 'sggnm'
+							, a.ldong_nm as 'dongnm'
+							, a.std_ym
+							, 0 as '유동인구_남00'
+							, sum(round(man_flow_pop_cnt_10g,0,1)) 	as '유동인구_남10'
+							, sum(round(man_flow_pop_cnt_20g,0,1)) 	as '유동인구_남20'
+							, sum(round(man_flow_pop_cnt_30g,0,1)) 	as '유동인구_남30'
+							, sum(round(man_flow_pop_cnt_40g,0,1)) 	as '유동인구_남40'
+							, sum(round(man_flow_pop_cnt_50g,0,1)) 	as '유동인구_남50'
+							, sum(round(man_flow_pop_cnt_60gu,0,1)) as '유동인구_남60'
+							, 0 as '유동인구_여00'
+							, sum(round(wman_flow_pop_cnt_10g,0,1)) 	as '유동인구_여10'
+							, sum(round(wman_flow_pop_cnt_20g,0,1)) 	as '유동인구_여20'
+							, sum(round(wman_flow_pop_cnt_30g,0,1)) 	as '유동인구_여30'
+							, sum(round(wman_flow_pop_cnt_40g,0,1)) 	as '유동인구_여40'
+							, sum(round(wman_flow_pop_cnt_50g,0,1)) 	as '유동인구_여50'
+							, sum(round(wman_flow_pop_cnt_60gu,0,1)) 	as '유동인구_여60'
+					from [modu].[MMB_MAIN_BLOCK_통계] a
+					where 1 = 1
+					<if test="sidocd != '00'">
+						and a.ldong_cd like #{sidocd} + '%'
+					</if>
+						and a.ldong_cd like #{sggcd} + '%'
+						and a.ldong_cd like #{dongcd} + '%'
+						and substring(a.STD_YM, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+					group by  a.sido_cd
+							, a.sgng_cd
+							, a.sgng_nm
+							, a.ldong_cd
+							, a.ldong_nm
+							, a.std_ym
+				) z
+				group by 	z.시도코드
+						,	z.구코드
+						,	z.동코드
+						,	z.sggnm
+						,	z.dongnm
+						,	substring(z.std_ym,1,4)
+			)t
+			group by t.년도
+			union all
+			select 	  substring(b.std_ym, 1, 4)
+					, 0
+					, sum(b.sale_amt_m) as '매출액'
+			from [modu].[MMB_LOBZ_SCLS_BLOCK_통계] b
+			where 1 = 1
+			<if test="sidocd != '00'">
+				and b.ldong_cd like #{sidocd} + '%'
+			</if>
+			  	and b.ldong_cd like #{sggcd} + '%'
+			  	and b.ldong_cd like #{dongcd} + '%'
+			  	and substring(b.STD_YM, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+			group by substring(b.std_ym, 1, 4)
+		) a
+		group by a.년도
+    </select>  
+
+  	<select id="DashboardDao.업종정보_1.select" parameterType="CmMap" resultType="CmResMap">   	
+		select 	 a.상권업종대분류명
+			   , substring(a.기준년월, 1, 4) as '년도'
+			   , substring(a.기준년월, 5, 2) as '월'
+			   , sum(a.cnt) as '점포수'
+		from modu.소상공인_상가정보_업종대분류_통계 a
+		where 1 = 1
+			and (a.시군구명 is not null and a.시군구명 != '')
+		 	and (a.법정동명 is not null and a.법정동명 != '')
+		<if test="sidocd != '00'">
+			and a.법정동코드 like #{sidocd} + '%'
+		</if>
+			and a.법정동코드 like #{sggcd} + '%'
+			and a.법정동코드 like #{dongcd} + '%'
+			and substring(a.기준년월, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+		group by  a.상권업종대분류명
+		   		, substring(a.기준년월, 1, 4)
+		   		, substring(a.기준년월, 5, 2)
+		order by  substring(a.기준년월, 1, 4) desc
+		   		, substring(a.기준년월, 5, 2) desc
+  	</select>
+
+  	<select id="DashboardDao.인구정보_1.select" parameterType="CmMap" resultType="CmResMap">   	
+		select 	  substring(b.std_ym, 1, 4) as '년도'
+				, sum(b.dwl_pop_tot_cnt) as '거주인구'
+				, sum(b.flow_pop_tot_cnt) as '유동인구'
+				, sum(b.wk_plc_pop_tot_cnt) as '직장인구'
+		from [modu].[block] a
+		inner join [modu].[MMB_MAIN_BLOCK] b
+		on a.block_cd = b.block_cd
+		where 	a.ldong_cd like #{sidocd} + '%'
+			and a.ldong_cd like #{sggcd} + '%'
+			and a.ldong_cd like #{dongcd} + '%'
+			and substring(b.std_ym, 1, 4) <![CDATA[ >= ]]> #{year} - 2
+		group by substring(b.std_ym, 1, 4)
+  	</select>
+
+  	<!-- 데이터가 없어서 임시로 교채  -->
+  	<select id="DashboardDao.인구성별정보_1.select" parameterType="CmMap" resultType="CmResMap">  	
+		select	z.연도
+		,		round((z.거주인구_남 / z.거주인구_남여총계) * 100,0)	as	거주인구_남
+		,		round((z.거주인구_여 / z.거주인구_남여총계) * 100,0)	as	거주인구_여
+		,		round((z.직장인구_남 / z.직장인구_남여총계) * 100,0)	as	직장인구_남
+		,		round((z.직장인구_여 / z.직장인구_남여총계) * 100,0)	as	직장인구_여
+		,		round((z.유동인구_남 / z.유동인구_남여총계) * 100,0)	as	유동인구_남
+		,		round((z.유동인구_여 / z.유동인구_남여총계) * 100,0)	as	유동인구_여
+		,		z.거주인구_남 as 거주인구_총남
+		,		z.거주인구_여 as 거주인구_총여
+		,		z.직장인구_남 as 직장인구_총남
+		,		z.직장인구_여 as 직장인구_총여
+		,		z.유동인구_남 as 유동인구_총남
+		,		z.유동인구_여 as 유동인구_총여
+		from
+		(
+			select
+					left(b.std_ym, 4) as '연도'
+				   , sum(b.man_dwl_pop_cnt_10gl) + sum(b.man_dwl_pop_cnt_10g) + sum(b.man_dwl_pop_cnt_20g) + sum(b.man_dwl_pop_cnt_30g) + sum(b.man_dwl_pop_cnt_40g) +
+					 sum(b.man_dwl_pop_cnt_50g)  + sum(b.man_dwl_pop_cnt_60gu) as '거주인구_남'
+				   , sum(b.wman_dwl_pop_cnt_10gl) + sum(b.wman_dwl_pop_cnt_10g) + sum(b.wman_dwl_pop_cnt_20g) + sum(b.wman_dwl_pop_cnt_30g) + sum(b.wman_dwl_pop_cnt_40g) +
+					 sum(b.wman_dwl_pop_cnt_50g)  + sum(b.wman_dwl_pop_cnt_60gu) as '거주인구_여'
+				   , sum(b.man_flow_pop_cnt_10g) + sum(b.man_flow_pop_cnt_20g) + sum(b.man_flow_pop_cnt_30g) +
+					 sum(b.man_flow_pop_cnt_40g) + sum(b.man_flow_pop_cnt_50g)  + sum(b.man_flow_pop_cnt_60gu) as '유동인구_남'
+				   , sum(b.wman_flow_pop_cnt_10g) + sum(b.wman_flow_pop_cnt_20g) + sum(b.wman_flow_pop_cnt_30g) +
+					 sum(b.wman_flow_pop_cnt_40g) + sum(b.wman_flow_pop_cnt_50g)  + sum(b.wman_flow_pop_cnt_60gu) as '유동인구_여'
+				   , sum(b.man_wk_plc_pop_cnt_20g) + sum(b.man_wk_plc_pop_cnt_30g) + sum(b.man_wk_plc_pop_cnt_40g) +
+					 sum(b.man_wk_plc_pop_cnt_50g) + sum(b.man_wk_plc_pop_cnt_60gu) as '직장인구_남'
+				   , sum(b.wman_wk_plc_pop_cnt_20g) + sum(b.wman_wk_plc_pop_cnt_30g) + sum(b.wman_wk_plc_pop_cnt_40g) +
+					 sum(b.wman_wk_plc_pop_cnt_50g)  + sum(b.wman_wk_plc_pop_cnt_60gu) as '직장인구_여'
+				   , sum(b.man_dwl_pop_cnt_10gl) + sum(b.man_dwl_pop_cnt_10g) + sum(b.man_dwl_pop_cnt_20g) + sum(b.man_dwl_pop_cnt_30g) + sum(b.man_dwl_pop_cnt_40g) +
+					 sum(b.man_dwl_pop_cnt_50g)  + sum(b.man_dwl_pop_cnt_60gu)
+				   + sum(b.wman_dwl_pop_cnt_10gl) + sum(b.wman_dwl_pop_cnt_10g) + sum(b.wman_dwl_pop_cnt_20g) + sum(b.wman_dwl_pop_cnt_30g) + sum(b.wman_dwl_pop_cnt_40g) +
+					 sum(b.wman_dwl_pop_cnt_50g)  + sum(b.wman_dwl_pop_cnt_60gu) as '거주인구_남여총계'
+				   , sum(b.man_flow_pop_cnt_10g) + sum(b.man_flow_pop_cnt_20g) + sum(b.man_flow_pop_cnt_30g) +
+					 sum(b.man_flow_pop_cnt_40g) + sum(b.man_flow_pop_cnt_50g)  + sum(b.man_flow_pop_cnt_60gu)
+				   + sum(b.wman_flow_pop_cnt_10g) + sum(b.wman_flow_pop_cnt_20g) + sum(b.wman_flow_pop_cnt_30g) +
+					 sum(b.wman_flow_pop_cnt_40g) + sum(b.wman_flow_pop_cnt_50g)  + sum(b.wman_flow_pop_cnt_60gu) as '유동인구_남여총계'
+					, sum(b.man_wk_plc_pop_cnt_20g) + sum(b.man_wk_plc_pop_cnt_30g) + sum(b.man_wk_plc_pop_cnt_40g) +
+					 sum(b.man_wk_plc_pop_cnt_50g) + sum(b.man_wk_plc_pop_cnt_60gu)
+				   + sum(b.wman_wk_plc_pop_cnt_20g) + sum(b.wman_wk_plc_pop_cnt_30g) + sum(b.wman_wk_plc_pop_cnt_40g) +
+					 sum(b.wman_wk_plc_pop_cnt_50g)  + sum(b.wman_wk_plc_pop_cnt_60gu) as '직장인구_남여총계'
+			from [modu].[block] a
+			inner join [modu].[MMB_MAIN_BLOCK] b
+			on a.block_cd = b.block_cd
+		   	where   a.ldong_cd like #{sidocd} + '%'
+			 	and a.ldong_cd like #{sggcd} + '%'
+			 	and a.ldong_cd like #{dongcd} + '%'
+			 	and left(b.std_ym, 4) = #{year}
+			group by left(b.std_ym, 4)
+		) z
+		order by 거주인구_남 desc
+  	</select>
+  	
+  	<select id="DashboardDao.인구데이터일자.select" parameterType="CmMap" resultType="CmResMap">
+  		select max(a.std_ym) max_ym
+  		     , substring(convert(varchar, DATEADD(MONTH, -3, max(a.std_ym)  + '01'), 112), 1, 6) min_ym
+		from [modu].[MMB_MAIN_BLOCK_통계] a
+		where 1 = 1
+		<if test="sidocd != '00'">
+			and a.sgng_cd like #{sidocd} + '%'
+		</if>
+		   	and a.sgng_cd like #{sggcd} + '%'
+			and a.ldong_cd like #{dongcd} + '%'
+  	</select>
+  	
+  	<select id="DashboardDao.인구성별정보_1_NEW.select" parameterType="CmMap" resultType="CmResMap">  	
+	select 	t.년도
+		,	round(sum(t.거주인구_남00 + t.거주인구_남10 + t.거주인구_남20 + t.거주인구_남30 + t.거주인구_남40 + t.거주인구_남50 + t.거주인구_남60) / sum(t.거주인구_총계) * 100,0)	as	거주인구_남
+		,	round(sum(t.거주인구_여00 + t.거주인구_여10 + t.거주인구_여20 + t.거주인구_여30 + t.거주인구_여40 + t.거주인구_여50 + t.거주인구_여60) / sum(t.거주인구_총계) * 100,0)	as	거주인구_여
+		,	round(sum(t.직장인구_남20 + t.직장인구_남30 + t.직장인구_남40 + t.직장인구_남50 + t.직장인구_남60) / sum(t.직장인구_총계) * 100,0)	as	직장인구_남
+		,	round(sum(t.직장인구_여20 + t.직장인구_여30 + t.직장인구_여40 + t.직장인구_여50 + t.직장인구_여60) / sum(t.직장인구_총계) * 100,0)	as	직장인구_여
+		,	round(sum(t.유동인구_남10 + t.유동인구_남20 + t.유동인구_남30 + t.유동인구_남40 + t.유동인구_남50 + t.유동인구_남60) / sum(t.유동인구_총계) * 100,0)	as	유동인구_남
+		,	round(sum(t.유동인구_여10 + t.유동인구_여20 + t.유동인구_여30 + t.유동인구_여40 + t.유동인구_여50 + t.유동인구_여60) / sum(t.유동인구_총계) * 100,0)	as	유동인구_여
+		,	sum(t.거주인구_남00 + t.거주인구_남10 + t.거주인구_남20 + t.거주인구_남30 + t.거주인구_남40 + t.거주인구_남50 + t.거주인구_남60) as 거주인구_총남
+		,	sum(t.거주인구_여00 + t.거주인구_여10 + t.거주인구_여20 + t.거주인구_여30 + t.거주인구_여40 + t.거주인구_여50 + t.거주인구_여60) as 거주인구_총여
+		,	sum(t.직장인구_남20 + t.직장인구_남30 + t.직장인구_남40 + t.직장인구_남50 + t.직장인구_남60) as 직장인구_총남
+		,	sum(t.직장인구_여20 + t.직장인구_여30 + t.직장인구_여40 + t.직장인구_여50 + t.직장인구_여60) as 직장인구_총여
+		,	sum(t.유동인구_남10 + t.유동인구_남20 + t.유동인구_남30 + t.유동인구_남40 + t.유동인구_남50 + t.유동인구_남60) as 유동인구_총남
+		,	sum(t.유동인구_여10 + t.유동인구_여20 + t.유동인구_여30 + t.유동인구_여40 + t.유동인구_여50 + t.유동인구_여60) as 유동인구_총여
+	from
+	(
+		select		z.시도코드
+				,	z.구코드
+				,	z.동코드
+				,	z.sggnm
+				,	z.dongnm
+				, 	substring(z.std_ym,1,4) as '년도'
+				,	round(sum(z.거주인구_남00) / count(1),0,1) as 거주인구_남00
+				,	round(sum(z.거주인구_남10) / count(1),0,1) as 거주인구_남10
+				,	round(sum(z.거주인구_남20) / count(1),0,1) as 거주인구_남20
+				,	round(sum(z.거주인구_남30) / count(1),0,1) as 거주인구_남30
+				,	round(sum(z.거주인구_남40) / count(1),0,1) as 거주인구_남40
+				,	round(sum(z.거주인구_남50) / count(1),0,1) as 거주인구_남50
+				,	round(sum(z.거주인구_남60) / count(1),0,1) as 거주인구_남60
+				,	round(sum(z.거주인구_여00) / count(1),0,1) as 거주인구_여00
+				,	round(sum(z.거주인구_여10) / count(1),0,1) as 거주인구_여10
+				,	round(sum(z.거주인구_여20) / count(1),0,1) as 거주인구_여20
+				,	round(sum(z.거주인구_여30) / count(1),0,1) as 거주인구_여30
+				,	round(sum(z.거주인구_여40) / count(1),0,1) as 거주인구_여40
+				,	round(sum(z.거주인구_여50) / count(1),0,1) as 거주인구_여50
+				,	round(sum(z.거주인구_여60) / count(1),0,1) as 거주인구_여60
+				,	round(sum(z.거주인구_남00) / count(1),0,1) + round(sum(z.거주인구_남10) / count(1),0,1) + round(sum(z.거주인구_남20) / count(1),0,1) + round(sum(z.거주인구_남30) / count(1),0,1) +
+					round(sum(z.거주인구_남40) / count(1),0,1) + round(sum(z.거주인구_남50) / count(1),0,1) + round(sum(z.거주인구_남60) / count(1),0,1) +
+					round(sum(z.거주인구_여00) / count(1),0,1) + round(sum(z.거주인구_여10) / count(1),0,1) + round(sum(z.거주인구_여20) / count(1),0,1) + round(sum(z.거주인구_여30) / count(1),0,1) +
+					round(sum(z.거주인구_여40) / count(1),0,1) + round(sum(z.거주인구_여50) / count(1),0,1) + round(sum(z.거주인구_여60) / count(1),0,1) as 거주인구_총계
+				,	0 as 직장인구_남00
+				,	0 as 직장인구_남10
+				,	round(sum(z.직장인구_남20) / count(1),0,1) as 직장인구_남20
+				,	round(sum(z.직장인구_남30) / count(1),0,1) as 직장인구_남30
+				,	round(sum(z.직장인구_남40) / count(1),0,1) as 직장인구_남40
+				,	round(sum(z.직장인구_남50) / count(1),0,1) as 직장인구_남50
+				,	round(sum(z.직장인구_남60) / count(1),0,1) as 직장인구_남60
+				,	0 as 직장인구_여00
+				,	0 as 직장인구_여10
+				,	round(sum(z.직장인구_여20) / count(1),0,1) as 직장인구_여20
+				,	round(sum(z.직장인구_여30) / count(1),0,1) as 직장인구_여30
+				,	round(sum(z.직장인구_여40) / count(1),0,1) as 직장인구_여40
+				,	round(sum(z.직장인구_여50) / count(1),0,1) as 직장인구_여50
+				,	round(sum(z.직장인구_여60) / count(1),0,1) as 직장인구_여60
+				,	round(sum(z.직장인구_남20) / count(1),0,1) + round(sum(z.거주인구_남30) / count(1),0,1) + round(sum(z.거주인구_남40) / count(1),0,1) +
+					round(sum(z.직장인구_남50) / count(1),0,1) + round(sum(z.직장인구_남60) / count(1),0,1) +
+					round(sum(z.직장인구_여20) / count(1),0,1) + round(sum(z.거주인구_여30) / count(1),0,1) + round(sum(z.거주인구_여40) / count(1),0,1) +
+					round(sum(z.직장인구_여50) / count(1),0,1) + round(sum(z.직장인구_여60) / count(1),0,1)  as 직장인구_총계
+				,	0 as 유동인구_남00
+				,	round(sum(z.유동인구_남10) / count(1),0,1) as 유동인구_남10
+				,	round(sum(z.유동인구_남20) / count(1),0,1) as 유동인구_남20
+				,	round(sum(z.유동인구_남30) / count(1),0,1) as 유동인구_남30
+				,	round(sum(z.유동인구_남40) / count(1),0,1) as 유동인구_남40
+				,	round(sum(z.유동인구_남50) / count(1),0,1) as 유동인구_남50
+				,	round(sum(z.유동인구_남60) / count(1),0,1) as 유동인구_남60
+				,	0 as 유동인구_여00
+				,	round(sum(z.유동인구_여10) / count(1),0,1) as 유동인구_여10
+				,	round(sum(z.유동인구_여20) / count(1),0,1) as 유동인구_여20
+				,	round(sum(z.유동인구_여30) / count(1),0,1) as 유동인구_여30
+				,	round(sum(z.유동인구_여40) / count(1),0,1) as 유동인구_여40
+				,	round(sum(z.유동인구_여50) / count(1),0,1) as 유동인구_여50
+				,	round(sum(z.유동인구_여60) / count(1),0,1) as 유동인구_여60
+				,	round(sum(z.유동인구_남10) / count(1),0,1) + round(sum(z.유동인구_남20) / count(1),0,1) + round(sum(z.유동인구_남30) / count(1),0,1) +
+					round(sum(z.유동인구_남40) / count(1),0,1) + round(sum(z.유동인구_남50) / count(1),0,1) + round(sum(z.유동인구_남60) / count(1),0,1) +
+					round(sum(z.유동인구_여10) / count(1),0,1) + round(sum(z.유동인구_여20) / count(1),0,1) + round(sum(z.유동인구_여30) / count(1),0,1) +
+					round(sum(z.유동인구_여40) / count(1),0,1) + round(sum(z.유동인구_여50) / count(1),0,1) + round(sum(z.유동인구_여60) / count(1),0,1)  as 유동인구_총계
+		from
+		(
+			select    a.sido_cd as '시도코드'
+					, a.sgng_cd  as '구코드'
+					, a.ldong_cd as '동코드'
+					, a.sgng_nm  as 'sggnm'
+					, a.ldong_nm as 'dongnm'
+					, 	a.std_ym
+					,   sum(round(man_dwl_pop_cnt_10gl,0,1)) 	as '거주인구_남00'
+					,   sum(round(man_dwl_pop_cnt_10g,0,1)) 	as '거주인구_남10'
+					,   sum(round(man_dwl_pop_cnt_20g,0,1)) 	as '거주인구_남20'
+					,   sum(round(man_dwl_pop_cnt_30g,0,1)) 	as '거주인구_남30'
+					,   sum(round(man_dwl_pop_cnt_40g,0,1)) 	as '거주인구_남40'
+					,   sum(round(man_dwl_pop_cnt_50g,0,1)) 	as '거주인구_남50'
+					,   sum(round(man_dwl_pop_cnt_60gu,0,1)) 	as '거주인구_남60'
+					,   sum(round(wman_dwl_pop_cnt_10gl,0,1)) 	as '거주인구_여00'
+					,   sum(round(wman_dwl_pop_cnt_10g,0,1)) 	as '거주인구_여10'
+					,   sum(round(wman_dwl_pop_cnt_20g,0,1)) 	as '거주인구_여20'
+					,   sum(round(wman_dwl_pop_cnt_30g,0,1)) 	as '거주인구_여30'
+					,   sum(round(wman_dwl_pop_cnt_40g,0,1)) 	as '거주인구_여40'
+					,   sum(round(wman_dwl_pop_cnt_50g,0,1)) 	as '거주인구_여50'
+					,   sum(round(wman_dwl_pop_cnt_60gu,0,1)) 	as '거주인구_여60'
+					,   0 	as '직장인구_남00'
+					,   0 	as '직장인구_남10'
+					,   sum(round(man_wk_plc_pop_cnt_20g,0,1)) 	as '직장인구_남20'
+					,   sum(round(man_wk_plc_pop_cnt_30g,0,1)) 	as '직장인구_남30'
+					,   sum(round(man_wk_plc_pop_cnt_40g,0,1)) 	as '직장인구_남40'
+					,   sum(round(man_wk_plc_pop_cnt_50g,0,1)) 	as '직장인구_남50'
+					,   sum(round(man_wk_plc_pop_cnt_60gu,0,1))	as '직장인구_남60'
+					,   0 	as '직장인구_여00'
+					,   0 	as '직장인구_여10'
+					,   sum(round(wman_wk_plc_pop_cnt_20g,0,1))  as '직장인구_여20'
+					,   sum(round(wman_wk_plc_pop_cnt_30g,0,1))  as '직장인구_여30'
+					,   sum(round(wman_wk_plc_pop_cnt_40g,0,1))  as '직장인구_여40'
+					,   sum(round(wman_wk_plc_pop_cnt_50g,0,1))  as '직장인구_여50'
+					,   sum(round(wman_wk_plc_pop_cnt_60gu,0,1)) as '직장인구_여60'
+					,   0 	as '유동인구_남00'
+					,   sum(round(man_flow_pop_cnt_10g,0,1)) 	as '유동인구_남10'
+					,   sum(round(man_flow_pop_cnt_20g,0,1)) 	as '유동인구_남20'
+					,   sum(round(man_flow_pop_cnt_30g,0,1)) 	as '유동인구_남30'
+					,   sum(round(man_flow_pop_cnt_40g,0,1)) 	as '유동인구_남40'
+					,   sum(round(man_flow_pop_cnt_50g,0,1)) 	as '유동인구_남50'
+					,   sum(round(man_flow_pop_cnt_60gu,0,1)) 	as '유동인구_남60'
+					,   0 	as '유동인구_여00'
+					,   sum(round(wman_flow_pop_cnt_10g,0,1)) 	as '유동인구_여10'
+					,   sum(round(wman_flow_pop_cnt_20g,0,1)) 	as '유동인구_여20'
+					,   sum(round(wman_flow_pop_cnt_30g,0,1)) 	as '유동인구_여30'
+					,   sum(round(wman_flow_pop_cnt_40g,0,1)) 	as '유동인구_여40'
+					,   sum(round(wman_flow_pop_cnt_50g,0,1)) 	as '유동인구_여50'
+					,   sum(round(wman_flow_pop_cnt_60gu,0,1)) 	as '유동인구_여60'
+			from [modu].[MMB_MAIN_BLOCK_통계] a
+		  	where 1 = 1
+			<if test="sidocd != '00'">
+				and a.sgng_cd like #{sidocd} + '%'
+			</if>
+				 and a.sgng_cd like #{sggcd} + '%'
+				 and a.ldong_cd like #{dongcd} + '%'
+				 and a.std_ym between #{minym} and #{maxym}
+			group by  a.sido_cd
+					, a.sgng_cd
+					, a.sgng_nm
+					, a.ldong_cd
+					, a.ldong_nm
+					, a.std_ym
+			) z
+			group by 	z.시도코드
+					,	z.구코드
+					,	z.동코드
+					,	z.sggnm
+					,	z.dongnm
+					,	substring(z.std_ym,1,4)
+		) t
+		group by t.년도
+  	</select>
+  	
+  	<select id="DashboardDao.인구정보_1_NEW.select" parameterType="CmMap" resultType="CmResMap">   	
+		select 	t.년도
+			,	sum(t.거주인구_남00 + t.거주인구_남10 + t.거주인구_남20 + t.거주인구_남30 + t.거주인구_남40 + t.거주인구_남50 + t.거주인구_남60) +
+				sum(t.거주인구_여00 + t.거주인구_여10 + t.거주인구_여20 + t.거주인구_여30 + t.거주인구_여40 + t.거주인구_여50 + t.거주인구_여60) as 거주인구_총인구
+			,	sum(t.직장인구_남20 + t.직장인구_남30 + t.직장인구_남40 + t.직장인구_남50 + t.직장인구_남60)+
+				sum(t.직장인구_여20 + t.직장인구_여30 + t.직장인구_여40 + t.직장인구_여50 + t.직장인구_여60) as 직장인구_총인구
+			,	sum(t.유동인구_남10 + t.유동인구_남20 + t.유동인구_남30 + t.유동인구_남40 + t.유동인구_남50 + t.유동인구_남60)+
+				sum(t.유동인구_여10 + t.유동인구_여20 + t.유동인구_여30 + t.유동인구_여40 + t.유동인구_여50 + t.유동인구_여60) as 유동인구_총인구
+		from
+		(
+			select		z.시도코드
+					,	z.구코드
+					,	z.동코드
+					,	z.sggnm
+					,	z.dongnm
+					, 	substring(z.std_ym,1,4) as '년도'
+					,	round(sum(z.거주인구_남00) / count(1),0,1) as 거주인구_남00
+					,	round(sum(z.거주인구_남10) / count(1),0,1) as 거주인구_남10
+					,	round(sum(z.거주인구_남20) / count(1),0,1) as 거주인구_남20
+					,	round(sum(z.거주인구_남30) / count(1),0,1) as 거주인구_남30
+					,	round(sum(z.거주인구_남40) / count(1),0,1) as 거주인구_남40
+					,	round(sum(z.거주인구_남50) / count(1),0,1) as 거주인구_남50
+					,	round(sum(z.거주인구_남60) / count(1),0,1) as 거주인구_남60
+					,	round(sum(z.거주인구_여00) / count(1),0,1) as 거주인구_여00
+					,	round(sum(z.거주인구_여10) / count(1),0,1) as 거주인구_여10
+					,	round(sum(z.거주인구_여20) / count(1),0,1) as 거주인구_여20
+					,	round(sum(z.거주인구_여30) / count(1),0,1) as 거주인구_여30
+					,	round(sum(z.거주인구_여40) / count(1),0,1) as 거주인구_여40
+					,	round(sum(z.거주인구_여50) / count(1),0,1) as 거주인구_여50
+					,	round(sum(z.거주인구_여60) / count(1),0,1) as 거주인구_여60
+					,	round(sum(z.거주인구_남00) / count(1),0,1) + round(sum(z.거주인구_남10) / count(1),0,1) + round(sum(z.거주인구_남20) / count(1),0,1) + round(sum(z.거주인구_남30) / count(1),0,1) +
+						round(sum(z.거주인구_남40) / count(1),0,1) + round(sum(z.거주인구_남50) / count(1),0,1) + round(sum(z.거주인구_남60) / count(1),0,1) +
+						round(sum(z.거주인구_여00) / count(1),0,1) + round(sum(z.거주인구_여10) / count(1),0,1) + round(sum(z.거주인구_여20) / count(1),0,1) + round(sum(z.거주인구_여30) / count(1),0,1) +
+						round(sum(z.거주인구_여40) / count(1),0,1) + round(sum(z.거주인구_여50) / count(1),0,1) + round(sum(z.거주인구_여60) / count(1),0,1) as 거주인구_총계
+					,	0 as 직장인구_남00
+					,	0 as 직장인구_남10
+					,	round(sum(z.직장인구_남20) / count(1),0,1) as 직장인구_남20
+					,	round(sum(z.직장인구_남30) / count(1),0,1) as 직장인구_남30
+					,	round(sum(z.직장인구_남40) / count(1),0,1) as 직장인구_남40
+					,	round(sum(z.직장인구_남50) / count(1),0,1) as 직장인구_남50
+					,	round(sum(z.직장인구_남60) / count(1),0,1) as 직장인구_남60
+					,	0 as 직장인구_여00
+					,	0 as 직장인구_여10
+					,	round(sum(z.직장인구_여20) / count(1),0,1) as 직장인구_여20
+					,	round(sum(z.직장인구_여30) / count(1),0,1) as 직장인구_여30
+					,	round(sum(z.직장인구_여40) / count(1),0,1) as 직장인구_여40
+					,	round(sum(z.직장인구_여50) / count(1),0,1) as 직장인구_여50
+					,	round(sum(z.직장인구_여60) / count(1),0,1) as 직장인구_여60
+					,	round(sum(z.직장인구_남20) / count(1),0,1) + round(sum(z.거주인구_남30) / count(1),0,1) + round(sum(z.거주인구_남40) / count(1),0,1) +
+						round(sum(z.직장인구_남50) / count(1),0,1) + round(sum(z.직장인구_남60) / count(1),0,1) +
+						round(sum(z.직장인구_여20) / count(1),0,1) + round(sum(z.거주인구_여30) / count(1),0,1) + round(sum(z.거주인구_여40) / count(1),0,1) +
+						round(sum(z.직장인구_여50) / count(1),0,1) + round(sum(z.직장인구_여60) / count(1),0,1)  as 직장인구_총계
+					,	0 as 유동인구_남00
+					,	round(sum(z.유동인구_남10) / count(1),0,1) as 유동인구_남10
+					,	round(sum(z.유동인구_남20) / count(1),0,1) as 유동인구_남20
+					,	round(sum(z.유동인구_남30) / count(1),0,1) as 유동인구_남30
+					,	round(sum(z.유동인구_남40) / count(1),0,1) as 유동인구_남40
+					,	round(sum(z.유동인구_남50) / count(1),0,1) as 유동인구_남50
+					,	round(sum(z.유동인구_남60) / count(1),0,1) as 유동인구_남60
+					,	0 as 유동인구_여00
+					,	round(sum(z.유동인구_여10) / count(1),0,1) as 유동인구_여10
+					,	round(sum(z.유동인구_여20) / count(1),0,1) as 유동인구_여20
+					,	round(sum(z.유동인구_여30) / count(1),0,1) as 유동인구_여30
+					,	round(sum(z.유동인구_여40) / count(1),0,1) as 유동인구_여40
+					,	round(sum(z.유동인구_여50) / count(1),0,1) as 유동인구_여50
+					,	round(sum(z.유동인구_여60) / count(1),0,1) as 유동인구_여60
+					,	round(sum(z.유동인구_남10) / count(1),0,1) + round(sum(z.유동인구_남20) / count(1),0,1) + round(sum(z.유동인구_남30) / count(1),0,1) +
+						round(sum(z.유동인구_남40) / count(1),0,1) + round(sum(z.유동인구_남50) / count(1),0,1) + round(sum(z.유동인구_남60) / count(1),0,1) +
+						round(sum(z.유동인구_여10) / count(1),0,1) + round(sum(z.유동인구_여20) / count(1),0,1) + round(sum(z.유동인구_여30) / count(1),0,1) +
+						round(sum(z.유동인구_여40) / count(1),0,1) + round(sum(z.유동인구_여50) / count(1),0,1) + round(sum(z.유동인구_여60) / count(1),0,1)  as 유동인구_총계
+		from
+		(
+			select    a.sido_cd as '시도코드'
+					, a.sgng_cd  as '구코드'
+					, a.ldong_cd as '동코드'
+					, a.sgng_nm  as 'sggnm'
+					, a.ldong_nm as 'dongnm'
+					, 	a.std_ym
+					,   sum(round(man_dwl_pop_cnt_10gl,0,1)) 	as '거주인구_남00'
+					,   sum(round(man_dwl_pop_cnt_10g,0,1)) 	as '거주인구_남10'
+					,   sum(round(man_dwl_pop_cnt_20g,0,1)) 	as '거주인구_남20'
+					,   sum(round(man_dwl_pop_cnt_30g,0,1)) 	as '거주인구_남30'
+					,   sum(round(man_dwl_pop_cnt_40g,0,1)) 	as '거주인구_남40'
+					,   sum(round(man_dwl_pop_cnt_50g,0,1)) 	as '거주인구_남50'
+					,   sum(round(man_dwl_pop_cnt_60gu,0,1)) 	as '거주인구_남60'
+					,   sum(round(wman_dwl_pop_cnt_10gl,0,1)) 	as '거주인구_여00'
+					,   sum(round(wman_dwl_pop_cnt_10g,0,1)) 	as '거주인구_여10'
+					,   sum(round(wman_dwl_pop_cnt_20g,0,1)) 	as '거주인구_여20'
+					,   sum(round(wman_dwl_pop_cnt_30g,0,1)) 	as '거주인구_여30'
+					,   sum(round(wman_dwl_pop_cnt_40g,0,1)) 	as '거주인구_여40'
+					,   sum(round(wman_dwl_pop_cnt_50g,0,1)) 	as '거주인구_여50'
+					,   sum(round(wman_dwl_pop_cnt_60gu,0,1)) 	as '거주인구_여60'
+					,   0 	as '직장인구_남00'
+					,   0 	as '직장인구_남10'
+					,   sum(round(man_wk_plc_pop_cnt_20g,0,1)) 	as '직장인구_남20'
+					,   sum(round(man_wk_plc_pop_cnt_30g,0,1)) 	as '직장인구_남30'
+					,   sum(round(man_wk_plc_pop_cnt_40g,0,1)) 	as '직장인구_남40'
+					,   sum(round(man_wk_plc_pop_cnt_50g,0,1)) 	as '직장인구_남50'
+					,   sum(round(man_wk_plc_pop_cnt_60gu,0,1))	as '직장인구_남60'
+					,   0 	as '직장인구_여00'
+					,   0 	as '직장인구_여10'
+					,   sum(round(wman_wk_plc_pop_cnt_20g,0,1))  as '직장인구_여20'
+					,   sum(round(wman_wk_plc_pop_cnt_30g,0,1))  as '직장인구_여30'
+					,   sum(round(wman_wk_plc_pop_cnt_40g,0,1))  as '직장인구_여40'
+					,   sum(round(wman_wk_plc_pop_cnt_50g,0,1))  as '직장인구_여50'
+					,   sum(round(wman_wk_plc_pop_cnt_60gu,0,1)) as '직장인구_여60'
+					,   0 	as '유동인구_남00'
+					,   sum(round(man_flow_pop_cnt_10g,0,1)) 	as '유동인구_남10'
+					,   sum(round(man_flow_pop_cnt_20g,0,1)) 	as '유동인구_남20'
+					,   sum(round(man_flow_pop_cnt_30g,0,1)) 	as '유동인구_남30'
+					,   sum(round(man_flow_pop_cnt_40g,0,1)) 	as '유동인구_남40'
+					,   sum(round(man_flow_pop_cnt_50g,0,1)) 	as '유동인구_남50'
+					,   sum(round(man_flow_pop_cnt_60gu,0,1)) 	as '유동인구_남60'
+					,   0 	as '유동인구_여00'
+					,   sum(round(wman_flow_pop_cnt_10g,0,1)) 	as '유동인구_여10'
+					,   sum(round(wman_flow_pop_cnt_20g,0,1)) 	as '유동인구_여20'
+					,   sum(round(wman_flow_pop_cnt_30g,0,1)) 	as '유동인구_여30'
+					,   sum(round(wman_flow_pop_cnt_40g,0,1)) 	as '유동인구_여40'
+					,   sum(round(wman_flow_pop_cnt_50g,0,1)) 	as '유동인구_여50'
+					,   sum(round(wman_flow_pop_cnt_60gu,0,1)) 	as '유동인구_여60'
+			from [modu].[MMB_MAIN_BLOCK_통계] a
+			where 1 = 1
+			<if test="sidocd != '00'">
+				and a.sgng_cd like #{sidocd} + '%'
+			</if>
+				and a.sgng_cd like #{sggcd} + '%'
+				and a.ldong_cd like #{dongcd} + '%'
+				and a.std_ym <![CDATA[ >= ]]> convert(varchar,#{year} - 2) + '%'
+			group by  a.sido_cd
+					, a.sgng_cd
+					, a.sgng_nm
+					, a.ldong_cd
+					, a.ldong_nm
+					, a.std_ym
+			) z
+			group by 	z.시도코드
+					,	z.구코드
+					,	z.동코드
+					,	z.sggnm
+					,	z.dongnm
+					,	substring(z.std_ym,1,4)
+		) t
+		group by t.년도
+  	</select>
+
+	<select id="DashboardDao.자료출처_최종시간.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			'매물' AS '이름',
+			'부동산R114' AS '출처',
+			substring(max(a.매물게시일), 1, 6) AS '최종시간'
+		from modu.통합_상가매물정보 a
+		where isnumeric(substring(a.매물게시일, 1, 1)) = 1
+
+		union all
+
+		select
+			'매매' AS '이름',
+			'부동산R114' AS '출처',
+			substring(max(a.매물게시일), 1, 6) AS '최종시간'
+		from modu.통합_상가매물_매매정보 a
+		where isnumeric(substring(a.매물게시일, 1, 1)) = 1
+
+		union all
+		
+		select
+			'상가' AS '이름',
+			'부동산R114' AS '출처',
+			substring(max(a.최초등록일), 1, 6) AS '최종시간'
+		from modu.P_SANGGA a
+		
+		union all
+		
+		select
+			'업종' AS '이름',
+			'소상공인진흥공단' AS '출처',
+			max(a.기준년월) AS '최종시간'
+		from modu.소상공인_상가정보_업종대분류_통계 a
+		
+		union all
+		
+		select
+			'인구' AS '이름',
+			'SKT' AS '출처',
+			max(a.std_ym) AS '최종시간'
+		from modu.MMB_MAIN_BLOCK a
+		where block_cd = '11010530100010000001'
+		
+		union all
+		
+		select
+			'매출' AS '이름',
+			'SKT, 현대카드' AS '출처',
+			max(a.std_ym) AS '최종시간'
+		from modu.MMB_LOBZ_SCLS_BLOCK a
+		where block_cd = '11010530100010000001' and bz_lobz_scls_cd = '102002'
+
+		union all
+		
+		select
+			'실거래' AS '이름',
+			'국토교통부' AS '출처',
+			substring(max(a.UPD_YMD), 1, 6) AS '최종시간'
+		from modu.MOLIT_NRG_TRD a
+
+		union all
+
+		select
+			'임대료_블럭' AS '이름',
+			'부동산R114' AS '출처',
+			max(a.std_yyyymm) AS '최종시간'
+		from modu.SHOP_RENT_100M a
+
+		union all
+
+		select
+			'매매가_블럭' AS '이름',
+			'부동산R114' AS '출처',
+			max(a.std_yyyymm) AS '최종시간'
+		from modu.SHOP_DEAL_100M a
+	    where id is not null
+		union all
+
+		select
+			'업종_블럭' AS '이름',
+			'소상공인진흥공단' AS '출처',
+			max(a.sdt_yyyymm) AS '최종시간'
+		from modu.sqr_100_store_10_cnt a
+
+		union all
+		
+		select
+			'유동인구_블럭' AS '이름',
+			'SKT' AS '출처',
+			max(a.std_ym) AS '최종시간'
+		from modu.MMB_MAIN_BLOCK a
+	</select>
+
+</mapper>

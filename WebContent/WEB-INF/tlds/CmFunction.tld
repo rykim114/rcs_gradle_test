@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+    
+	<description>common tag library</description>
+	<display-name>common tag</display-name>
+	<tlib-version>1.0</tlib-version>
+	<short-name>cfn</short-name>
+	<uri>cfn</uri>
+
+	<function>
+  		<description>strDate, format</description>
+		<name>dateFormat</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getStrDateToString(java.lang.String, java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+        <description>Jul</description>
+        <name>cmUsDatePatten2</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getUsDatePatten2(java.lang.String)
+        </function-signature>
+    </function>
+	
+	<function>
+  		<description>yyyy.MM.dd</description>
+		<name>ymFormat</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getPointYm(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>yyyy.MM.dd</description>
+		<name>dtFormat</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getPointDt(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>yyyy.MM.dd HH:mm:ss</description>
+		<name>dtmFormat</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getPointDtm(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>yyyy.MM.dd</description>
+		<name>dayFormat</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getStrWeekToString(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>changeBR</description>
+		<name>changeBR</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getStrChangeBr(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>cutStr</description>
+		<name>cutStr</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getByteString(java.lang.String, java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>getTodayString</description>
+		<name>getTodayString</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String getTodayString(java.lang.String)
+		</function-signature>
+	</function>
+	
+	<function>
+  		<description>decodeAES</description>
+		<name>decodeAES</name>
+		<function-class>apps.framework.utils.CmFunction</function-class>
+		<function-signature>
+			String decodeAES(java.lang.String)
+		</function-signature>
+	</function>
+
+    <function>
+        <description>숫자 세 자리마다 ','를 표시</description>
+        <name>setNumComma</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String setNumComma(java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <description>yyyy.mm.dd</description>
+        <name>changeDatePatten</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeDatePatten(java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+        <description>yyyy.mm.dd</description>
+        <name>changeDatePatten2</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeDatePatten2(java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <description>yyyy.mm.dd hh24:mi:ss</description>
+        <name>cmDtmPatten</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getPointDtm(java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <description>글자수 자르기</description>
+        <name>getByteString</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getByteString(java.lang.String, java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <description>문자열에서 모든 HTML 태그 삭제 하고  \n을 변경</description>
+        <name>removeHTML</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String removeHTMLChangeBr(java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+        <description>시간 비교해서 날짜 가지고 오기</description>
+        <name>changeCafeDate</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeCafeDate(java.lang.String)
+        </function-signature>
+    </function>    
+    
+    <function>
+        <description>텍스트를 * 로 변환  (ex : ("abcdebe" , 2)  = abcde**)</description>
+        <name>getStringReverseHidden</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getStringReverseHidden(java.lang.String, java.lang.String)
+        </function-signature>
+    </function>    
+    
+    <function>
+        <description>사용후기 점수 css 적용을 위한 수치변환</description>
+        <name>getGrade</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getGrade(java.lang.String)
+        </function-signature>
+    </function>
+        
+    <function>
+        <description>무조건 소문자로 변환</description>
+        <name>changeToLowerCase</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeToLowerCase(java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+        <description>Youtube Url에서 Youtube Id 만 추출</description>
+        <name>changeYoutubePath</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeYoutubePath(java.lang.String)
+        </function-signature>
+    </function>
+    <function>
+        <description>입력된 년수를 나이대로 보여주기(10대초반 , 20대중반 등)</description>
+        <name>changeAgeYear</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeAgeYear(java.lang.String)
+        </function-signature>
+    </function>
+    <function>
+        <description>해당 날짜를 하루가 지났으면 년도.월.일 로 보여주고 하루가 지나지 않았으면 시간:분 으로 보여줌</description>
+        <name>changeCafeDate2</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String changeCafeDate2(java.lang.String)
+        </function-signature>
+    </function>    
+	 <function>
+        <description>문자열 치환</description>
+        <name>replace</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String replace(java.lang.String, java.lang.String, java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+    	<description>구매후기 옵션 html</description>
+    	<name>textReviewOption</name>
+    	<function-class>apps.framework.utils.CmFunction</function-class>
+    	<function-signature>
+    		String getReviewOptionInfo(java.lang.String)
+    	</function-signature>
+    </function>
+    
+    <function>
+        <description>이름 마스킹 처리</description>
+        <name>getChangeUserName</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getChangeUserName(java.lang.String)
+        </function-signature>
+    </function>
+    <function>
+        <description>yyyyMM</description>
+        <name>getRegDate6</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getRegDate6()
+        </function-signature>
+    </function>
+    <function>
+        <description>AES encode</description>
+        <name>getEncodeAes</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getEncodeAes(java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+        <description>AES decode</description>
+        <name>getDecodeAes</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getDecodeAes(java.lang.String)
+        </function-signature>
+    </function>
+    
+    <function>
+        <description>EMAIL ******로 표시</description>
+        <name>getEmailHidden</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+           String getEmailHidden(java.lang.String, java.lang.String)
+        </function-signature>
+    </function>
+        
+    <function>
+        <description>연락처 ******로 표시</description>
+        <name>getChangePhone</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+           String getChangePhone(java.lang.String, java.lang.String)
+        </function-signature>
+    </function>
+        
+    <function>
+        <description>년월일</description>
+        <name>dateStrucChange</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String dateStrucChange(java.lang.String, int)
+        </function-signature>
+    </function>        
+
+    <function>
+        <description>getFileSize</description>
+        <name>getFileSize</name>
+        <function-class>apps.framework.utils.CmFunction</function-class>
+        <function-signature>
+            String getFileSize(long)
+        </function-signature>
+    </function>        
+</taglib>

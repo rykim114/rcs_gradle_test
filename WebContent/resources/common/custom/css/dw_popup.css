@@ -1,0 +1,51 @@
+/* css to dawul popup customize css  */
+/* �븘�슂�븳 �뒪���씪 �떆�듃�뒗 �젙�쓽 �빐�꽌 �궗�슜�븯�꽭�슂.. */ 
+/* �쟻�슜�� �뙘�뾽 �샃�뀡�쓽 'className':'dawul'濡� �쟻�슜 */
+/*  marker.bindPopup(html,{'closeOnClick':true,'closeButton':false,'maxWidth':'500','className':'dawul'}); */
+
+.dawul .leaflet-popup-tip {
+	padding: 0px;
+	margin: 0px;
+	transform: none;
+	color: black;
+	width: 0px;
+	height: 0px;
+}
+
+.leaflet-popup-close-button{
+	padding	:	7px 4px 0 0;
+}
+
+.dawul .leaflet-popup-content-wrapper{
+	color: black;
+	border-radius: 0px;
+	box-shadow:0 0 0 rgba(0,0,0,0); /* �셿�쟾�닾紐� */  
+	background-color:transparent;   /* 諛깃렇�씪�슫�뱶 �닾紐� */
+}
+.dawul .leaflet-popup-content {
+	margin: 5px 5px;
+	width : 50px;
+}
+
+#mapInfo2{
+	left : 27%; !important;
+}
+
+.leaflet-popup-content-wrapper{
+	padding: 0px !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+position: absolute;
+top: 0;
+right: 0;
+padding: 7px 4px 0 0;
+text-align: center;
+width: 18px;
+height: 14px;
+font: 16px/14px Tahoma, Verdana, sans-serif;
+color: #c3c3c3;
+text-decoration: none;
+font-weight: bold;
+background: transparent;
+}

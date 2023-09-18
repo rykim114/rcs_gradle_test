@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EmailDao">
+	
+	<select id="EmailDao.getNoticeEmailSendCount" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COALESCE(COUNT(COMPANY_CODE),0)
+			FROM RE_NOTICE_EMAIL_SEND
+			WHERE COMPANY_CODE = #{companyCode}
+			AND proj_code      = #{proj_code}
+			AND levy_ym        = #{levy_ym}
+			AND sell_code      = #{sell_code}
+			AND group_seq_c    = ${group_seq_c}
+			AND status         = #{status}
+			AND cust_code      = ${cust_code}
+			AND send           = #{send}
+			AND bill_seq       = #{bill_seq}::bigint
+			AND levy_date      = #{levy_date}::date
+		]]>
+	</select>
+	
+	<select id="EmailDao.getNoticeEmailSendCount_Lotte" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COALESCE(COUNT(COMPANY_CODE),0)
+			FROM RE_NOTICE_EMAIL_SEND_LOTTE
+			WHERE COMPANY_CODE = #{companyCode}
+			AND proj_code      = #{proj_code}
+			AND levy_ym        = #{levy_ym}
+			AND sell_code      = #{sell_code}
+			AND seq_n    	   = ${seq_n}
+			AND status         = #{status}
+			AND cust_code      = ${cust_code}
+			AND send           = #{send}
+		]]>
+	</select>	
+	
+	
+	<select id="EmailDao.getNoticeEmailSendCount_Ezrems" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COALESCE(COUNT(COMPANY_CODE),0)
+			FROM RE_NOTICE_EMAIL_SEND_EZREMS
+			WHERE COMPANY_CODE		= #{company_code}
+			AND proj_code			= #{proj_code}
+			AND sell_code			= #{sell_code}
+			AND group_seq_c			= #{group_seq_c}::bigint
+			AND levy_ym				= #{levy_ym}
+			AND levy_date			= #{levy_date}::date
+			AND status				= #{status}
+			AND send				= #{send}
+			AND bill_seq			= #{bill_seq}::bigint
+		]]>
+	</select>	
+	
+	
+	<select id="EmailDao.getNoticeEmailSendCountInvoice_Ezrems" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			select coalesce(count(1),0)
+			  from re_cont_invoice_emp
+			 where company_code			= #{company_code}
+			   and proj_code			= #{proj_code}
+			   and sell_code			= #{sell_code}
+			   and group_cont_id		= #{group_cont_id}::bigint
+			   and invoice_use_yn = 'Y'
+		]]>
+	</select>	
+	
+	<select id="EmailDao.getNoticeEmailSendList" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT COMPANY_CODE, PROJ_CODE, SELL_CODE, LEVY_YM, BILL_SEQ, GROUP_SEQ_C, STATUS, CUST_CODE, DATE_AFTER, SEQ, LEVY_DATE
+			FROM RE_NOTICE_EMAIL_SEND
+			WHERE send    = #{send}
+		]]>
+	</select>
+	
+	<select id="EmailDao.getRentEmailSendList" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT COMPANY_CODE, PROJ_CODE, SELL_CODE, GROUP_CONT_ID, DATE_PRE, CUST_CODE, CUST_EMAIL AS CUST_EMAIL,SEND_EMAIL AS SEND_EMAIL, CUST_CODE, SEND
+			FROM RE_RENT_EMAIL_SEND_EZREMS
+			WHERE send    = #{send}
+		]]>
+	</select>	
+	
+	<select id="EmailDao.getNoticeEmailSendList_Lotte" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+		  SELECT COMPANY_CODE, PROJ_CODE, SELL_CODE, LEVY_YM, GROUP_SEQ_C, STATUS, CUST_CODE, SEQ ,CUST_CODE_CONT,SEQ_N,DONG,FLOOR,HO,HO2
+			FROM RE_NOTICE_EMAIL_SEND_LOTTE
+			WHERE send    = #{send}
+		]]>
+	</select>
+	
+	
+	<select id="EmailDao.getNoticeEmailSendList_Ezrems" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+        select a.seq
+             , a.print_seq
+             , a.company_code
+             , a.proj_code
+             , a.sell_code
+             , a.status 
+             , a.group_seq_c
+             , a.levy_ym 
+             , a.levy_date
+             , a.bill_seq
+             , a.group_cont_id 
+             , a.cont_id 
+             , a.cust_code
+             , a.date_bill
+             , a.date_after
+             , a.send
+             , a.cust_email
+             , b.cust_name
+         from re_notice_email_send_ezrems a 
+         left join re_code_cust b
+           on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.cust_code = b.cust_code
+        where a.send = #{send}
+		]]>
+	</select>
+	
+	<select id="EmailDao.getNoticeEmailSendFrom_Lotte" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+		  SELECT ROW_INPUT_EMP_NO as FromMail
+			FROM RE_NOTICE_EMAIL_SEND_LOTTE
+			WHERE seq_n    = #{seq_n}::bigint
+		]]>
+	</select>		
+	
+	<select id="EmailDao.getNoticeEmailSendCodeCust" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT A.CUST_NAME, A.CUST_EMAIL, A.BUY_TAX_EMP_NAME, A.BUY_TAX_EMAIL, B.BUY_TAX_EMAIL AS MASTER_BUY_TAX_EMAIL
+				FROM 
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CUST_CODE, CUST_NAME, X_DECRYPT(CUST_EMAIL) AS CUST_EMAIL , BUY_TAX_EMP_NAME , X_DECRYPT(BUY_TAX_EMAIL) AS BUY_TAX_EMAIL
+						FROM RE_CODE_CUST 
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code})A 
+					LEFT JOIN					
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CONT_ID, CUST_CODE, X_DECRYPT(BUY_TAX_EMAIL) AS BUY_TAX_EMAIL
+						FROM RE_CONT_MASTER
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code}
+						AND cont_id = (select cont_id from re_notice_master where
+									COMPANY_CODE=#{companyCode}
+									AND PROJ_CODE=#{proj_code}
+									AND SELL_CODE=#{sell_code}
+									AND CUST_CODE=${cust_code}
+									AND levy_ym=#{levy_ym}
+									AND BILL_SEQ = #{bill_seq}::BIGINT
+									AND levy_date = #{levy_date}::date
+									group by cont_id)
+						) B 
+					ON A.COMPANY_CODE=B.COMPANY_CODE 
+					AND A.PROJ_CODE= B.PROJ_CODE 
+					AND A.SELL_CODE = B.SELL_CODE 
+					AND A.CUST_CODE=B.CUST_CODE		
+		]]>
+	</select>
+	
+	<select id="EmailDao.getRentEmailSendCodeCust" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT A.CUST_NAME, A.CUST_EMAIL, A.BUY_TAX_EMP_NAME, A.BUY_TAX_EMAIL
+				FROM 
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CUST_CODE, CUST_NAME, X_DECRYPT(CUST_EMAIL) AS CUST_EMAIL , BUY_TAX_EMP_NAME , X_DECRYPT(BUY_TAX_EMAIL) AS BUY_TAX_EMAIL
+						FROM RE_CODE_CUST 
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code})A 					
+		]]>
+	</select>	
+	
+	<select id="EmailDao.getNoticeEmailSendCodeCust_Lotte" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+					
+           select b.cust_name, b.cust_code, x_decrypt(b.cust_email) as cust_email , b.buy_tax_emp_name , x_decrypt(b.buy_tax_email) as buy_tax_email
+                , c.cust_name, c.cust_code, x_decrypt(c.cust_email) as cust_email , c.buy_tax_emp_name , x_decrypt(c.buy_tax_email) as buy_tax_email
+             from (select 1 as a) a  left join re_code_cust b on b.company_code = #{companyCode} and b.proj_code = #{proj_code} and b.sell_code = #{sell_code} and b.cust_code = #{cust_code}::bigint
+                                     left join re_code_cust c on c.company_code = #{companyCode} and c.proj_code = #{proj_code} and c.sell_code = #{sell_code} and c.cust_code = #{cust_code_cont}::bigint						
+		]]>
+	</select>	
+	
+	<select id="EmailDao.getNoticeEmailSendCodeCust_Ezrems" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			select a.cust_name, a.cust_email, a.buy_tax_emp_name, a.buy_tax_email, b.buy_tax_email as master_buy_tax_email
+			     , x_decrypt(d.cust_email)as bill_cust_email
+				from 
+					(select company_code ,proj_code, sell_code ,cust_code, cust_name, x_decrypt(cust_email) as cust_email , buy_tax_emp_name , x_decrypt(buy_tax_email) as buy_tax_email
+						from re_code_cust 
+					where 
+						company_code=#{company_code}
+						and proj_code=#{proj_code}
+						and sell_code=#{sell_code}
+						and cust_code=#{cust_code}::bigint)a 
+					left join					
+					(select company_code ,proj_code, sell_code ,cont_id, cust_code, x_decrypt(buy_tax_email) as buy_tax_email
+						from re_cont_master
+					where 
+						company_code=#{company_code}
+						and proj_code=#{proj_code}
+						and sell_code=#{sell_code}
+						and cust_code=#{cust_code}::bigint
+						and cont_id = #{cont_id}::bigint
+						) b 
+					on a.company_code=b.company_code 
+					and a.proj_code= b.proj_code 
+					and a.sell_code = b.sell_code 
+				   left join re_notice_master c
+				     on a.company_code = c.company_code and a.proj_code = c.proj_code and a.sell_code = c.sell_code 
+				    and c.bill_seq = #{bill_seq}::bigint
+				   left join re_code_cust d
+				     on a.company_code = d.company_code and a.proj_code = d.proj_code and a.sell_code = d.sell_code
+				    and c.cust_code = d.cust_code
+				   
+	
+		]]>
+	</select>
+	
+	
+	<select id="EmailDao.getNoticeEmailSendCodeCustCont" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT A.CUST_NAME, A.CUST_EMAIL, A.BUY_TAX_EMP_NAME, A.BUY_TAX_EMAIL, B.BUY_TAX_EMAIL AS MASTER_BUY_TAX_EMAIL
+				FROM 
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CUST_CODE, CUST_NAME, X_DECRYPT(CUST_EMAIL) AS CUST_EMAIL , BUY_TAX_EMP_NAME , X_DECRYPT(BUY_TAX_EMAIL) AS BUY_TAX_EMAIL
+						FROM RE_CODE_CUST 
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code})A 
+					LEFT JOIN					
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CONT_ID, CUST_CODE, X_DECRYPT(BUY_TAX_EMAIL) AS BUY_TAX_EMAIL
+						FROM RE_CONT_MASTER
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code}
+						AND cont_id = ${cont_id}
+						) B 
+					ON A.COMPANY_CODE=B.COMPANY_CODE 
+					AND A.PROJ_CODE= B.PROJ_CODE 
+					AND A.SELL_CODE = B.SELL_CODE 
+					AND A.CUST_CODE=B.CUST_CODE												
+		]]>
+	</select>
+	
+ 	<insert id="EmailDao.insertNoticeEmailSend" parameterType="CmMap" >		
+		insert into RE_NOTICE_EMAIL_SEND (COMPANY_CODE, PROJ_CODE, SELL_CODE, LEVY_YM, BILL_SEQ, GROUP_SEQ_C, STATUS, CUST_CODE, SEND, DATE_AFTER, LEVY_DATE, ROW_INPUT_EMP_NO, ROW_INPUT_DATE, ROW_INPUT_IP)
+		values (#{companyCode}, 
+				#{proj_code}, 
+				#{sell_code}, 
+				#{levy_ym}, 
+				${bill_seq}, 
+				${group_seq_c}, 
+				#{status}, 
+				${cust_code}, 
+				#{send},
+				to_date(#{date_after}, 'YYYY-MM-DD'),
+				#{levy_date}::date,
+				#{userId},
+				NOW(),	
+				#{rqesterIp}
+								
+		);	 				
+	</insert>
+	
+ 	<insert id="EmailDao.insertNoticeEmailSend_Lotte" parameterType="CmMap" >		
+		insert into RE_NOTICE_EMAIL_SEND_LOTTE (COMPANY_CODE, PROJ_CODE, SELL_CODE, LEVY_YM, STATUS, CUST_CODE,CUST_CODE_CONT,SEQ_N,GROUP_SEQ_C,DONG,FLOOR,HO,HO2, SEND, ROW_INPUT_EMP_NO, ROW_INPUT_DATE, ROW_INPUT_IP)
+		values (#{companyCode}, 
+				#{proj_code}, 
+				#{sell_code}, 
+				#{levy_ym},   
+				#{status}, 
+				${cust_code},
+				${cust_code_cont}, 
+				${seq_n},
+				${group_seq_c},
+				#{dong},
+				#{floor},
+				#{ho},
+				#{ho2},
+				#{send},
+				#{userId},
+				NOW(),	
+				#{rqesterIp}				
+		);	 				
+	</insert>	
+	
+	
+ 	<insert id="EmailDao.insertNoticeEmailSend_Ezrems" parameterType="CmMap" >		
+		INSERT INTO ezrems.re_notice_email_send_ezrems(
+		            print_seq, company_code, proj_code, sell_code, status, group_seq_c
+		          , levy_ym, levy_date, bill_seq, group_cont_id, cont_id, cust_code
+		          , cust_email
+		          , send, date_bill, date_after, row_input_emp_no, row_input_date
+		          , row_input_ip)
+        select nextval('re_notice_print_temp_ezrems_seq_seq'), a.company_code, a.proj_code, a.sell_code, a.status, a.group_seq_c
+             , a.levy_ym, a.levy_date, a.bill_seq, a.group_cont_id, a.cont_id, a.cust_code
+             ,
+               case when a.sell_code = '20'
+                    then 
+                         case when  coalesce(d.buy_tax_email, '') = '' 
+                              then 
+                                    case when coalesce(b.cust_email, '') = '' 
+                                         then x_decrypt(c.cust_email)
+                                         else x_decrypt(b.cust_email)
+                                     end 
+                              else x_decrypt(d.buy_tax_email)
+                          end 
+                    else 
+                         case when coalesce(b.cust_email, '') = '' 
+                              then 
+                                    case when coalesce(c.cust_email, '') = '' 
+                                         then x_decrypt(d.buy_tax_email)
+                                         else x_decrypt(c.cust_email)
+                                     end 
+                              else x_decrypt(b.cust_email)
+                          end 
+                     end as cust_email
+             , case when  (b.cust_email is not null or c.cust_email is not null or d.buy_tax_email is not null) then #{send} else 'X' end, a.date_bill, a.date_after, #{userId}, NOW()
+             , #{rqesterIp}
+          from re_notice_master a 
+          left join re_code_cust b 
+            on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.cust_code = b.cust_code 
+          left join re_code_cust c 
+            on a.company_code = c.company_code and a.proj_code = c.proj_code and a.sell_code = c.sell_code and a.cust_code_cont = c.cust_code 
+          left join re_cont_master d 
+            on a.company_code = d.company_code and a.proj_code = d.proj_code and a.sell_code = d.sell_code and a.group_cont_id = d.group_cont_id and a.cont_id = d.cont_id 
+          where a.company_code = #{company_code}
+            and a.proj_code = #{proj_code}
+            and a.sell_code = #{sell_code}
+            and a.levy_ym = #{levy_ym}
+            and a.levy_date = #{levy_date}::date
+            and a.bill_seq = #{bill_seq}::bigint
+            and not exists (   select 1 
+                                     from re_notice_email_send_ezrems z 
+                                    where a.company_code = z.company_code
+                                      and a.proj_code = z.proj_code 
+                                      and a.sell_code = z.sell_code 
+                                      and a.levy_ym = z.levy_ym 
+                                      and a.levy_date = z.levy_date
+                                      and a.bill_seq = z.bill_seq
+                                      and case when a.sell_code = '20'
+                                                                           then 
+                                                                                case when  coalesce(d.buy_tax_email, '') = '' 
+                                                                                     then 
+                                                                                           case when coalesce(b.cust_email, '') = '' 
+                                                                                                then x_decrypt(c.cust_email)
+                                                                                                else x_decrypt(b.cust_email)
+                                                                                            end 
+                                                                                     else x_decrypt(d.buy_tax_email)
+                                                                                 end 
+                                                                           else 
+                                                                                case when coalesce(b.cust_email, '') = '' 
+                                                                                     then 
+                                                                                           case when coalesce(c.cust_email, '') = '' 
+                                                                                                then x_decrypt(d.buy_tax_email)
+                                                                                                else x_decrypt(c.cust_email)
+                                                                                            end 
+                                                                                     else x_decrypt(b.cust_email)
+                                                                                 end 
+                                                                            end = z.cust_email
+                                      and z.levy_ym = #{levy_ym}
+                                      and z.levy_date = #{levy_date}::date 
+                                      and z.bill_seq = #{bill_seq}::bigint
+                                      and z.send = 'N')
+ 				
+	</insert>
+	
+	
+	<insert id="EmailDao.insertRentEmailSend_Ezrems" parameterType="CmMap" >		
+		INSERT INTO re_rent_email_send_ezrems(
+		            company_code, proj_code, sell_code, group_cont_id, date_pre, cust_code
+		          , cust_email,send_email, send, row_input_emp_no, row_input_date
+		          , row_input_ip)
+        values(#{company_code},#{proj_code},#{sell_code},#{group_cont_id}::bigint,#{date_pre},#{cust_code}::bigint,#{cust_email},#{cust_email},#{send}
+        	  ,#{userId},NOW(),#{userIp}) 				
+	</insert>	
+	
+	
+	 <insert id="EmailDao.insertNoticeEmailSendInvoice_Ezrems" parameterType="CmMap" >		
+		INSERT INTO ezrems.re_notice_email_send_ezrems(
+		            print_seq, company_code, proj_code, sell_code, status, group_seq_c
+		          , levy_ym, levy_date, bill_seq, group_cont_id, cont_id, cust_code, cust_email
+		          , send, date_bill, date_after, row_input_emp_no, row_input_date
+		          , row_input_ip)
+		    select nextval('re_notice_print_temp_ezrems_seq_seq'), a.company_code, a.proj_code, a.sell_code, a.status, a.group_seq_c
+		         , a.levy_ym, a.levy_date, a.bill_seq, a.group_cont_id, a.cont_id, a.cust_code, x_decrypt(b.invoice_emp_email) invoice_emp_email
+		         , #{send}, a.date_bill, a.date_after, #{userId}, NOW()
+		         , #{rqesterIp}
+		      from re_notice_master a 
+		      left join re_cont_invoice_emp b on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.group_cont_id = b.group_cont_id
+		     where a.company_code = #{company_code}
+		       and a.proj_code = #{proj_code}
+		       and a.sell_code = #{sell_code}
+		       and a.levy_ym = #{levy_ym}
+		       and a.levy_date = #{levy_date}::date
+		       and a.bill_seq = #{bill_seq}::bigint
+		       and b.invoice_use_yn = 'Y'
+		       and not exists (   select 1 
+		                            from re_notice_email_send_ezrems z 
+		                           where a.company_code = z.company_code
+		                             and a.proj_code = z.proj_code 
+		                             and a.sell_code = z.sell_code 
+		                             and a.levy_ym = z.levy_ym 
+		                             and a.levy_date = z.levy_date
+		                             and a.bill_seq = z.bill_seq
+		                             and x_decrypt(b.invoice_emp_email) = z.cust_email
+		                             and z.levy_ym = #{levy_ym}
+		                             and z.levy_date = #{levy_date}::date 
+		                             and z.bill_seq = #{bill_seq}::bigint
+		                             and z.send = 'N')
+	</insert>	
+	
+	<update id="EmailDao.updateNoticeEmailSend" parameterType="CmMap">
+		
+		UPDATE RE_NOTICE_EMAIL_SEND
+			<set>
+			<if test="cust_email != null || cust_email != ''">CUST_EMAIL=#{cust_email},</if>
+      		<if test="u_send != null || u_send != ''">SEND=#{u_send}</if>
+      		</set>
+       WHERE COMPANY_CODE = #{companyCode}
+			AND proj_code      = #{proj_code}
+			AND sell_code      = #{sell_code}
+			AND levy_ym        = #{levy_ym}			
+			AND bill_seq        = ${bill_seq}			
+			AND group_seq_c    = ${group_seq_c}
+			AND status         = #{status}
+			AND cust_code      = ${cust_code}
+			AND seq           = ${seq}
+		
+	</update>
+	
+	<update id="EmailDao.updateRentEmailSend" parameterType="CmMap">
+		
+		UPDATE RE_RENT_EMAIL_SEND_EZREMS
+			<set>
+			<if test="cust_email != null || cust_email != ''">CUST_EMAIL=#{cust_email},</if>
+      		<if test="u_send != null || u_send != ''">SEND=#{u_send}</if>
+      		</set>
+       WHERE COMPANY_CODE 		= #{companyCode}
+			AND proj_code      	= #{proj_code}
+			AND sell_code      	= #{sell_code}
+			AND group_cont_id   = ${group_cont_id}
+			AND date_pre   		= #{date_pre}
+			AND cust_code   	= ${cust_code}
+		
+	</update>	
+	
+	<update id="EmailDao.updateNoticeEmailSend_Lotte" parameterType="CmMap">
+		
+		UPDATE RE_NOTICE_EMAIL_SEND_LOTTE
+			<set>
+			<if test="cust_email != null || cust_email != ''">CUST_EMAIL=#{cust_email},</if>
+      		<if test="u_send != null || u_send != ''">SEND=#{u_send}</if>
+      		</set>
+       WHERE COMPANY_CODE = #{companyCode}
+			AND proj_code      = #{proj_code}
+			AND sell_code      = #{sell_code}
+			AND levy_ym        = #{levy_ym}		
+			AND status         = #{status}
+			AND cust_code      = ${cust_code}
+			AND seq_n           = ${seq_n}
+		
+	</update>	
+	
+	<update id="EmailDao.updateNoticeEmailSend_Ezrems" parameterType="CmMap">
+		
+		UPDATE RE_NOTICE_EMAIL_SEND_EZREMS
+			<set>
+			<if test="send_email != null || cust_email != ''">SEND_EMAIL = #{send_email},</if>
+      		<if test="u_send != null || u_send != ''">SEND = #{u_send}</if>
+      		</set>
+       WHERE COMPANY_CODE		= #{company_code}
+			AND proj_code		= #{proj_code}
+			AND sell_code		= #{sell_code}
+			AND seq				= #{seq}::bigint
+		
+	</update>
+
+ 	<insert id="EmailDao.insertEmailSendHistory" parameterType="CmMap" >		
+		<selectKey keyProperty="email_seq" order="BEFORE" resultType="java.lang.Integer">
+			SELECT	COALESCE(MAX(EMAIL_SEQ), 0) + 1  FROM SM_EMAIL
+		</selectKey>
+		INSERT INTO SM_EMAIL (
+			EMAIL_SEQ
+			, EMAIL_SUBJECT
+			, EMAIL_NOTE
+			, SEND_DATE
+			, ROW_INPUT_DATE
+			, ROW_INPUT_EMP_NO
+			, ROW_INPUT_IP
+			, COMPANY_CODE
+			, PROJ_CODE
+			, SELL_CODE 
+            <if test="attach_file_yn != null and attach_file_yn != ''">
+            , ATTACH_FILE_YN
+            </if>
+            , SEND_EMAIL
+		)VALUES (
+			#{email_seq}
+			, #{email_subject}
+			, #{email_note}
+			, NOW()
+			, NOW()
+			, #{userId}
+			, #{rqesterIp}
+			, #{company_code}
+			, #{proj_code}
+			, #{sell_code}
+			<if test="attach_file_yn != null and attach_file_yn != ''">
+			, #{attach_file_yn}
+			</if>
+			, #{send_email}
+		)	
+	</insert>
+		
+	
+</mapper>

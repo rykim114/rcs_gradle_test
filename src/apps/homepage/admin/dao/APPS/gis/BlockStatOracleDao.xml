@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BlockStatOracleDao">
+
+	<select id="BlockStatOracleDao.인구정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.block_cd,
+			a.std_ym AS '기준월',
+			a.dwl_pop_tot_cnt AS '거주_전체',
+			a.flow_pop_tot_cnt AS '유동_전체',
+			a.wk_plc_pop_tot_cnt AS '직장_전체',
+			a.man_dwl_pop_cnt_10gl AS '거주_남성_10l',
+			a.man_dwl_pop_cnt_10g AS '거주_남성_10',
+			a.man_dwl_pop_cnt_20g AS '거주_남성_20',
+			a.man_dwl_pop_cnt_30g AS '거주_남성_30',
+			a.man_dwl_pop_cnt_40g AS '거주_남성_40',
+			a.man_dwl_pop_cnt_50g AS '거주_남성_50',
+			a.man_dwl_pop_cnt_60gu AS '거주_남성_60u',
+			a.wman_dwl_pop_cnt_10gl AS '거주_여성_10l',
+			a.wman_dwl_pop_cnt_10g AS '거주_여성_10',
+			a.wman_dwl_pop_cnt_20g AS '거주_여성_20',
+			a.wman_dwl_pop_cnt_30g AS '거주_여성_30',
+			a.wman_dwl_pop_cnt_40g AS '거주_여성_40',
+			a.wman_dwl_pop_cnt_50g AS '거주_여성_50',
+			a.wman_dwl_pop_cnt_60gu AS '거주_여성_60u',
+			a.man_wk_plc_pop_cnt_20g AS '직장_남성_20',
+			a.man_wk_plc_pop_cnt_30g AS '직장_남성_30',
+			a.man_wk_plc_pop_cnt_40g AS '직장_남성_40',
+			a.man_wk_plc_pop_cnt_50g AS '직장_남성_50',
+			a.man_wk_plc_pop_cnt_60gu AS '직장_남성_60u',
+			a.wman_wk_plc_pop_cnt_20g AS '직장_여성_20',
+			a.wman_wk_plc_pop_cnt_30g AS '직장_여성_30',
+			a.wman_wk_plc_pop_cnt_40g AS '직장_여성_40',
+			a.wman_wk_plc_pop_cnt_50g AS '직장_여성_50',
+			a.wman_wk_plc_pop_cnt_60gu AS '직장_여성_60u',
+			a.man_flow_pop_cnt_10g AS '유동_남성_10',
+			a.man_flow_pop_cnt_20g AS '유동_남성_20',
+			a.man_flow_pop_cnt_30g AS '유동_남성_30',
+			a.man_flow_pop_cnt_40g AS '유동_남성_40',
+			a.man_flow_pop_cnt_50g AS '유동_남성_50',
+			a.man_flow_pop_cnt_60gu AS '유동_남성_60u',
+			a.wman_flow_pop_cnt_10g AS '유동_여성_10',
+			a.wman_flow_pop_cnt_20g AS '유동_여성_20',
+			a.wman_flow_pop_cnt_30g AS '유동_여성_30',
+			a.wman_flow_pop_cnt_40g AS '유동_여성_40',
+			a.wman_flow_pop_cnt_50g AS '유동_여성_50',
+			a.wman_flow_pop_cnt_60gu AS '유동_여성_60u'
+		from
+			modu.MMB_MAIN_BLOCK a
+		where
+			(a.std_ym between #{startYMD} and #{endYMD}) 
+			<foreach collection="blockCdArr" item="blockCd" open="and (" close=")" separator=" or ">
+				a.block_cd like #{blockCd} + '%'
+			</foreach>
+			<if test='groupCode != null and groupCode.equals("41")'>
+			and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%' 
+			</if>
+	</select>
+
+
+	<select id="BlockStatOracleDao.매출정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.block_cd,
+			a.std_ym AS '기준월',
+			
+			a.sale_amt_mon AS '매출_요일_월',
+			a.sale_amt_tus AS '매출_요일_화',
+			a.sale_amt_wed AS '매출_요일_수',
+			a.sale_amt_thu AS '매출_요일_목',
+			a.sale_amt_fri AS '매출_요일_금',
+			a.sale_amt_sat AS '매출_요일_토',
+			a.sale_amt_sun AS '매출_요일_일',
+			
+			a.sale_amt_spring AS '매출_계절_봄',
+			a.sale_amt_summer AS '매출_계절_여름',
+			a.sale_amt_autumn AS '매출_계절_가을',
+			a.sale_amt_winter AS '매출_계절_겨울',
+
+
+			a.sale_amt_00tmst AS '매출_시간_00',
+			a.sale_amt_01tmst AS '매출_시간_01',
+			a.sale_amt_02tmst AS '매출_시간_02',
+			a.sale_amt_03tmst AS '매출_시간_03',
+			a.sale_amt_04tmst AS '매출_시간_04',
+			a.sale_amt_05tmst AS '매출_시간_05',
+			a.sale_amt_06tmst AS '매출_시간_06',
+			a.sale_amt_07tmst AS '매출_시간_07',
+			a.sale_amt_08tmst AS '매출_시간_08',
+			a.sale_amt_09tmst AS '매출_시간_09',
+			a.sale_amt_10tmst AS '매출_시간_10',
+			a.sale_amt_11tmst AS '매출_시간_11',
+			a.sale_amt_12tmst AS '매출_시간_12',
+			a.sale_amt_13tmst AS '매출_시간_13',
+			a.sale_amt_14tmst AS '매출_시간_14',
+			a.sale_amt_15tmst AS '매출_시간_15',
+			a.sale_amt_16tmst AS '매출_시간_16',
+			a.sale_amt_17tmst AS '매출_시간_17',
+			a.sale_amt_18tmst AS '매출_시간_18',
+			a.sale_amt_19tmst AS '매출_시간_19',
+			a.sale_amt_20tmst AS '매출_시간_20',
+			a.sale_amt_21tmst AS '매출_시간_21',
+			a.sale_amt_22tmst AS '매출_시간_22',
+			a.sale_amt_23tmst AS '매출_시간_23',
+
+			a.man_sale_amt_20g AS '매출_남성_20',
+			a.man_sale_amt_30g AS '매출_남성_30',
+			a.man_sale_amt_40g AS '매출_남성_40',
+			a.man_sale_amt_50g AS '매출_남성_50',
+			a.man_sale_amt_60gu AS '매출_남성_60u',
+
+			a.wman_sale_amt_20g AS '매출_여성_20',
+			a.wman_sale_amt_30g AS '매출_여성_30',
+			a.wman_sale_amt_40g AS '매출_여성_40',
+			a.wman_sale_amt_50g AS '매출_여성_50',
+			a.wman_sale_amt_60gu AS '매출_여성_60u'
+
+		from
+			modu.MMB_LOBZ_SCLS_BLOCK a
+		where
+			<foreach collection="blockCdArr" item="blockCd" open="(" close=")" separator=" or ">
+				a.block_cd like #{blockCd} + '%'
+			</foreach>
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%' 
+		</if>
+			
+	</select>
+
+	<select id="BlockStatOracleDao.업종별_매출추이.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.block_cd,
+			b.bz_lobz_lcls_cd AS '업종코드',
+			SUBSTRING(a.std_ym, 1, 4) AS '년도',
+			SUM(
+				ISNULL(a.SALE_AMT_M, 0)
+			) AS '매출',
+			SUM(
+				ISNULL(a.cduse_amt_20g, 0)
+				+ ISNULL(a.cduse_amt_30g, 0)
+				+ ISNULL(a.cduse_amt_40g, 0)
+				+ ISNULL(a.cduse_amt_50g, 0) 
+				+ ISNULL(a.cduse_amt_60gu, 0)
+			) AS '카드매출',
+			SUM(
+				ISNULL(a.cduse_cnt_20g, 0)
+				+ ISNULL(a.cduse_cnt_30g, 0)
+				+ ISNULL(a.cduse_cnt_40g, 0)
+				+ ISNULL(a.cduse_cnt_50g, 0)
+				+ ISNULL(a.cduse_cnt_60gu, 0)
+			) AS '건'
+		from
+			modu.MMB_LOBZ_SCLS_BLOCK a
+		left outer join
+			modu.MMC_BZ_CATE_S b
+		on
+			a.bz_lobz_scls_cd = b.bz_lobz_scls_cd
+		where
+			<foreach collection="blockCdArr" item="blockCd" open="(" close=")" separator=" or ">
+				a.block_cd like #{blockCd} + '%'
+			</foreach>
+		and SUBSTRING(a.std_ym, 1, 4) >= #{minYear}
+		and b.bz_lobz_lcls_cd is not null
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%' 
+		</if>
+		group by
+			a.block_cd, SUBSTRING(a.std_ym, 1, 4), b.bz_lobz_lcls_cd
+	</select>
+
+
+	<select id="BlockStatOracleDao.유동인구_시간별.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.block_cd,
+			a.std_yyyy AS '년도',
+			a.wkdy_cd AS '요일',
+			a.time_cd AS '시간',
+			a.man AS '남성',
+			a.woman AS '여성'
+		from
+			modu.MMB_R114_FLOW_POP a
+		where
+			(a.std_yyyy = (select max(std_yyyy) 
+			                  from modu.MMB_R114_FLOW_POP z))
+			<if test="blockCdArr != null and ! blockCdArr.isEmpty()">
+				<foreach collection="blockCdArr" item="blockCd" open="and (" close=")" separator=" or ">
+					a.block_cd like #{blockCd} + '%'
+				</foreach>
+			</if>
+			<if test="pnu != null and pnu != ''">
+			and ldong_cd like #{pnu} + '%'
+			</if>
+			<if test='groupCode != null and groupCode.equals("41")'>
+			and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%' 
+			</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PushDao">
+	
+	<select id="PushDao.selectDeviceInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+		select a.seq
+			, a.userid
+			, a.device_id
+			, a.device_os
+			, a.device_os_version
+			, a.device_uuid
+			, a.device_use_yn
+			, b.usernm 
+			, b.proj_code
+			, b.sell_code
+			, b.dong
+			, b.floor
+			, b.ho
+		from homepage.re_device_info a
+			inner join homepage.re_member_info b on a.userid = b.userid
+		where 1=1
+		<if test="userId != '' and userId != null">
+		   and b.userid = #{userId} 
+	     </if>
+	     and a.device_use_yn ='Y'
+ 		
+ 	</select>
+
+	<select id="PushDao.selectPushInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+		select userid, push_gub, usr_yn
+		from homepage.re_push_user_info 
+		where userid =#{userId} 
+		and push_gub=#{push_gub}	
+ 	</select>
+ 	
+ 	
+ 	<insert id="PushDao.insertPush" parameterType="CmMap" >		
+			insert into homepage.re_push_info (
+				company_code
+				, proj_code 
+				, sell_code 
+				, dong 
+				, floor 
+				, ho
+				, push_type               
+				, userid                  
+				, usernm                  
+				, device_id               
+				, device_os               
+				, device_os_version       
+				, device_uuid             
+				, push_title
+				, push_content                
+			    , status_return   
+				, push_gbn
+				, nt_hits_cnt
+			    , row_input_id
+				, row_input_date 
+				, row_input_ip
+			)       
+			values ( 
+				#{company_code}
+				, #{proj_code}
+				, #{sell_code}
+				, #{dong}
+				, #{floor}
+				, #{ho}
+				, #{push_type}
+				, #{userId}
+				, #{usernm}
+				, #{device_id}
+				, #{device_os}
+				, #{device_os_version}
+				, #{device_uuid}
+				, #{push_title}
+				, #{push_content}
+				, #{status_return}
+				, #{push_gbn}
+				, 0
+				, #{userId}
+				, NOW()
+				, #{userIp}
+				)			
+	</insert>
+	
+	
+	
+	<select id="PushDao.selectUserInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false" >
+		select a.company_code, a.proj_code, a.sell_code,  X_DECRYPT(b.cust_email) as cust_email, b.cust_name, a.dong, a.floor, a.ho, b.cust_hp_pre, b.cust_hp_mid, X_DECRYPT(b.cust_hp_post) as cust_hp_post from re_cont_master a
+		       left join re_code_cust b on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.cust_code = b.cust_code
+		       left join ( select a.company_code
+                         , a.proj_code
+                         , a.sell_code
+                         , a.cont_id
+                         , a.dong
+                         , a.floor
+                         , a.ho
+                         , a.ho2
+                      from re_cont_detail a
+                     inner join ( select company_code
+                                       , proj_code
+                                       , sell_code
+                                       , cont_id
+                                       , min(seq) as seq
+                                    from re_cont_detail
+                                   group by company_code
+                                       , proj_code
+                                       , sell_code
+                                       , cont_id
+                                ) b on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.cont_id = b.cont_id and a.seq = b.seq
+                  ) c on a.company_code = c.company_code and a.proj_code = c.proj_code and a.sell_code = c.sell_code and a.cont_id = c.cont_id
+        where 
+        	a.proj_code = #{proj_code}
+			<if test="userId != '' and userId != null">
+			   and b.cust_email = x_encrypt(#{userId}) 
+			</if>
+			<if test="dong != '' and dong != null">
+				and a.dong = #{dong}
+			</if>
+			<if test="ho != '' and ho != null">
+				and a.ho2 = #{ho}
+			</if>
+			and now() between a.date_chg and a.date_last_chg
+ 	</select>
+</mapper>

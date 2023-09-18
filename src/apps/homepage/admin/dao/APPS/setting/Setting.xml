@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SettingDao">
+
+	<select id="SettingDao.zeons_PC등록정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+				a.PC등록대수													as pc등록대수
+	 		,	LEFT(CONVERT(varchar, a.계약일자, 112),4)+'년 '+
+	 			SUBSTRING(CONVERT(varchar, a.계약일자, 112),5,2) +'월 '+
+	 			RIGHT(CONVERT(varchar, a.계약일자, 112),2)+'일' 				as 계약일자
+			,	LEFT(CONVERT(varchar, a.계약시작일, 112),4)+'년 '+
+	 			SUBSTRING(CONVERT(varchar, a.계약시작일, 112),5,2) +'월 '+
+	 			RIGHT(CONVERT(varchar, a.계약시작일, 112),2)+'일' 				as 계약시작일	 			
+	 		,	LEFT(CONVERT(varchar, a.계약종료일, 112),4)+'년 '+
+	 			SUBSTRING(CONVERT(varchar, a.계약종료일, 112),5,2) +'월 '+
+	 			RIGHT(CONVERT(varchar, a.계약종료일, 112),2)+'일' 				as 계약종료일
+			,	(SELECT DATEDIFF(day, getdate(), a.계약종료일) )				as 잔여일
+			,   b.count														as 사용중인ip
+		from modu.r114_사용자 a
+		left outer join (
+			select 
+					  count(순번)												as count
+					, 아이디
+			from modu.r114_PC정보
+			where 
+					아이디 = #{userId}
+				and 사용여부 = 'Y'
+			group by 아이디
+		) b
+		on a.아이디 = b.아이디
+		where 
+			1 = 1
+			and	a.아이디 = #{userId}
+			and	a.사용여부 = 'Y'
+	</select>
+		
+
+	<select id="SettingDao.zeons_PC접속정보.select" parameterType="CmMap" resultType="CmResMap">
+		select
+				a.아이디
+			,	a.아이피
+			,	a.PC명
+			,	substring(b.발생일시, 1, 4)    + '년 '
+				+ substring(b.발생일시, 5, 2)  + '월 '
+				+ substring(b.발생일시, 7, 2)  + '일 '
+				+ substring(b.발생일시, 9, 2)  + '시 '
+				+ substring(b.발생일시, 11, 2) + '분 '
+				+ substring(b.발생일시, 13, 2) + '초 '
+				as 발생일시
+			,	case when b.종료일시 is not null then '로그아웃'
+				 else '로그인'
+				end as 접속상태
+		from modu.r114_PC정보 a
+		left outer join 
+		(
+			select
+				  	아이디
+				,	아이피
+				,	발생일시
+				,	종료일시
+			from modu.r114_사용자접속로그
+			where
+				1 = 1
+				and 아이디 = #{userId}
+		) b
+		on a.아이디 = b .아이디 and a.아이피 = b.아이피
+		where
+			1 = 1
+			and a.사용여부 = 'Y'
+			and a.아이디 = #{userId}
+		order by 발생일시 desc
+	</select>
+	
+	<select id="SettingDao.zeons_IP등록현황.select" parameterType="CmMap" resultType="CmResMap">
+		select
+				ROW_NUMBER () over(order by b.등록일자 asc) 					as seq
+			,	a.아이디
+			,	a.아이피
+			,	a.PC명													as pc명
+			, 	substring(convert(varchar,b.등록일자,20), 1, 4)    +'년 '
+				+ substring(convert(varchar,b.등록일자,20), 6, 2)  +'월 '
+				+ substring(convert(varchar,b.등록일자,20), 9, 2)  +'일 '
+				+ substring(convert(varchar,b.등록일자,20), 12, 2) +'시 '
+				+ substring(convert(varchar,b.등록일자,20), 15, 2) +'분 '
+				+ substring(convert(varchar,b.등록일자,20), 18, 2) +'초 '
+				as 등록일시
+			,	substring(b.발생일시, 1, 4)    +'년 '
+				+ substring(b.발생일시, 5, 2)  +'월 '
+				+ substring(b.발생일시, 7, 2)  +'일 '
+				+ substring(b.발생일시, 9, 2)  +'시 '
+				+ substring(b.발생일시, 11, 2) +'분 '
+				+ substring(b.발생일시, 13, 2) +'초 '
+				as 발생일시
+		from modu.r114_PC정보 a
+		left outer join 
+		(
+			select 
+				  	아이디
+				,	아이피
+				,	max(발생일시)											as 발생일시
+				,	min(등록일자)											as 등록일자
+			from modu.r114_사용자접속로그
+			group by 아이디, 아이피
+		) b
+		on a.아이디 = b.아이디 and a.아이피 = b.아이피
+		where 
+			1 = 1
+			and a.사용여부 = 'Y'
+			and a.아이디 = #{userId}		
+	</select>
+
+	<update id="SettingDao.zeons_PC등록삭제.update" parameterType="CmMap">
+		update
+			modu.r114_PC정보
+		set
+			삭제일시 = convert(char(10), getdate(), 113),
+			삭제자아이디 = #{userId},
+			사용여부 = 'N',
+			수정일자 = getdate(),
+			수정자아이피 = #{userIp},
+			수정자아이디 = #{userId}		
+		where 순번 = #{순번}
+	</update>
+
+	<select id="SettingDao.zeons_비밀번호수정보기.select" parameterType="CmMap" resultType="CmResMap">
+		select 
+			       아이디
+		,		회원구분
+		,		비밀번호
+		,		법인코드
+		,		사용자이름
+		,		PC등록대수
+		,		그룹코드
+		,		기능권한
+		,		특이사항
+		,		접속오류수
+		,		로그인락
+		,		비밀번호변경일
+		,		비밀번호만료일
+		,		최종로그인일시
+		,		최종로그아웃일시
+		,		사용여부
+		,		비고
+		,		등록일자
+		,		등록자아이피
+		,		등록자아이디
+		,		수정일자
+		,		수정자아이피
+		,		수정자아이디
+		from modu.r114_사용자
+		where	
+				로그인락 = 'N'
+		and
+				아이디 = #{userId}
+		and
+				사용여부 = 'Y'
+				
+	</select>	
+	
+	<update id="SettingDao.zeons_비밀번호수정연기.update" parameterType="CmMap">
+		update
+				modu.r114_사용자
+		set
+				비밀번호만료일 = dateadd(day,90,getdate())
+		,		수정일자      = getdate()
+   		,		수정자아이피 = #{userIp}
+   		,		수정자아이디 = #{userId}
+		where
+				아이디 = #{userId}
+		and		사용여부 = 'Y'
+	</update>
+
+	<select id="SettingDao.zeons_사용자공지사항.select" parameterType="CmMap" resultType="CmResMap">
+	 	select  ROW_NUMBER() OVER(ORDER BY 상단공지여부 desc, 순번 desc) as 번호
+	 	,		순번	as seq
+	 	,		replace(convert(char(10), 입력일자, 23),'-','.') as 입력일자
+	 	,		구분
+	 	,		분류
+	 	, 		제목
+	    from 	modu.r114_공지사항
+	    where 	구분 = 10
+	    and 	공지구분 = 'Y'
+	    and 	사용여부 = 'Y'
+	    order by 번호
+	</select>
+	
+	<select id="SettingDao.zeons_임대료상세테스트.select" parameterType="CmMap" resultType="CmResMap">
+		select				a.매물게시일 as 매물등록일
+						,	a.R_상가유형 as 상가유형
+						,	left(a.층정보, charindex('/', a.층정보 + '/')-1) as 층
+						,	a.전용면적
+						,	a.계약면적
+						,	a.보증금
+						,	a.월세가 as 월세
+						, 	b.시도명 + ' ' + b.시군구명 + ' ' + b.읍면동명 + ' ' + 
+							case when a.PNU코드 is null then ''  
+								when right(a.PNU코드, 4) = '0000' then convert(varchar,convert(int, substring(right(a.PNU코드, 8), 0, 5))) + '번지'
+								else convert(varchar,convert(int, substring(right(a.PNU코드, 8), 0, 5))) + '-' + convert(varchar,convert(int, substring(right(a.PNU코드, 8), 5, 8))) + '번지'
+								end 주소
+				from		modu.통합_상가매물정보 a
+				inner join 	modu.kikcd_b b on a.법정동코드 = b.법정동코드
+				where
+							1 = 1		 		 
+				and 		a.법정동코드 like '11680' + '%'
+	</select>
+
+	<select id="SettingDao.사용자공지사항팝업.select" parameterType="CmMap" resultType="CmResMap">
+		select top 1 ROW_NUMBER() OVER(ORDER BY 상단공지여부 desc, 순번 desc) as 번호
+			,	순번 as seq
+			,	replace(convert(char(10), 입력일자, 23), '-', '.') as 입력일자
+			, 	구분
+			, 	분류
+			, 	제목
+		from modu.r114_공지사항
+		where 구분 = 10
+		and   공지구분 = 'Y'
+		and   사용여부 = 'Y'
+		order by 번호
+	</select>
+</mapper>

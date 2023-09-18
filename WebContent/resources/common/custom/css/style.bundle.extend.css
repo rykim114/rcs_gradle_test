@@ -1,0 +1,11 @@
+.datatable.datatable-default.datatable-loaded > .datatable-table > .datatable-head .datatable-row:first-child th:first-child i {
+	left: 0;
+}
+
+.tt-suggestion.tt-selectable {
+	background-color: white;
+}
+
+.tt-suggestion.tt-selectable.tt-cursor {
+	background-color: yellow;
+}

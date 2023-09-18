@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0103Dao">
+
+	<select id="BI0103Dao.ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code
+		, 		company_name
+		, 		vendor_no			as decrypt_vendor_no
+		, 		vendor_name
+		, 		represent_name
+		, 		biz_status
+		, 		biz_type
+		, 		zip_code
+		, 		addr1
+		, 		addr2
+		, 		use_yn
+		, 		basic_send_num		as decrypt_basic_send_num
+		, 		basic_send_email	as decrypt_basic_send_email
+		, 		row_input_date
+		, 		row_input_id
+		, 		row_input_ip
+		, 		row_update_date
+		, 		row_update_id
+		, 		row_update_ip
+		from ha_code_company
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		where	search(#{main_search_key_word}, company_name, addr1, addr2)
+		</if>
+	order by company_code , company_name
+	</select>
+	
+	<select id="BI0103Dao.ha_code_company.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_code_company	(
+			company_code
+		,	company_name
+		,	vendor_no
+		,	vendor_name
+		,	represent_name
+		,	biz_status
+		,	biz_type
+		,	zip_code
+		,	addr1
+		,	addr2
+		,	use_yn
+		,	basic_send_num
+		,	basic_send_email
+		,	row_input_date
+		,	row_input_ip
+		,	row_input_id
+		)
+		values	(
+			#{company_code}
+		,	#{company_name}			
+		,	#{encrypt_vendor_no}
+		,	#{vendor_name}
+		,	#{represent_name}
+		,	#{biz_status}
+		,	#{biz_type}
+		, 	#{zip_code}
+		,	#{addr1}
+		,	#{addr2}
+		,	#{use_yn}
+		,	#{encrypt_basic_send_num}
+		,	#{encrypt_basic_send_email}
+		,	now()
+		,	#{userIp}
+		,	#{userId}		
+		)
+	</select>
+	
+	<select id="BI0103Dao.ha_code_company.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_code_company
+		where	company_code	=	#{company_code}
+	</select>
+	
+	<select id="BI0103Dao.ha_code_company.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_code_company
+		set	company_name		=	#{company_name}
+		,	vendor_no			=	#{encrypt_vendor_no}
+		,	vendor_name			=	#{vendor_name}
+		,	represent_name		=	#{represent_name}
+		,	biz_status			=	#{biz_status}
+		,	biz_type			=	#{biz_type}		
+		,	zip_code			=	#{zip_code}
+		,	addr1				=	#{addr1}
+		,	addr2				=	#{addr2}
+		,	use_yn				=	#{use_yn}
+		,	basic_send_num		=	#{encrypt_basic_send_num}
+		,	basic_send_email	=	#{encrypt_basic_send_email}
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	company_code	=	#{company_code}
+	</select>
+	
+
+<!-- 	<select id="BI0103Dao.ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code		as	code
+			,	company_name		as	label
+		from	ha_code_company
+		order by	company_code
+	</select>
+	
+	<select id="BI0103Dao.select_ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	user_id		as	code
+			,	user_id		as	label
+		from	ha_code_company
+		order by	company_code
+	</select>
+	 -->
+</mapper>

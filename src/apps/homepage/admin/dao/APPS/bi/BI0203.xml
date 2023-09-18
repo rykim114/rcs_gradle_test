@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0203Dao">
+
+	<select id="BI0203Dao.ha_auth_group_menu.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	순번
+		,		구분
+		,		입력일자
+		,		분류
+		,		제목 as t_title
+		,		내용
+		,		사용여부
+		,		비고
+		,		등록자아이피
+		,		등록자아이디
+		,		수정일자
+		,		수정자아이피
+		,		수정자아이디
+		from modu.zeons_공지사항
+	</select>
+	
+
+	<select id="BI0203Dao.ha_auth_sys.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code
+			,	sys_id			as	code
+			,	sys_name		as	label
+			,	use_yesno
+			,	sort_order
+		from	ha_auth_sys
+		where	company_code	=	#{companyCode}
+		order by	sort_order
+	</select>
+	
+	<select id="BI0203Dao.ha_auth_group_menu.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_auth_group_menu	(
+			auth_group_seq
+		,	sys_id
+		,	pgm_code
+		,	menu_code
+		,	menu_name
+		,	update_yesno
+		,	retrieve_yesno
+		,	insert_yesno
+		,	append_yesno
+		,	duplicate_yesno
+		,	delete_yesno
+		,	print_yesno
+		,	excel_yesno
+		,	close_yesno
+		,	sort_order
+		,	row_input_date
+		,	row_input_ip
+		,	row_input_id
+		)
+		values	(
+			#{auth_group_seq}
+		,	#{sys_id}
+		,	#{pgm_code}
+		,	#{menu_code}
+		,	#{menu_name}
+		,	#{update_yesno}
+		,	#{retrieve_yesno}
+		,	#{insert_yesno}
+		,	#{append_yesno}
+		,	#{duplicate_yesno}
+		,	#{delete_yesno}
+		,	#{print_yesno}
+		,	#{excel_yesno}
+		,	#{close_yesno}
+		,	#{sort_order}
+		,	now()
+		,	#{userIp}
+		,	#{userId}		
+		)
+	</select>
+	
+	<select id="BI0203Dao.ha_auth_group_menu.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_auth_group_menu
+		where	company_code	=	#{companyCode}
+		and		user_id			=	#{user_id}
+		and		sys_id			=	#{sys_id}
+		and		pgm_code		=	#{pgm_code}
+	</select>
+	
+	<select id="BI0203Dao.ha_auth_group_menu.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_auth_group_menu
+		set	update_yesno		=	#{update_yesno}
+		,	retrieve_yesno		=	#{retrieve_yesno}
+		,	insert_yesno		=	#{insert_yesno}
+		,	append_yesno		=	#{append_yesno}
+		,	duplicate_yesno		=	#{duplicate_yesno}
+		,	delete_yesno		=	#{delete_yesno}
+		,	print_yesno			=	#{print_yesno}
+		,	excel_yesno			=	#{excel_yesno}
+		,	close_yesno			=	#{close_yesno}
+		,	sort_order			=	#{sort_order}
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	auth_group_seq	=	#{auth_group_seq}::bigint
+		and		pgm_code		=	#{pgm_code}
+	</select>	
+	
+	<select id="BI0203Dao.select_ha_auth_group_menu_pgm_search.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	pgm_code		as	code
+			,	pgm_code		as	label
+		from	ha_auth_pgmcode
+		where	sys_id	=	#{menu_sys_id}
+		order by	pgm_code
+	</select>
+	
+	<select id="BI0203Dao.select_ha_auth_group_menu_pgm.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	pgm_code		as	code
+			,	pgm_code		as	label
+		from	ha_auth_pgmcode
+		where	sys_id	 =	#{sys_id}
+		and		pgm_name =  #{menu_name}
+		order by	pgm_code
+	</select>
+	
+	<select id="BI0203Dao.select_ha_auth_group_menu_menu_code.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	pgm_code		as	code
+			,	pgm_code		as	label
+		from	ha_auth_pgmcode
+		where	sys_id	=	#{sys_id}
+		and		pgm_name =  #{menu_name}
+		order by	pgm_code
+	</select>
+	
+	<select id="BI0203Dao.select_ha_auth_group_menu_menu_name.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	pgm_name		as	code
+			,	pgm_name		as	label
+		from	ha_auth_pgmcode
+		where	sys_id	=	#{sys_id}
+		order by	pgm_name
+	</select>
+	
+	<select id="BI0203Dao.select_ha_auth_user.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	user_id		as	code
+			,	user_id		as	label
+		from	ha_auth_user
+		order by	company_code
+	</select>
+	
+	<select id="BI0203Dao.select_ha_auth_group.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">	
+		select	auth_group_seq as code
+		,		auth_group_name	as label
+		from 	ha_auth_group
+		order by auth_group_seq
+	</select>	
+	
+	<select id="BI0203Dao.pop_ha_auth_group_menu.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+        select distinct a.detail_code   as code
+		      ,a.detail_name            as label
+         from ha_comm_detail a inner join ha_auth_group_menu b 
+                                       on a.detail_code = b.group_id
+                                      and a.comm_code   = '0003'
+        where a.use_yn = 'Y'
+     order by a.detail_code 
+	</select>
+	
+	<select id="BI0203Dao.pop_ha_auth_group_menu_2.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+			delete 
+			from ha_auth_group_menu
+			where auth_group_seq = #{auth_group_seq}
+	</select>	
+	
+	<select id="BI0203Dao.pop_ha_auth_group_menu_2.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert into ha_auth_group_menu(
+			  auth_group_seq
+			, sys_id
+			, pgm_code
+			, menu_code
+			, menu_name
+			, update_yesno
+			, retrieve_yesno
+			, insert_yesno
+			, append_yesno
+			, duplicate_yesno
+			, delete_yesno
+			, print_yesno
+			, excel_yesno
+			, close_yesno
+			, sort_order
+			, row_input_date
+			, row_input_ip
+			, row_input_id
+			, row_update_date
+			, row_update_ip
+			, row_update_id)		  
+			select #{auth_group_seq}
+			 	 , sys_id
+			  	 , pgm_code
+			   	 , menu_code
+			     , menu_name
+		     	 , update_yesno
+		      	 , retrieve_yesno
+		       	 , insert_yesno
+		         , append_yesno
+	         	 , duplicate_yesno
+	          	 , delete_yesno
+	           	 , print_yesno
+	             , excel_yesno
+	             , close_yesno
+	             , sort_order
+	             , row_input_date
+	             , row_input_ip
+	             , row_input_id
+	             , row_update_date
+	             , row_update_ip
+	             , row_update_id
+			from ha_auth_group_menu
+		   where group_id = #{group_id}
+	</select>
+	
+</mapper>

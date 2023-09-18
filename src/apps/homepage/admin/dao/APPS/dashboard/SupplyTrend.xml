@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SupplyTrendDao">
+	<select id="SupplyTrendDao.공급최종일자.select" parameterType="CmMap" resultType="CmResMap">
+		select max(a.분양일) as 분양일
+		from modu.P_SANGGA a
+	</select>
+
+	<select id="SupplyTrendDao.공급추이차트.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.pnu,
+			a.상가코드,
+			a.상가명,
+			rtrim(ltrim(a.상가유형)) AS 상가유형,
+			isnull(a.총점포수, 0) as 총점포수,
+			a.입주일,
+			substring(a.입주일, 1, 4) as 입주년도,
+			a.분양일,
+			substring(a.분양일, 1, 4) as 분양년도,
+			a.연면적,
+			a.읍면동 as dongnm,
+			rtrim(isnull(a.구시군, '') + ' ' + isnull(a.구, '')) as sggnm,
+			a.도시 as sidonm,
+			1 AS 공급건수,
+			a.입주진행상황,
+			sum(h.분양면적) AS 분양면적,
+			sum(h.전용면적) AS 전용면적,
+			sum(h.분양가) AS 분양가
+		from modu.P_SANGGA a
+		left outer join modu.P_SANGGAHO h
+		on a.상가코드 = h.상가코드
+		where 1 = 1
+		<if test="pnu != null and pnu != 'all' and pnu != ''">
+			and a.pnu LIKE #{pnu} + '%'
+		</if>
+		<if test="geom != null and geom != '' and pnu != 'all'">
+			and a.bizdist_id = #{bizdistseq}
+		</if>
+
+		<if test="isRawData == null or isRawData == ''">
+			and a.분양일 != ''
+			<if test="startYYYY != null and startYYYY != ''">
+				and a.분양일 >= #{startYYYY} + '0101'
+			</if>
+			<if test="endYYYY != null and endYYYY != ''">
+				and a.분양일 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+			</if>
+
+			<if test="startYMD != null and startYMD != ''">
+				and a.분양일 >= #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and a.분양일 <![CDATA[ <= ]]> #{endYMD}
+			</if>
+
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and a.상가유형 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+		</if>
+		group by a.pnu, a.상가코드, a.상가명, a.상가유형, a.총점포수, a.입주일, a.입주진행상황, substring(a.입주일, 1, 4), a.분양일, substring(a.분양일, 1, 4),
+				 a.연면적, a.읍면동, rtrim(isnull(a.구시군, '') + ' ' + isnull(a.구, '')), a.도시
+		order by a.분양일 asc
+	</select>
+
+
+	<select id="SupplyTrendDao.공급추이차트_누적.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '0'
+			WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15000'
+			WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30000'
+			END AS 연면적코드,
+			sum(isnull(a.총점포수, 0)) AS 총점포수,
+			sum(a.연면적) AS 연면적,
+			sum(1) AS 공급건수,
+			sum(h.분양면적) AS 분양면적,
+			sum(h.전용면적) AS 전용면적,
+			sum(h.분양가) AS 분양가
+		from
+			modu.P_SANGGA a
+		left outer join
+			modu.P_SANGGAHO h
+		on
+		a.상가코드 = h.상가코드
+		where
+			1 = 1
+		<if test="pnu != null and pnu != 'all' and pnu != ''">
+			and a.pnu LIKE #{pnu} + '%'
+		</if>
+		<if test="geom != null and geom != '' and pnu != 'all'">
+			and a.bizdist_id = #{bizdistseq}
+		</if>
+		<if test="isRawData == null or isRawData == ''">
+			and a.분양일 != ''
+			<if test="startYYYY != null and startYYYY != ''">
+				and a.분양일 >= #{startYYYY} + '0101'
+			</if>
+			<if test="endYYYY != null and endYYYY != ''">
+				and a.분양일 <![CDATA[ <= ]]> #{endYYYY} + '1231'
+			</if>
+
+			<if test="startYMD != null and startYMD != ''">
+				and a.분양일 >= #{startYMD}
+			</if>
+			<if test="endYMD != null and endYMD != ''">
+				and a.분양일 <![CDATA[ <= ]]> #{endYMD}
+				and a.분양일 <![CDATA[ <= ]]> #{endYMD}
+			</if>
+			<if test="sanggaArr != null and sanggaArr.size() > 0">
+				and a.상가유형 in
+				<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+					#{sangga}
+				</foreach>
+			</if>
+		</if>
+		group by
+			CASE WHEN a.연면적 <![CDATA[ < ]]> 1000 THEN '0'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 1000 AND a.연면적 <![CDATA[ < ]]> 3000 THEN '1000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 3000 AND a.연면적 <![CDATA[ < ]]> 5000 THEN '3000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 5000 AND a.연면적 <![CDATA[ < ]]> 7000 THEN '5000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 7000 AND a.연면적 <![CDATA[ < ]]> 10000 THEN '7000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 10000 AND a.연면적 <![CDATA[ < ]]> 15000 THEN '10000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 15000 AND a.연면적 <![CDATA[ < ]]> 30000 THEN '15000'
+				 WHEN a.연면적 <![CDATA[ >= ]]> 30000 THEN '30000'
+			END
+	</select>
+
+</mapper>

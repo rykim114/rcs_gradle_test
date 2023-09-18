@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0104Dao">
+
+	<select id="BI0104Dao.ha_code_proj.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select  company_code
+	           ,proj_code
+	           ,proj_name
+	           ,tel_no_pre
+	           ,tel_no_mid
+	           ,tel_no_post  as decrypt_tel_no_post
+	           ,fax_no_pre
+	           ,fax_no_mid
+	           ,fax_no_post
+	           ,zip_code
+	           ,addr1
+	           ,addr2
+	           ,email  as decrypt_email
+	           ,sort_order
+	           ,use_yn
+	           ,itf_code
+	           ,itf_proj
+	     from ha_code_proj
+	    where company_code = #{company_code}
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		and		search(#{main_search_key_word}, proj_name, addr1, addr1)
+		</if>	    
+	order by company_code, proj_code , proj_name
+	</select>
+	
+	<select id="BI0104Dao.ha_code_proj.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_code_proj	(
+			company_code
+           ,proj_code
+           ,proj_name
+           ,tel_no_pre
+           ,tel_no_mid
+           ,tel_no_post
+           ,fax_no_pre
+           ,fax_no_mid
+           ,fax_no_post
+           ,zip_code
+           ,addr1
+           ,addr2
+           ,email
+           ,sort_order
+           ,use_yn
+	       ,itf_code
+	       ,itf_proj           
+		   ,row_input_date
+		   ,row_input_ip
+		   ,row_input_id
+		)
+		values	(
+			#{company_code}
+           ,#{proj_code}
+           ,#{proj_name}
+           ,#{tel_no_pre}
+           ,#{tel_no_mid}
+           ,#{encrypt_tel_no_post}
+           ,#{fax_no_pre}
+           ,#{fax_no_mid}
+           ,#{fax_no_post}
+           ,#{zip_code}
+           ,#{addr1}
+           ,#{addr2}
+           ,#{encrypt_email}
+           ,#{sort_order}::numeric
+           ,#{use_yn}
+           ,#{itf_code}
+           ,#{itf_proj}           
+		   ,now()
+           ,#{userIp}
+           ,#{userId}		
+		)
+	</select>
+	
+	<select id="BI0104Dao.ha_code_proj.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_code_proj
+		where	company_code	=	#{company_code}
+		and		proj_code		=	#{proj_code}
+	</select>
+	
+	<select id="BI0104Dao.ha_code_proj.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_code_proj
+		set	proj_name			= 	#{proj_name}
+           ,tel_no_pre			= 	#{tel_no_pre}
+           ,tel_no_mid			= 	#{tel_no_mid}
+           ,tel_no_post			= 	#{encrypt_tel_no_post}
+           ,fax_no_pre			= 	#{fax_no_pre}
+           ,fax_no_mid			= 	#{fax_no_mid}
+           ,fax_no_post			= 	#{fax_no_post}
+           ,zip_code			= 	#{zip_code}
+           ,addr1				= 	#{addr1}
+           ,addr2				= 	#{addr2}
+           ,email				= 	#{encrypt_email}
+           ,sort_order			= 	#{sort_order}::numeric
+           ,use_yn				= 	#{use_yn}
+           ,itf_code			= 	#{itf_code}
+           ,itf_proj			= 	#{itf_proj}
+		   ,row_update_date 	= 	NOW()
+		   ,row_update_id	 	= 	#{userId}
+		   ,row_update_ip 		= 	#{userIp}
+		where company_code		=	#{company_code}
+		  and proj_code			=	#{proj_code}
+	</select>
+	
+	<select id="BI0104Dao.ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code	as	code
+			,	company_name	as	label
+		from	ha_code_company
+		order by	company_code
+	</select>	
+	
+
+<!-- 	<select id="BI0104Dao.ha_code_proj.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	proj_code		as	code
+			,	proj_name		as	label
+		from	ha_code_proj
+		order by	proj_code
+	</select>
+	
+	<select id="BI0104Dao.select_ha_code_proj.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	user_id		as	code
+			,	user_id		as	label
+		from	ha_code_proj
+		order by	proj_code
+	</select>
+	 -->
+</mapper>

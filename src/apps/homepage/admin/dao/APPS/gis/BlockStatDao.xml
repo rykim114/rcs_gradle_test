@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BlockStatDao">
+
+	<select id="BlockStatDao.평균분양가.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.상가코드,
+			a.상가명,
+			a.상가유형,
+			a.입주일,
+			a.분양일,
+			a.연면적,
+			a.X,
+			a.Y,
+			h.층,
+			h.호수,
+			h.분양면적,
+			h.전용면적,
+			h.분양가,
+			s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) AS is_contains,
+			s.id
+		from
+			modu.P_SANGGA a
+		left outer join
+			modu.P_SANGGAHO h
+		on
+			a.상가코드 = h.상가코드
+		left outer join
+		(
+			select
+				s.*
+			from
+				modu.sqr_100 s
+			where
+				s.id in
+			<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+				#{blockId}
+			</foreach>
+		) s
+		on
+			s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+		where
+			h.분양가 > 0
+		and ISNUMERIC(a.X) = 1
+		and ISNUMERIC(a.Y) = 1
+		and (a.X between #{west} and #{east})
+		and (a.Y between #{south} and #{north})					
+		and s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+		and (a.분양일 between #{startYMD} and #{endYMD})
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and	isnull(a.도시, '') = #{demoSidonm}
+		and	isnull(a.구시군, '') = #{demoSggnm}
+		</if>
+		
+	</select>
+
+
+	<select id="BlockStatDao.단지리스트.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.상가코드,
+			a.상가명,
+			a.상가유형,
+			a.분양일,
+			a.입주일,
+			a.도시,
+			a.구시군,
+			a.읍면동,
+			a.번지,
+			a.지하총층,
+			a.지상총층,
+			a.대지면적,
+			a.연면적,
+			a.총점포수,
+			a.X,
+			a.Y,
+			COALESCE(SUM(CASE WHEN a.층 = '1F' THEN 1 ELSE NULL END), -1) AS '점포수1F',
+			COALESCE(AVG(CASE WHEN a.층 = '1F' AND a.분양면적 > 0 THEN (a.분양가 / a.분양면적 * 3.3058) ELSE NULL END), -1) AS '계약평당가1F',
+			COALESCE(AVG(CASE WHEN a.층 = '1F' AND a.전용면적 > 0 THEN (a.분양가 / a.전용면적 * 3.3058) ELSE NULL END), -1) AS '전용평당가1F',
+			COALESCE(AVG(CASE WHEN a.분양면적 > 0 THEN (a.전용면적 / a.분양면적 * 100) ELSE NULL END), -1) AS '전용율'
+		from
+		(
+			select
+				a.상가코드,
+				a.상가명,
+				a.상가유형,
+				a.분양일,
+				a.입주일,
+				a.도시,
+				a.구시군,
+				a.읍면동,
+				a.행정동,
+				a.주소상세,
+				a.번지,
+				a.지하총층,
+				a.지상총층,
+				a.대지면적,
+				a.연면적,
+				a.총점포수,
+				a.X,
+				a.Y,
+				h.층,
+				h.호수,
+				h.분양면적,
+				h.전용면적,
+				h.분양가
+			from
+				modu.P_SANGGA a
+			left outer join
+				modu.P_SANGGAHO h
+			on
+				a.상가코드 = h.상가코드			
+			left outer join
+			(
+				select
+					s.*
+				from
+					modu.sqr_100 s
+				where
+					s.id in
+				<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+					#{blockId}
+				</foreach>
+			) s
+			on
+				s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+			where
+				1 = 1
+			and isnumeric(a.X) = 1
+			and isnumeric(a.Y) = 1
+			and (a.X between #{west} and #{east})
+			and (a.Y between #{south} and #{north})
+			and s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+			and substring(a.분양일, 1, 4) >= #{startYMD}
+			<if test='groupCode != null and groupCode.equals("41")'>
+			and	isnull(a.도시, '') = #{demoSidonm}
+			and	isnull(a.구시군, '') = #{demoSggnm}
+			</if>
+			
+		) a
+		group by
+			a.상가코드,
+			a.상가명,
+			a.상가유형,
+			a.분양일,
+			a.입주일,
+			a.도시,
+			a.구시군,
+			a.읍면동,
+			a.번지,
+			a.지하총층,
+			a.지상총층,
+			a.대지면적,
+			a.연면적,
+			a.총점포수,
+			a.X,
+			a.Y
+	</select>
+
+
+	<select id="BlockStatDao.평균임대료.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.STD_YYYYMM AS '계약월',
+			ISNULL(a.n, 0) AS '개수',
+			ISNULL(a.usage_area, 0) AS '전용면적',
+			ISNULL(a.cont_area, 0) AS '계약면적',
+			ISNULL(a.rent, 0) AS '임대료',
+			ISNULL(a.rent_ua, 0) AS '전용면적_당_임대료',
+			ISNULL(a.rent_ca, 0) AS '계약면적_당_임대료',
+			ISNULL(a.floor, 0) AS '층',
+			a.sangga_type AS '상가유형'
+		from
+			modu.SHOP_RENT_100M a
+		where
+			(a.STD_YYYYMM between #{startYMD} and #{endYMD})
+		and a.id in
+				<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+					#{blockId}
+				</foreach>
+			
+	</select>
+	
+	<select id="BlockStatDao.평균매매가.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.STD_YYYYMM AS '계약월',
+			ISNULL(a.n, 0) AS '개수',
+			ISNULL(a.usage_area, 0) AS '전용면적',
+			ISNULL(a.cont_area, 0) AS '계약면적',
+			ISNULL(a.deal, 0) AS '매매가',
+			ISNULL(a.rent_ua, 0) AS '전용면적_당_매매가',
+			ISNULL(a.rent_ca, 0) AS '계약면적_당_매매가',
+			ISNULL(a.floor, 0) AS '층',
+			a.sangga_type AS '상가유형'
+		from
+			modu.SHOP_DEAL_100M a
+		where
+			(a.STD_YYYYMM between #{startYMD} and #{endYMD})
+		and a.id in
+				<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+					#{blockId}
+				</foreach>
+			
+	</select>
+
+	<select id="BlockStatDao.실거래가.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			d.TRD_YYMM + RIGHT('0' + d.TRD_DD, 2) AS '계약일자',
+			d.BLDG_USG_NM AS '건물용도',
+			d.SGG_NM + ' ' + d.M_JIBUN AS '시군구명',
+			d.FLR AS '층',
+			CAST(d.EXPS_GRS_ARSZ AS DECIMAL(10, 2)) AS '전유면적',
+			d.USG_RGN_NM AS '용도지역',
+			d.TX_COST AS '거래금액',
+			d.CNSTRCT_YY AS '건축년도',
+			d.X,
+			d.Y,
+			d.R_건물명 as '건물명',
+			case when d.R_건물명 is not null and d.R_상가유형 is null 
+				 then '기타상가'
+				 else d.R_상가유형
+			end as '상가유형'
+		from
+			modu.MOLIT_NRG_TRD d
+		left outer join
+		(
+			select
+				s.*
+			from
+				modu.sqr_100 s
+			where
+				s.id in
+			<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+				#{blockId}
+			</foreach>
+		) s
+		on
+			s.geom.STContains(geometry::STPointFromText('POINT(' + d.X + ' ' + d.Y + ')', 4326)) = 1
+		where
+			1 = 1
+		and (d.X between #{west} and #{east})
+		and (d.Y between #{south} and #{north})
+		and s.geom.STContains(geometry::STPointFromText('POINT(' + d.X + ' ' + d.Y + ')', 4326)) = 1
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and	isnull(d.SGG_NM, '') like #{demoSidonm} + ' ' + #{demoSggnm} + '%'
+		</if>
+		order by
+			d.TRD_YYMM desc, d.TRD_DD desc
+	</select>
+
+	<select id="BlockStatDao.업종분포V2_old.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			d.지점수,
+			d.대분류명,
+			d.기준월,
+			d.id
+		from
+		(
+			select
+				a.id,
+				a.sdt_yyyymm as 기준월,
+				a.관광여가오락 as '관광/여가/오락',
+				a.부동산,
+				a.생활서비스,
+				a.소매,
+				a.숙박,
+				a.스포츠,
+				a.음식,
+				a.학문교육 as '학문/교육'
+			from
+				modu.sqr_100_store_cnt a
+			where
+				a.id in
+			<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+				#{blockId}
+			</foreach>
+			and (a.sdt_yyyymm between #{startYMD} and #{endYMD})
+		) a
+		unpivot
+		(
+			지점수 for 대분류명 in
+			([관광/여가/오락], 부동산, 생활서비스, 소매, 숙박, 스포츠, 음식, [학문/교육])
+		) d
+		order by
+			d.기준월 asc, d.대분류명 asc
+	</select>
+
+	<select id="BlockStatDao.업종분포V2_new.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			d.지점수,
+			d.대분류명,
+			d.기준월,
+			d.id
+			from
+			(
+				select
+					a.id,
+					a.sdt_yyyymm as 기준월,
+					a.과학기술 as '과학·기술',
+					a.교육,
+					a.보건의료,
+					a.부동산,
+					a.소매,
+					a.수리개인 as '수리·개인',
+					a.숙박,
+					a.시설관리임대 as '시설관리·임대',
+					a.예술스포츠 as '예술·스포츠',
+					a.음식
+			from modu.sqr_100_store_10_cnt a
+			where
+			a.id in
+			<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+				#{blockId}
+			</foreach>
+			and (a.sdt_yyyymm between #{startYMD} and #{endYMD})
+			) a
+			unpivot
+			(
+				지점수 for 대분류명 in
+				([과학·기술], 교육, 보건의료, 부동산, 소매, [수리·개인], 숙박, [시설관리·임대], [예술·스포츠], 음식)
+			) d
+			order by
+				d.기준월 asc, d.대분류명 asc
+	</select>
+
+
+	<select id="BlockStatDao.아파트리스트.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			p.X좌표,
+			p.Y좌표,
+			p.구시군 AS 시군구,
+			p.읍면동,
+			case when substring(p.아파트코드, 1, 1) = 'G' then '오피스텔' else '아파트' end 상품구분,   
+			p.아파트명 AS 단지명, 
+			(
+				CASE
+					WHEN CAST(p.사업형태 AS VARCHAR) = '1' THEN '공공분양'
+					WHEN CAST(p.사업형태 AS VARCHAR) = '2' THEN '공공임대'
+					WHEN CAST(p.사업형태 AS VARCHAR) = '3' THEN '민간분양'
+					ELSE '민간임대'
+				END 
+			) AS 구분,
+			COALESCE(p.총세대수, 0) AS 세대수,
+			p.분양일 AS 착공일,
+			p.입주연도 AS 사용승인일,
+			a.pnu,
+			p.건설회사 AS 시공사
+		FROM modu.P_APT_기본정보 p LEFT OUTER JOIN (SELECT 아파트코드, 테이블명, 산여부, 법정동코드, 본번, 부번, REPLACE(법정동코드 + CAST(산여부 + 1 AS VARCHAR) + 본번 + 부번, char(9), '') AS PNU FROM modu.PNU) a ON p.아파트코드 = a.아파트코드 AND a.테이블명 = 'P_APT' AND a.산여부 <![CDATA[ < ]]> '2' AND LEN(a.산여부) = 1 
+		WHERE
+			1 = 1
+		AND ISNUMERIC(p.X좌표) = 1
+		AND ISNUMERIC(p.Y좌표) = 1
+		AND (p.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+		AND (p.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and exists	(	select	1
+						from	modu.P_APT_기본정보 z
+						where	p.아파트코드 = z.아파트코드
+							and isnull(z.도시, '') = #{demoSidonm}
+							and isnull(z.구시군, '') = #{demoSggnm}
+					)
+		</if>
+
+		ORDER BY
+			p.아파트코드
+	</select>
+	
+	<select id="BlockStatDao.시설정보리스트.select" parameterType="CmMap" resultType="CmResMap">
+		  SELECT a.gbn
+		       , a.시설구분
+		       , a.구분
+			   , a.시설명
+			   , a.특징
+			   , a.특징2
+			   , a.도로명주소
+			   , a.X좌표
+			   , a.Y좌표
+		  FROM (  select '1' gbn
+		               , '관공서' as 시설구분
+					   , a.유형 as 구분
+					   , a.시설명
+					   , a.세부항복 as 특징
+					   , null as 특징2
+					   , a.도로명주소
+					   , a.X좌표
+					   , a.Y좌표
+					from [modu].[공공데이터_공공시설정보] a
+				   where ISNUMERIC(a.X좌표) = 1
+					 and ISNUMERIC(a.Y좌표) = 1
+					 and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+					 and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all  
+				  select '2' gbn
+				  	   , '병원' as 시설구분
+					   , a.종별코드명 as 구분
+					   , a.병원명
+					   , a.종별코드명 as 특징
+					   , a.병상수 as 특징2
+					   , a.도로명주소
+					   , a.X좌표
+					   , a.Y좌표
+					from [modu].[공공데이터_병원정보]  a
+				   where ISNUMERIC(a.X좌표) = 1
+					 and ISNUMERIC(a.Y좌표) = 1
+					 and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+					 and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all  
+				select '3' gbn
+					 , '학교' as 시설구분
+					 , a.학교급구분 as 구분
+					 , a.학교명
+					 , a.설립형태 as 특징
+					 , case when a.학교급구분 = '초등학교' then b.전체학생수 when a.학교급구분 = '중학교' then c.전체학생수 when a.학교급구분 = '고등학교' then d.전체학생수 end as 특징2
+					 , a.소재지도로명주소
+					 , a.지도좌표X
+					 , a.지도좌표Y
+				  from [modu].[교육정보_초중고학교위치] a left join (select z.학교알리미아이디, z.전체학생수
+				                                                       from [modu].[교육정보_학교알리미_초등학교] z ) b on a.[학교알리미아이디] = b.[학교알리미아이디]
+														  left join (select z.학교알리미아이디, z.전체학생수
+				                                                       from [modu].[교육정보_학교알리미_중학교] z ) c on a.[학교알리미아이디] = c.[학교알리미아이디]
+														  left join (select z.학교알리미아이디, z.전체학생수
+				                                                       from [modu].[교육정보_학교알리미_고등학교] z ) d on a.[학교알리미아이디] = d.[학교알리미아이디]
+
+				 where ISNUMERIC(a.지도좌표X) = 1
+				   and ISNUMERIC(a.지도좌표Y) = 1
+				   and (a.지도좌표X BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+				   and (a.지도좌표Y BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all  
+				select '4' gbn
+					 , '문화시설' as 시설구분
+					 , a.유형 as 구분
+					 , a.시설명
+					 , a.설립주체 as 특징
+					 , isnull(b.이용자수, null) as 특징2
+					 , a.도로명주소
+					 , a.X좌표
+					 , a.Y좌표
+				  from [modu].[공공데이터_문화시설정보] a left join [modu].[공공데이터_문화시설_이용자정보] b on a.순번 = b.공공데이터_문화시설정보_순번 and b.구분 = '1' and b.시점 = (select max(시점) from [modu].[공공데이터_문화시설_이용자정보] z)
+				 where ISNUMERIC(a.X좌표) = 1
+				   and ISNUMERIC(a.Y좌표) = 1
+					 and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+					 and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))) a
+		  order by 1
+	</select>
+
+	<select id="BlockStatDao.교통정보리스트.select" parameterType="CmMap" resultType="CmResMap">
+		  SELECT a.gbn
+		       , a.시설구분
+		       , a.구분
+			   , a.시설명
+			   , a.특징
+			   , a.특징2
+			   , a.도로명주소
+			   , a.X좌표
+			   , a.Y좌표
+		  FROM (select '1' gbn
+					 , '지하철' as 시설구분
+					 , a.유형 as 구분
+					 , a.역명 as 시설명
+					 , a.노선 as 특징
+					 , isnull(b.승차 + 하차, null) as 특징2
+					 , a.지번주소 as 도로명주소
+					 , a.X좌표
+					 , a.Y좌표
+				  from [modu].[공공데이터_지역철정보] a left join [modu].[공공데이터_지역철_이용자정보] b on a.순번 = b.공공데이터_지역철정보_순번 and b.구분 = '1' and b.시점 = (select max(시점) from [modu].[공공데이터_지역철_이용자정보] z)
+				 where ISNUMERIC(a.X좌표) = 1
+				   and ISNUMERIC(a.Y좌표) = 1
+				   and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+				   and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all  
+				  select '2' gbn
+					 , '철도역' as 시설구분
+					 , a.유형 as 구분
+					 , a.철도역명
+					 , null as 특징
+					 , isnull(b.승차 + 하차, null) as 특징2
+					 , a.지번주소 as 도로명주소
+					 , a.X좌표
+					 , a.Y좌표
+				  from [modu].[공공데이터_철도역정보] a left join [modu].[공공데이터_철도역_이용자정보] b on a.순번 = b.공공데이터_철도역정보_순번 and b.구분 = '1' and b.시점 = (select max(시점) from [modu].[공공데이터_철도역_이용자정보] z)
+				 where ISNUMERIC(a.X좌표) = 1
+				   and ISNUMERIC(a.Y좌표) = 1
+				   and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+				   and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all 
+				select '3' gbn
+					 , '톨게이트' as 시설구분
+					 , a.노선 as 구분
+					 , a.영업소명
+					 , null as 특징
+					 , isnull(b.통행량, null) as 특징2
+					 , a.도로명주소
+					 , a.X좌표
+					 , a.Y좌표
+				  from [modu].[공공데이터_톨게이트정보] a left join [modu].[공공데이터_톨게이트정보_이용자정보] b on a.순번 = b.공공데이터_톨게이트정보_순번 and b.구분 = '1' and b.시점 = (select max(시점) from [modu].[공공데이터_톨게이트정보_이용자정보] z)
+				 where ISNUMERIC(a.X좌표) = 1
+				   and ISNUMERIC(a.Y좌표) = 1
+				   and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+				   and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				union all  
+				select '4' gbn
+					 , '공항' as 시설구분
+					 , '공항' as 구분
+					 , a.공항명
+					 , null as 특징
+					 , isnull(b.여객수, null) as 특징2
+					 , a.도로명주소
+					 , a.X좌표
+					 , a.Y좌표
+				  from [modu].[공공데이터_공항정보] a left join [modu].[공공데이터_공항_이용자정보] b on a.순번 = b.공공데이터_공항정보_순번 and b.구분 = '1' and b.시점 = (select max(시점) from [modu].[공공데이터_공항_이용자정보] z)
+				 where ISNUMERIC(a.X좌표) = 1
+				   and ISNUMERIC(a.Y좌표) = 1
+					 and (a.X좌표 BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+					 and (a.Y좌표 BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))) a
+		  order by 1, 2
+	</select>
+
+	<select id="BlockStatDao.임대매물.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			a.매물코드 AS 물건코드,
+			a.매물게시일 AS 매물등록일,
+			a.건물명 AS 건물명,
+			a.R_상가유형 AS 상가유형,
+			b.시도명 + ' ' + b.시군구명 + ' ' + b.읍면동명 + ' ' + c.지번 AS 주소,
+			a.층정보 AS 층,
+			a.전용면적,
+			a.계약면적,
+			a.보증금,
+			a.월세가 AS 월세,
+			a.premiumPrice as 권리금 , 		
+			'' AS 사용승인일,
+			a.X좌표 AS x,
+			a.Y좌표 AS y
+		from
+			modu.통합_상가매물정보 a
+		left outer join
+			modu.kikcd_b b
+		on
+			a.법정동코드 = b.법정동코드
+		left outer join
+			(
+				select
+					c.pnu,
+					c.지번
+				from
+				(
+					select
+						c.pnu,
+						c.지번,
+						ROW_NUMBER() OVER (PARTITION BY pnu ORDER BY pnu) AS rownum
+					from
+						modu.R114코드_매핑정보 c
+				) c
+				where
+					rownum = 1
+			) c
+		on
+			a.pnu코드 = c.pnu
+		where
+			1 = 1
+		and a.sqr100_ID in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		and SUBSTRING(a.매물게시일, 1, 4) <![CDATA[ >= ]]> #{startYMD}
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and	isnull(b.시도명, '') = #{demoSidonm}
+		and	isnull(b.시군구명, '') = #{demoSggnm}
+		</if>
+		and ltrim(rtrim(a.PNU코드)) != ''
+		order by
+			a.매물게시일 desc
+	</select>
+
+	<select id="BlockStatDao.매매매물.select" parameterType="CmMap" resultType="CmResMap">
+		select 
+			a.매물코드 AS 물건코드,
+			a.매물게시일 AS 매물등록일,
+			a.건물명 AS 건물명,
+			a.R_상가유형 AS 상가유형,
+			b.시도명 + ' ' + b.시군구명 + ' ' + b.읍면동명 + ' ' + c.지번 AS 주소,
+			a.층정보 AS 층,
+			a.전용면적,
+			a.계약면적,
+			a.매매가,
+			a.premiumPrice as 권리금,
+			a.임대수익률 AS 수익률,
+			a.X좌표 AS x,
+			a.Y좌표 AS y
+		from
+			modu.통합_상가매물_매매정보 a
+		left outer join
+			modu.kikcd_b b
+		on
+			a.법정동코드 = b.법정동코드
+		left outer join
+			(
+				select
+					c.pnu,
+					c.지번
+				from
+				(
+					select
+						c.pnu,
+						c.지번,
+						ROW_NUMBER() OVER (PARTITION BY pnu ORDER BY pnu) AS rownum
+					from
+						modu.R114코드_매핑정보 c
+				) c
+				where
+					rownum = 1
+			) c
+		on
+			a.pnu코드 = c.pnu
+		where
+			1 = 1
+		and a.sqr100_ID in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		and SUBSTRING(a.매물게시일, 1, 4) <![CDATA[ >= ]]> #{startYMD}
+		<if test='groupCode != null and groupCode.equals("41")'>
+		and	isnull(b.시도명, '') = #{demoSidonm}
+		and	isnull(b.시군구명, '') = #{demoSggnm}
+		</if>
+		and ltrim(rtrim(a.PNU코드)) != ''
+		order by
+			a.매물게시일 desc
+	</select>
+
+</mapper>

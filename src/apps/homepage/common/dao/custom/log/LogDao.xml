@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="AdminLogDao">
+
+	<insert id="AdminLogDao.insertLogMsg" parameterType="cmMap">
+	INSERT INTO hp_admin.ha_sign_process_error_log(
+		log_seq, error_date, process_name, 
+		company_code, user_id, signature_seq, 
+		receipt_seq, service_seq, error_content
+	)VALUES(
+		default, NOW(), #{process_name},
+		#{companyCode}, #{userId}, #{signature_seq},
+		#{reciept_seq}, #{service_seq}, #{error_content}	
+	)
+	</insert> 
+
+	<select id="AdminLogDao.selectLogMsg" parameterType="cmMap">
+		
+		SELECT
+			LOG_SEQ, ERROR_DATE, PROCESS_NAME,
+			COMPANY_CODE, USER_ID, SIGNATURE_SEQ,
+			RECEIPT_SEQ, SERVICE_SEQ, ERROR_CONTENT
+		FROM Hp_admin.ha_sign_process_error_log
+		WHERE TO_CHAR(error_date,'YYYY-MM-DD') = #{error_date_check}
+	</select>
+
+
+</mapper>

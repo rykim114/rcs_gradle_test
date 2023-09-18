@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SettlebankDao">
+
+	<update id="SettlebankDao.insertPgRequest" parameterType="CmMap">
+		UPDATE ezrems.re_settlebank_pg
+		   SET 
+				pmid 			   = #{P_MID}            -- 상점아이디
+				, poid             = #{P_OID}            -- 주문번호
+				, pamt             = #{P_AMT}            -- 거래금액
+				, pmname           = #{P_MNAME}          -- 상점한글명
+				, puname           = #{P_UNAME}          -- 결제고객성명
+				, pename           = #{P_ENAME}          -- 상점영문명
+				, pnoti            = #{P_NOTI}           -- 기타주문정보
+				, pgoods           = #{P_GOODS}          -- 결제상품명
+				, pvtransdt        = #{P_VTRANSDT}       -- 가상계좌입금일
+				, pbname           = #{P_BNAME}          -- 통장인자명
+				, pemail           = #{P_EMAIL}          -- 사용자이메일계정
+				, pphone		   = #{P_PHONE}          -- 사용자연락처
+				--, pprdterm          -- 상품제공기간
+				--, puserid           -- 사용자아이디
+				, ptarget		   = #{P_TARGET}         
+				, pstatecd         = #{P_STATUS}         -- 거래상태
+				, ptrno            = #{P_TR_NO}          -- 거래번호
+				, pauthdt          = #{P_AUTH_DT}        -- 승인일자
+				, pauthno          = #{P_AUTH_NO}        -- 승인번호
+				, ptype            = #{P_TYPE}           -- 거래종류
+				, phash            = #{P_HASH}           -- md5 hash code
+				, row_input_id     = #{row_input_id}     -- 입력자
+				, row_input_date   = NOW()  -- 입력시간
+				, row_input_ip     = #{row_input_ip}  -- 입력자IP        
+		where ptrno = #{P_TR_NO}	
+			
+	</update>
+	
+ 	<insert id="SettlebankDao.insertPgResult" parameterType="CmMap">
+		  INSERT INTO ezrems.re_settlebank_pg
+		  (
+				pmid 			      -- 상점아이디
+				, poid                -- 주문번호
+				, pamt                -- 거래금액
+				, pmname              -- 상점한글명
+				, puname              -- 결제고객성명
+				, pnoti               -- 기타주문정보
+				, pgoods              -- 결제상품명
+				, pstatecd            -- 거래상태
+				, ptrno               -- 거래번호
+				, ptype               -- 거래종류
+				, pfncd1              -- 금융사코드1
+				, pfncd2              -- 금융사코드2
+				, pfnnm               -- 금융사명
+				, pauthno             -- 승인번호
+				, pauthdt             -- 승인일자
+				, prmesg1             -- 메시지1
+				, prmesg2             -- 메시지2
+				, phash               -- md5 hash code
+		  )VALUES(
+			    #{P_MID}             
+				, #{P_OID}             
+				, #{P_AMT}             
+				, #{P_MNAME}           
+				, #{P_UNAME}	        
+				, #{P_NOTI}            
+				, #{P_PGoods}			
+				, #{P_STATUS}          
+				, #{P_TR_NO}           
+				, #{P_TYPE}            
+				, #{P_FN_CD1}          
+				, #{P_FN_CD2}          
+				, #{P_FN_NM}	        
+				, #{P_AUTH_NO}         
+				, #{P_AUTH_DT}         
+				, #{P_RMESG1}          
+				, #{P_RMESG2}		    
+				, #{HashedData}          
+		  )
+		  
+	</insert>
+	
+ 	<insert id="SettlebankDao.insertPgTemp" parameterType="CmMap">
+		  INSERT INTO ezrems.re_settlebank_pg_temp
+		  (
+			  company_code      -- 회사코드
+			  , proj_code       -- 현장코드
+			  , sell_code       -- 현장구분코드
+			  , cust_code       -- 거래처코드
+			  , cont_id         -- 계약 ID
+			  , group_cont_id   -- 그룹계약대장ID
+			  , pg_seq          -- pg순번
+			  , ptrno			-- 거래번호
+			  , levy_ym         -- 부과년월
+			  , pstatecd        -- 거래상태
+			  , ptype           -- 거래종류
+			  , pamt            -- 거래금액
+			  , prmesg1         -- 메시지1
+			  , prmesg2         -- 메시지2
+			  , phash           -- md5 hash code
+			  , row_input_date
+		  )VALUES(
+			    #{P_COMPANY_CODE}             
+				, #{P_PROJ_CODE}             
+				, #{P_SELL_CODE}             
+				, #{P_CUST_CODE}::bigint           
+				, #{P_CONT_ID}::bigint      
+				, #{P_GROUP_CONT_ID}::numeric            
+				, #{P_PG_SEQ}::bigint
+				, #{P_TR_NO}
+				, TO_CHAR(NOW(), 'YYYYMM')   
+				, #{P_STATUS}           
+				, #{P_TYPE}            
+				, #{P_AMT}          
+				, #{P_RMESG1}       
+				, #{P_RMESG2}     
+				, #{P_HASH}   
+				, NOW()       
+		  )
+		  
+	</insert>
+	
+ 	<select id="SettlebankDao.selectKey" parameterType="CmResMap" resultType="CmResMap">
+		  select a.pg_seq as pg_seq
+		       , a.prmesg1 as prmesg1
+		       , a.prmesg2 as prmesg2
+  			from ezrems.re_settlebank_pg a
+ 		   where a.ptrno = #{P_TR_NO}
+	</select>
+	
+ 	<select id="SettlebankDao.chkPgValue" parameterType="CmMap" resultType="java.lang.Integer">
+		  select count(*) as cnt
+  			from ezrems.re_settlebank_pg a
+ 		   where a.ptrno = #{P_TR_NO} 
+	</select>
+	
+ 	<update id="SettlebankDao.updatePg" parameterType="CmMap">
+		  UPDATE ezrems.re_settlebank_pg
+		   SET 
+		   		pstatecd         = #{P_STATUS},         -- 거래상태
+		   		row_update_date	 = NOW()
+		where ptrno = #{P_TR_NO}	
+	</update>
+ 	<update id="SettlebankDao.updatePgTemp" parameterType="CmMap">
+		 UPDATE ezrems.re_settlebank_pg_temp
+		   SET 
+		   		pstatecd         = #{P_STATUS},         -- 거래상태
+		   		row_update_date	 = NOW()
+		where ptrno = #{P_TR_NO}	
+	</update>
+	
+</mapper>

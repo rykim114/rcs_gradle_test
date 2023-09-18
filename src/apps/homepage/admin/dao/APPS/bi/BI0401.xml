@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0401Dao">
+
+	<select id="BI0401Dao.ha_comm_master____.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+
+				
+				select	
+					 	b.user_id
+					,	a.recv_email	as decrypt_recv_email
+					,	a.cc_email		as decrypt_cc_email
+					from	(	select	email_seq
+							,	unnest(string_to_array(recv_email, ','))	as	recv_email
+							,	unnest(string_to_array(cc_email, ',')) 		as 	cc_email
+							from	ha_email_send_info	) a
+						left join	ha_email_send_info b
+							on	b.email_seq	=	a.email_seq
+					limit 10
+	</select>
+	
+	<select id="BI0401Dao.ha_email_send_info" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select company_code
+	         , comm_code
+	         , comm_name
+	         , comm_div
+	         , remarks
+	         , use_yn
+	         , use_table
+	         , use_column
+		from ha_comm_master
+		where	company_code = #{companyCode}
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		and		search(#{main_search_key_word}, comm_name, remarks)
+		</if>
+	   order by comm_code
+	</select>
+	
+	<select id="BI0401Dao.ha_comm_master.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_comm_master	(
+			company_code
+		,	comm_code
+		,	comm_name
+		,	comm_div
+		,	remarks
+		,	use_yn
+		,	use_table
+		,	use_column
+		,	row_input_date
+		,	row_input_ip
+		,	row_input_id
+		)
+		values	(
+			#{company_code}
+		,	#{comm_code}			
+		,	#{comm_name}
+		,	#{comm_div}
+		,	#{remarks}
+		,	#{use_yn}
+		,	#{use_table}
+		,	#{use_column}
+		,	now()
+		,	#{userIp}
+		,	#{userId}		
+		)
+	</select>
+	
+	<select id="BI0401Dao.ha_comm_master.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_comm_master
+		where	company_code	=	#{companyCode}
+		and		comm_code		=	#{comm_code}		
+	</select>
+	
+	<select id="BI0401Dao.ha_comm_master.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_comm_master
+		set	comm_name			=	#{comm_name}
+		,	comm_div			=	#{comm_div}
+		,	remarks				=	#{remarks}
+		,	use_yn				=	#{use_yn}
+		,	use_table			=	#{use_table}
+		,	use_column			=	#{use_column}
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	company_code	=	#{companyCode}
+		and		comm_code		=	#{comm_code}	
+	</select>
+	
+
+<!-- 	<select id="BI0401Dao.ha_comm_master.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code		as	code
+			,	company_name		as	label
+		from	ha_comm_master
+		order by	company_code
+	</select>
+	
+	<select id="BI0401Dao.select_ha_comm_master.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	user_id		as	code
+			,	user_id		as	label
+		from	ha_comm_master
+		order by	company_code
+	</select>
+	 -->
+</mapper>

@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SMSDao">
+
+	 	
+ 	<insert id="SMSDao.insertSmsQueue" parameterType="CmMap" >		
+		insert into CF_MSG_SEND_QUEUE (MSG_TYPE, MSG_TITLE, MSG_CONTENT, SEND_NUM, RECV_COUNT) 
+		values ('${msg_type}', '${msg_title}', '${msg_content}', '${send_num}', ${recv_cont});	 				
+	</insert>
+	
+	<insert id="SMSDao.insertSmsQueueReceiver" parameterType="CmMap" >		
+			insert into CF_MSG_SEND_QUEUE_RECEIVER (BATCH_ID, SERIAL_NO, RECV_NUM, EX_COL3)
+			values (currval('CF_MSGSENDQUEUE_BATCHID_SEQ'::regclass), 1, '${recv_num}', #{proj_code});					
+	</insert>	
+	
+	
+	
+	<select id="SMSDao.getNoticeSMSSendCodeCust" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+			SELECT A.CUST_NAME, A.BUY_TAX_HP_PRE ,A.BUY_TAX_HP_MID ,A.BUY_TAX_HP_POST 
+					,B.BUY_TAX_HP_PRE AS MASTER_BUY_TAX_HP_PRE ,B.BUY_TAX_HP_MID AS MASTER_BUY_TAX_HP_MID ,B.BUY_TAX_HP_POST AS MASTER_BUY_TAX_HP_POST,
+					CUST_HP_PRE, CUST_HP_MID, CUST_HP_POST
+				FROM 
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CUST_CODE, CUST_NAME, BUY_TAX_HP_PRE, BUY_TAX_HP_MID,X_DECRYPT(BUY_TAX_HP_POST) AS BUY_TAX_HP_POST,
+						CUST_HP_PRE, CUST_HP_MID,X_DECRYPT(CUST_HP_POST) AS CUST_HP_POST 
+						FROM RE_CODE_CUST 
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code})A 
+					LEFT JOIN					
+					(SELECT COMPANY_CODE ,PROJ_CODE, SELL_CODE ,CONT_ID, CUST_CODE, BUY_TAX_HP_PRE ,BUY_TAX_HP_MID ,X_DECRYPT(BUY_TAX_HP_POST) AS BUY_TAX_HP_POST 
+						FROM re_cont_master 
+					WHERE 
+						COMPANY_CODE=#{companyCode}
+						AND PROJ_CODE=#{proj_code}
+						AND SELL_CODE=#{sell_code}
+						AND CUST_CODE=${cust_code}
+						AND cont_id = (select cont_id from re_notice_master where
+									COMPANY_CODE=#{companyCode}
+									AND PROJ_CODE=#{proj_code}
+									AND SELL_CODE=#{sell_code}
+									AND CUST_CODE=${cust_code}
+									AND levy_ym=#{levy_ym}
+									AND BILL_SEQ = #{bill_seq}::BIGINT
+									group by cont_id)
+						) B 
+					ON A.COMPANY_CODE=B.COMPANY_CODE 
+					AND A.PROJ_CODE= B.PROJ_CODE 
+					AND A.SELL_CODE = B.SELL_CODE 
+					AND A.CUST_CODE=B.CUST_CODE		
+		]]>
+	</select>
+	
+	
+	<select id="SMSDao.getNoticeSMSSendCodeCust_Ezrems" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+        select 
+               case when a.sell_code = '20'
+                    then 
+                         case when  coalesce(d.buy_tax_hp_pre || d.buy_tax_hp_mid || x_decrypt(d.buy_tax_hp_post), '') = '' 
+                              then 
+                                    case when coalesce(b.cust_hp_pre || b.cust_hp_mid || x_decrypt(b.cust_hp_post), '') = '' 
+                                         then c.cust_hp_pre || c.cust_hp_mid || x_decrypt(c.cust_hp_post)
+                                         else b.cust_hp_pre || b.cust_hp_mid || x_decrypt(b.cust_hp_post)
+                                     end 
+                              else d.buy_tax_hp_pre || d.buy_tax_hp_mid || x_decrypt(d.buy_tax_hp_post)
+                          end 
+                    else 
+                         case when coalesce(b.cust_hp_pre || b.cust_hp_mid || x_decrypt(b.cust_hp_post), '') = '' 
+                              then 
+                                    case when coalesce(c.cust_hp_pre || c.cust_hp_mid || x_decrypt(c.cust_hp_post), '') = '' 
+                                         then d.buy_tax_hp_pre || d.buy_tax_hp_mid || x_decrypt(d.buy_tax_hp_post)
+                                         else c.cust_hp_pre || c.cust_hp_mid || x_decrypt(c.cust_hp_post)
+                                     end 
+                              else b.cust_hp_pre || b.cust_hp_mid || x_decrypt(b.cust_hp_post)
+                          end 
+                     end as receipt_nm
+
+          from re_notice_master a 
+          left join re_code_cust b 
+            on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.cust_code = b.cust_code 
+          left join re_code_cust c 
+            on a.company_code = c.company_code and a.proj_code = c.proj_code and a.sell_code = c.sell_code and a.cust_code_cont = c.cust_code 
+          left join re_cont_master d 
+            on a.company_code = d.company_code and a.proj_code = d.proj_code and a.sell_code = d.sell_code and a.group_cont_id = d.group_cont_id and a.cont_id = d.cont_id 
+          where a.company_code = #{company_code}
+            and a.proj_code = #{proj_code}
+            and a.sell_code = #{sell_code}
+            and a.levy_ym = #{levy_ym}
+            and a.levy_date = #{levy_date}::date
+            and a.bill_seq = #{bill_seq}::bigint
+            and (coalesce(c.cust_hp_pre || c.cust_hp_mid || x_decrypt(c.cust_hp_post), '') <> '' or  coalesce(b.cust_hp_pre || b.cust_hp_mid || x_decrypt(b.cust_hp_post), '') <> '' or coalesce(d.buy_tax_hp_pre || d.buy_tax_hp_mid || x_decrypt(d.buy_tax_hp_post), '') <> '') 
+
+
+		]]>
+	</select>
+	
+	<select id="SMSDao.getNoticeSMSSendInvoice_Ezrems" parameterType="CmMap" resultType="CmResMap" >
+        select invoice_emp_hp_pre || invoice_emp_hp_mid || x_decrypt(invoice_emp_hp_post) receipt_nm
+          from re_cont_invoice_emp
+         where company_code = #{company_code}
+           and proj_code = #{proj_code}
+           and sell_code = #{sell_code}
+           and group_cont_id = #{group_cont_id}::bigint
+           and invoice_use_yn = 'Y'
+           and (invoice_emp_hp_pre is not null or invoice_emp_hp_mid is not null or invoice_emp_hp_post is not null)
+
+		
+	</select>
+
+	<select id="SMSDao.getNoticeSMSSendCountInvoice_Ezrems" parameterType="CmMap" resultType="java.lang.Integer" >
+		<![CDATA[
+			select coalesce(count(1),0)
+			  from re_cont_invoice_emp
+			 where company_code			= #{company_code}
+			   and proj_code			= #{proj_code}
+			   and sell_code			= #{sell_code}
+			   and group_cont_id		= #{group_cont_id}::bigint
+			   and invoice_use_yn 		= 'Y'
+			   
+			   
+		]]>
+	</select>	
+	
+
+	<select id="SMSDao.getNoticeSMSSendCodeCust400" parameterType="CmMap" resultType="CmResMap" >
+		<![CDATA[
+           select b.cust_name, b.cust_code, b.cust_hp_pre as cust_hp_pre, b.cust_hp_mid as cust_hp_mid, x_decrypt(b.cust_hp_post) as cust_hp_post
+                , c.cust_name, c.cust_code, c.cust_hp_pre as cont_hp_pre, c.cust_hp_mid as cont_hp_mid, x_decrypt(c.cust_hp_post) as cont_hp_post
+             from (select 1 as a) a  left join re_code_cust b on b.company_code = #{companyCode} and b.proj_code = #{proj_code} and b.sell_code = #{sell_code} and b.cust_code = #{cust_code}::bigint
+                                     left join re_code_cust c on c.company_code = #{companyCode} and c.proj_code = #{proj_code} and c.sell_code = #{sell_code} and c.cust_code = #{cust_code_cont}::bigint
+		]]>
+	</select>
+
+	
+	<select id="SMSDao.getSmsTmplList" parameterType="CmMap" resultType="CmResMap" >
+		select sms_form_html_cust, sms_form_html_admin, sms_form_html_cooperation, use_yn
+		from re_sms_form
+		where company_code = #{company_code}
+		and proj_code = #{proj_code}
+		and form_id = #{form_id}
+	</select>
+	
+	
+	
+	<insert id="SMSDao.insertReSmsSend" parameterType="CmMap" >		
+		insert into RE_SMS_SEND 
+			( COMPANY_CODE
+			, PROJ_CODE
+			, FORM_ID
+			, BATCH_ID
+			, ROW_INPUT_ID
+			, ROW_INPUT_IP
+			, ROW_INPUT_DATE )
+		values 
+			( #{company_code}
+			, #{proj_code}
+			, #{form_id}
+			, currval('CF_MSGSENDQUEUE_BATCHID_SEQ'::regclass)
+			, #{userId}
+			, #{userIp}
+			, NOW() );				
+	</insert>	
+	
+	<insert id="SMSDao.insertSmsReserve" parameterType="CmMap" >
+		insert into RE_SMS_RESERVE
+			( COMPANY_CODE
+			, PROJ_CODE
+			, FORM_ID
+			, RESERVE_DT
+			, SEND_NUM
+			, RECV_NUM
+			, MSG_TITLE
+			, MSG_CONTENT
+			, ROW_INPUT_ID
+			, ROW_INPUT_IP
+			, ROW_INPUT_DATE )
+		values
+			( #{company_code}
+			, #{proj_code}
+			, #{form_id}
+			, #{reserve_dt}
+			, #{send_num}
+			, #{recv_num}
+			, #{msg_title}
+			, #{msg_content}
+			, #{userId}
+			, #{userIp}
+			, NOW() )
+	</insert>
+
+	<select id="SMSDao.getSmsReserveList" resultType="CmResMap" >
+		select company_code
+			, proj_code
+			, form_id
+			, reserve_dt
+			, send_num
+			, recv_num
+			, msg_title
+			, msg_content
+			, row_input_id
+			, row_input_date
+			, row_input_ip
+			, row_update_id
+			, row_update_date
+			, row_update_ip
+			, to_char(now(), 'yyyymmddhh24mi') as cnk_datetime
+		from re_sms_reserve
+		where reserve_dt <![CDATA[<=]]> to_char(now(), 'yyyymmddhh24mi')
+	</select>
+	
+	<delete id="SMSDao.deleteSmsReserveList" parameterType="CmMap" >
+		delete from re_sms_reserve
+		where reserve_dt <![CDATA[<=]]> #{chk_datetime}
+	</delete>
+	
+	<select id="SMSDao.getSmsBatchId" resultType="java.lang.Integer" >
+		select nextval('CF_MSGSENDQUEUE_BATCHID_SEQ')
+	</select>
+	
+	<select id="SMSDao.insertKakaoAlimTalk" parameterType="CmMap" resultType="java.lang.String">
+		select fn_schkaka_send(#{msg_title}, #{msg_content}, #{recv_num}, #{send_num}, #{template_code}, #{batch_id})
+		;
+	</select>
+	
+	<insert id="SMSDao.insertSmsQueueZo" parameterType="CmMap" >		
+		insert into CF_MSG_SEND_QUEUE (BATCH_ID, MSG_TYPE, MSG_TITLE, MSG_CONTENT, SEND_NUM, RECV_COUNT) 
+		values (#{batch_id}, #{msg_type}, #{msg_title}, #{msg_content}, #{send_num}, ${recv_cont});	 				
+	</insert>
+	
+	<insert id="SMSDao.insertSmsQueueReceiverZo" parameterType="CmMap" >		
+		insert into CF_MSG_SEND_QUEUE_RECEIVER (BATCH_ID, SERIAL_NO, RECV_NUM, EX_COL1)
+		values (#{batch_id}, 1, #{recv_num}, #{batch_id});				
+	</insert>	
+	
+	<insert id="SMSDao.insertReSmsSendZo" parameterType="CmMap" >		
+		insert into RE_SMS_SEND 
+			( company_code
+			, proj_code
+			, sell_code
+			, form_id
+			, batch_id
+			, contents
+			, row_input_id
+			, row_input_ip
+			, row_input_date )
+		values 
+			( #{company_code}
+			, #{proj_code}
+			, #{sell_code}
+			, #{form_id}
+			, #{batch_id}
+			, #{msg_content}
+			, #{userId}
+			, #{userIp}
+			, NOW() );				
+	</insert>	
+	
+	<select id="SMSDao.getSmsParamList" parameterType="CmMap" resultType="CmResMap" >
+		select company_code
+			 , comm_code
+			 , detail_code
+			 , detail_name 
+			 , code1
+		  from sm_comm_detail
+		 where company_code = #{company_code}  
+		   and comm_code = '0138'
+		   and use_yn = 'Y'
+	    order by sort_order, detail_name
+		
+	</select>
+	
+	
+	<select id="SMSDao.getSmsSendData" parameterType="CmMap" resultType="CmResMap">
+		<![CDATA[
+
+        select a.company_code
+             , a.proj_code
+             , a.sell_code
+             , a.status 
+             , c.group_name
+             , a.levy_ym 
+             , a.bill_amt 
+             , to_char(b.rent_amt, 'FM999,999,999,999') as rent_amt
+             , to_char(b.manage_amt, 'FM999,999,999,999') as manage_amt
+             , to_char(b.service_amt, 'FM999,999,999,999') as service_amt
+             , coalesce(f.detail_name, m.detail_name) as rent_deposit_bank
+             , coalesce(case when z.deposit_div = '0100' then j.cmf_nm else h.cust_nm end, l.rec_deposit_name) as rent_deposit_name
+             , coalesce(x_decrypt(d.deposit_no), l.rec_deposit_no) as rent_deposit_no
+             , coalesce(g.detail_name, m.detail_name) as mgt_deposit_bank
+             , coalesce(case when z.deposit_div = '0100' then j.cmf_nm else h.cust_nm end, l.rec_deposit_name) as mgt_deposit_name
+             , coalesce(x_decrypt(e.deposit_no), l.rec_deposit_no) as mgt_deposit_no
+             , a.dong
+             , a.floor
+             , a.ho
+             , a.ho2 
+             , a.cust_code_cont as cust_code
+             , a.group_cont_id 
+             , a.cont_id 
+             , n.cust_name 
+             , a.date_after date_deadline
+             
+
+          from re_notice_master a
+          left join re_code_sell z on a.company_code = z.company_code and a.proj_code = z.proj_code and a.sell_code = z.sell_code
+          left join (   select company_code, proj_code, sell_code, group_seq_c, levy_ym, levy_date, bill_seq
+                             , sum(case when request_div = '0200' then bill_amt else 0 end) as rent_amt
+                             , sum(case when request_div = '0300' then bill_amt else 0 end) as manage_amt
+                             , sum(case when request_div = '0400' then bill_amt else 0 end) as service_amt
+                          from re_notice_request 
+                         where company_code = #{company_code} 
+                           and proj_code = #{proj_code}
+                           and sell_code = #{sell_code}
+                           and levy_ym = #{levy_ym} 
+                           and levy_date = #{levy_date}::date
+                           and bill_seq = #{bill_seq}::bigint
+                      group by company_code, proj_code, sell_code, group_seq_c, levy_ym, levy_date, bill_seq
+                     ) b 
+            on a.company_code = b.company_code and a.proj_code = b.proj_code and a.sell_code = b.sell_code and a.group_seq_c = b.group_seq_c 
+           and a.levy_ym = b.levy_ym and a.levy_date = b.levy_date and a.bill_seq = b.bill_seq
+          left join re_notice_group_master c
+            on a.company_code = c.company_code and a.proj_code = c.proj_code and a.sell_code = c.sell_code and a.group_seq_c = c.group_seq_c
+          left join re_cont_deposit d 
+            on a.company_code = d.company_code and a.proj_code = d.proj_code and a.sell_code = d.sell_code and a.group_cont_id = d.group_cont_id 
+           and a.cont_id = d.cont_id 
+          left join re_dfh_deposit e 
+            on a.company_code = e.company_code and a.proj_code = e.proj_code and a.sell_code = e.sell_code and a.status = e.status and a.dong = e.dong 
+           and a.floor = e.floor and a.ho = e.ho and a.ho2 = e.ho2 and e.use_yn ='Y'
+          left join sm_comm_detail f
+            on a.company_code = f.company_code and f.comm_code = '0060' and d.bank_code = f.detail_code 
+          left join sm_comm_detail g
+            on a.company_code = g.company_code and g.comm_code = '0060' and e.bank_code = g.detail_code 
+          left join schifco.tb_rvas_mast h
+            on x_decrypt(d.deposit_no) = h.vacct_no
+          left join schifco.tb_rvas_mast i
+            on x_decrypt(e.deposit_no) = i.vacct_no
+          left join ezrems_va.vacs_vact j
+            on x_decrypt(d.deposit_no) = j.acct_no
+          left join ezrems_va.vacs_vact k
+            on x_decrypt(e.deposit_no) = k.acct_no
+          left join re_code_deposit l
+            on a.company_code = l.company_code and a.proj_code = l.proj_code and a.sell_code = l.sell_code and l.va_yn = 'Y' and l.use_yn = 'Y' and l.owner_div = c.manage_comp_div 
+          left join sm_comm_detail m
+            on a.company_code = m.company_code and m.comm_code = '0060' and l.rec_bank_code = m.detail_code
+          left join re_code_cust n 
+            on a.company_code = n.company_code and a.proj_code = n.proj_code and a.sell_code = n.sell_code and a.cust_code_cont = n.cust_code 
+         where a.company_code = #{company_code}
+           and a.proj_code = #{proj_code}
+           and a.sell_code = #{sell_code}
+           and a.levy_ym = #{levy_ym}
+           and a.levy_date = #{levy_date}::date
+           and a.bill_seq = #{bill_seq}::bigint
+		]]>
+
+   </select>
+	
+	<select id="SMSDao.getSmsFormInfo" parameterType="CmMap" resultType="CmResMap">
+
+		select msg_form_id
+		     , form_div
+		     , basic_send_num
+		     , msg_title
+		     , msg as sms_form_html_cust
+		     , kakao_service_id
+		     , template_code
+		     , pay_yn
+		     , use_yn
+		     , remark
+		  from ha_msg_form_info a
+		 where a.msg_form_id = #{msg_form_id}::bigint	
+		   and use_yn = 'Y'
+
+	</select>	
+	
+	<insert id="SMSDao.insertReSmsSendZo_Ezrems" parameterType="CmMap" >		
+		insert into ha_msg_send_info 
+			( company_code
+			, msg_form_id
+			, user_id
+			, msg_type
+			, msg_title
+			, msg_content
+			, send_num
+			, recv_num
+			, send_date
+			, msg_result
+
+			, row_input_id
+			, row_input_ip
+			, row_input_date )
+		values 
+			( #{company_code}
+			, #{msg_form_id}::bigint
+			, #{userId}
+			, #{msg_type}
+			, #{msg_title}
+			, #{msg_content}
+			, #{send_num}
+			, #{recv_num}
+			, now()
+			, #{msg_result}
+
+			, #{userId}
+			, #{userIp}
+			, now() );				
+	</insert>	
+</mapper>

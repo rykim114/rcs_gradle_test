@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0305Dao">
+
+	<select id="BI0305Dao.ha_email_form_info.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	email_form_id
+		, 		email_title
+		, 		basic_send_email
+		, 		basic_send_email_name
+		, 		form_path
+		, 		pay_yn
+		, 		use_yn
+		, 		remark
+		, 		row_input_id
+		, 		row_input_date
+		, 		row_input_ip
+		, 		row_update_id
+		, 		row_update_date
+		, 		row_update_ip
+		from ha_email_form_info
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		where		search(#{main_search_key_word},email_title, basic_send_email,	basic_send_email_name)
+		</if>		
+		order by 	email_form_id
+		,			email_title
+	</select>
+
+	<select id="BI0305Dao.ha_email_form_info.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_email_form_info	(
+				email_title
+		, 		basic_send_email
+		, 		basic_send_email_name
+		, 		form_path
+		, 		pay_yn
+		, 		use_yn
+		, 		remark
+		, 		row_input_id
+		, 		row_input_date
+		, 		row_input_ip
+		)
+		values	(
+			#{email_title}
+		, 	#{basic_send_email}
+		, 	#{basic_send_email_name}
+		, 	#{form_path}
+		, 	#{pay_yn}
+		, 	#{use_yn}
+		, 	#{remark}
+		,	#{userId}
+		,	now()
+		,	#{userIp}		
+		)
+	</select>
+	
+	<select id="BI0305Dao.ha_email_form_info.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_email_form_info
+		where	email_form_id		=	#{email_form_id}::bigint
+	</select>
+	
+	<select id="BI0305Dao.ha_email_form_info.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_email_form_info
+		set	email_title				=	#{email_title}
+		,	basic_send_email		=	#{basic_send_email}
+		,	basic_send_email_name	=	#{basic_send_email_name}		
+		,	form_path				=	#{form_path}
+		,	pay_yn					=	#{pay_yn}
+		,	use_yn					=	#{use_yn}
+		,	remark					=	#{remark}		
+		, 	row_update_date 		= 	NOW()
+		, 	row_update_id	 		= 	#{userId}
+		, 	row_update_ip 			= 	#{userIp}
+		where	email_form_id		=	#{email_form_id}::bigint
+	</select>	
+
+</mapper>

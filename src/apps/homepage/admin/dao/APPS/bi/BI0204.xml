@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0204Dao">
+
+	<select id="BI0204Dao.ha_msg_send_master.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		
+		select  a.company_code
+		,	    a.user_name
+		,		a.mobile_no
+		,		a.remark
+		,		a.otp_num
+		,		a.use_yesno
+		from ha_msg_send_master a
+
+	</select>
+	
+	<insert id="BI0204Dao.ha_msg_send_master.insert" parameterType="CmMap">
+		INSERT INTO
+			ha_msg_send_master
+		(
+			company_code,
+			user_name,
+			mobile_no,
+			remark,
+			otp_num,
+			use_yesno,
+			row_input_date,
+			row_input_ip,
+			row_input_id
+		)
+		VALUES
+		(
+			#{company_code},
+			#{user_name},
+			#{encrypt_mobile_no},
+			#{remark},
+			#{otp_num},
+			#{use_yesno},
+			NOW(),
+			#{userIp},
+			#{userId}
+		)
+	</insert>
+	
+	<update id="BI0204Dao.ha_msg_send_master.update" parameterType="CmMap">
+		UPDATE 	ha_msg_send_master
+		SET
+			user_name 			= #{user_name},
+			remark 				= #{remark},
+			otp_num 			= #{otp_num},
+			use_yesno 			= #{use_yesno},
+			row_input_date 		= NOW(),
+			row_input_ip 		= #{userIp},
+			row_input_id 		= #{userId}
+		WHERE   company_code 	= #{company_code}
+		AND		mobile_no  		= #{mobile_no}
+	</update>
+	
+	<delete id="BI0204Dao.ha_msg_send_master.delete" parameterType="CmMap">
+		DELETE 
+		from 	ha_msg_send_master
+		WHERE 	company_code 		= #{company_code}
+		AND		mobile_no			= #{mobile_no}		
+	</delete>
+
+	
+</mapper>

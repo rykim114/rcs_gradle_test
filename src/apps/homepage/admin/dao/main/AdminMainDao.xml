@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminMainDao">
+	<select id="AdminMainDao.getUserPgmList.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		with menulist as (
+			select a.메뉴코드
+			     , a.상위메뉴코드
+				 , a.메뉴명
+				 , a.정렬
+				 , a.메뉴코드 메뉴정렬
+				 , a.아이콘
+				 , a.파일경로
+				 , a.레벨
+				 , a.모달창사용여부
+				 , (select case when count(*) > 0 then 'Y' else 'N' end from modu.r114_메뉴 b where b.상위메뉴코드 = a.메뉴코드 and b.사용여부='Y') 하위메뉴
+				 , 0 하위메뉴순서
+				 , (
+				 	select count(*)
+				 	from modu.r114_메뉴 b
+					inner join modu.r114_그룹별권한 g on b.메뉴코드 = g.메뉴코드 and g.그룹코드 = #{admin_groupcode} and g.사용여부 = 'Y'
+				 	where b.상위메뉴코드 = a.상위메뉴코드 and b.사용여부='Y'
+				 ) 하위메뉴숫자
+				 , isnull((select min(b.메뉴코드) from modu.r114_메뉴 b where b.상위메뉴코드 = a.메뉴코드 and b.레벨 = '2'  and b.사용여부='Y'), a.메뉴코드) 오픈메뉴
+				 , row_number() over (order by a.정렬) 메뉴순서
+			  from modu.r114_메뉴 a
+	    inner join modu.r114_그룹별권한 g on a.메뉴코드 = g.메뉴코드 and g.그룹코드 = #{admin_groupcode} and g.사용여부 = 'Y'
+			 where a.레벨 = '1'
+			   and a.사용여부 = 'Y'
+		 union all
+			select a.메뉴코드
+			     , a.상위메뉴코드
+				 , a.메뉴명 
+				 , a.정렬
+				 , a.상위메뉴코드 메뉴정렬
+				 , a.아이콘
+				 , a.파일경로
+				 , a.레벨
+				 , a.모달창사용여부
+				 , 'N' 하위메뉴 
+				 , row_number() over (partition by a.상위메뉴코드, a.레벨 order by a.정렬 asc) 하위메뉴순서
+				 , (
+				 	select count(*)
+				 	from modu.r114_메뉴 b
+				 	inner join modu.r114_그룹별권한 g on b.메뉴코드 = g.메뉴코드 and g.그룹코드 = #{admin_groupcode} and g.사용여부 = 'Y'
+				 	where b.상위메뉴코드 = a.상위메뉴코드 and b.사용여부='Y'
+				 ) 하위메뉴숫자
+				 , a.메뉴코드 오픈메뉴
+				 , 99 메뉴순서
+		      from modu.r114_메뉴 a inner join modu.r114_메뉴 b on a.상위메뉴코드 = b.메뉴코드
+	    inner join modu.r114_그룹별권한 g on a.메뉴코드 = g.메뉴코드 and g.그룹코드 = #{admin_groupcode} and g.사용여부 = 'Y'
+		     where a.레벨 = '2'  
+		       and a.사용여부 = 'Y'
+		  )
+		  select a.메뉴코드 menucode
+		       , a.상위메뉴코드 upmenucode
+			   , a.메뉴명 menuname
+			   , a.정렬  sortcode
+			   , a.아이콘 icon
+			   , a.파일경로 filepath
+			   , a.레벨 lvl
+			   , a.하위메뉴 downyn
+			   , a.하위메뉴순서 downsort
+			   , a.하위메뉴숫자 downcnt
+			   , a.메뉴순서 menuorder1
+			   , isnull(a.모달창사용여부, 'N') modalyn
+			   , a.오픈메뉴 opencode
+		    from menulist a 		     
+		order by a.메뉴정렬, a.하위메뉴순서
+	</select>
+
+	<select id="AdminMainDao.getUserPgmLvl.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		  select 레벨 as lvl
+		    from modu.r114_메뉴 a  
+		   where a.메뉴코드 = #{pgmCode}
+		     and a.사용여부 = 'Y'
+	</select>
+
+	<select id="AdminMainDao.getExcelDown.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		  select max(isnull(a.엑셀다운, 'N')) as excelyn
+		  	   , max(isnull(a.상세엑셀다운, 'N')) as dtlexcelyn
+			from modu.r114_그룹별권한 a inner join [modu].[r114_사용자] b on a.그룹코드 = b.그룹코드
+		   where a.메뉴코드 = #{pgmCode}
+		     and b.아이디 = #{userId}
+	</select>
+
+	<update id="AdminMainDao.updateMenuTime" parameterType="CmMap">
+		<![CDATA[
+		update modu.r114_사용자메뉴로그
+		   set 반영여부 = 'Y'
+		     , 종료일시 = CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':','')
+		     , 체류시간 = DATEDIFF(mi, CONVERT(DATETIME, STUFF(STUFF(STUFF(발생일시,13,0,':'),11,0,':'),9,0,' ')), GETDATE()) + 1
+		     , 수정일자 = GETDATE()
+		 where 아이디 = #{userId}
+		   and 세션ID = #{session_id}
+		   and 반영여부 = 'N'  
+		]]>    
+	</update>
+
+   	<insert id="AdminMainDao.insertMenuLog" parameterType="CmMap">
+		INSERT INTO modu.r114_사용자메뉴로그
+	           (아이디
+	           ,세션ID
+	           ,아이피
+	           ,메뉴코드
+	           ,발생일시
+	           ,체류시간
+	           ,반영여부
+	           ,등록일자)
+     	VALUES
+     	(
+			#{userId},
+			#{session_id},
+			#{ipAddr},
+			#{pgmCode},
+			CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':',''),
+			null,
+			'N',
+			GETDATE()
+		)
+	</insert>
+	
+	<insert id="AdminMainDao.insertMenuBtnLog" parameterType="CmMap">
+		INSERT INTO modu.r114_사용자버튼로그
+	           (아이디
+	           ,세션ID
+	           ,아이피
+	           ,메뉴코드
+	           ,버튼명
+	           ,의도
+	           ,발생일시
+	           ,등록일자)
+     	VALUES
+     	(
+			#{userId},
+			#{session_id},
+			#{ipAddr},
+			#{pgmCode},
+			#{btnName},
+			#{inTent},
+			CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':',''),
+			GETDATE()
+		)
+	</insert>
+	
+	<insert id="AdminMainDao.insertMenuDownBtnLog" parameterType="CmMap">
+		INSERT INTO modu.r114_사용자다운로드버튼로그
+	           (아이디
+	           ,세션ID
+	           ,아이피
+	           ,메뉴코드
+	           ,발생일시
+	           ,등록일자)
+     	VALUES
+     	(
+			#{userId},
+			#{session_id},
+			#{ipAddr},
+			#{pgmCode},
+			CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':',''),
+			GETDATE()
+		)
+	</insert>	
+</mapper>

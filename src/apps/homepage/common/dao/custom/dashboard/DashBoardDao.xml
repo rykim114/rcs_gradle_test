@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DashBoardDao">
+	<select id="DashBoardDao.selectDashBoardTop" parameterType="CmMap" resultType="CmResMap">
+		  select '1' totcnt
+		       , '2' as  sendcnt
+		       , '3' as writecnt
+		       , '4' as  completecnt
+		       , '5' as  delaycnt
+	</select>
+
+	<select id="DashBoardDao.selectDashBoardChart1" parameterType="CmMap" resultType="CmResMap">
+		  select '1' as date
+		       , '2' totcnt
+		       , '3' sendcnt
+		       , '4' writecnt
+		       , '5' completecnt
+		       , '6' delaycnt
+	</select>
+
+</mapper>

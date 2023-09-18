@@ -1,0 +1,871 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="GisDao">
+
+	<!-- 격자 100*100 -->
+	<select id="GisDao.selectSqr100List" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.id,
+			a.geom.STAsText() AS geom,
+			a.CITY_NM 시도명,
+			a.SGNG_NM 시군구명,
+			a.EMD_NM 읍면동명
+		FROM modu.sqr_100 a
+		WHERE
+		1 = 1
+		AND (CAST(a.GEOM_C_X AS FLOAT) BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+		AND (CAST(a.GEOM_C_Y AS FLOAT) BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+	</select>
+
+	<select id="GisDao.selectSqr100GridList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.*
+		FROM
+		(
+			SELECT
+				a.id,
+				a.geom,
+				a.시도명,
+				a.시군구명,
+				a.읍면동명,
+				ROW_NUMBER() OVER (PARTITION BY id ORDER BY distance) AS rownum
+			FROM
+			(
+			SELECT
+				a.id,
+				a.geom.STAsText() AS geom,
+				a.CITY_NM 시도명,
+				a.SGNG_NM 시군구명,
+				a.EMD_NM 읍면동명,
+				b.X좌표,
+				b.Y좌표,
+				POWER(CAST(a.GEOM_C_X AS FLOAT) - CAST(b.X좌표 AS FLOAT), 2) +
+				POWER(CAST(a.GEOM_C_Y AS FLOAT) - CAST(b.Y좌표 AS FLOAT), 2) AS distance
+			FROM modu.sqr_100 a
+			LEFT OUTER JOIN modu.kikcd_b b
+			ON
+			(CAST(b.X좌표 AS FLOAT) BETWEEN CAST(#{swLng} AS FLOAT) - 0.00075 AND CAST(#{neLng} AS FLOAT) - 0.00075)
+			AND (CAST(b.Y좌표 AS FLOAT) BETWEEN CAST(#{swLat} AS FLOAT) - 0.002 AND CAST(#{neLat} AS FLOAT) - 0.002)
+			WHERE
+			1 = 1
+			AND (CAST(a.GEOM_C_X AS FLOAT) BETWEEN CAST(#{swLng} AS FLOAT) - 0.00075 AND CAST(#{neLng} AS FLOAT) - 0.00075)
+			AND (CAST(a.GEOM_C_Y AS FLOAT) BETWEEN CAST(#{swLat} AS FLOAT) - 0.002 AND CAST(#{neLat} AS FLOAT) - 0.002)
+			) a
+		) a
+		WHERE a.rownum = 1
+	</select>
+
+	<select id="GisDao.selectSqr100GridByIdList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.id,
+			a.geom.STAsText() AS geom
+		FROM modu.sqr_100 a
+		WHERE
+		1 = 1
+		AND a.id in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+	</select>
+
+	<select id="GisDao.selectSqr100GridDetail" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.*
+		FROM
+		(
+			SELECT
+				a.id,
+				a.geom,
+				a.시도명,
+				a.시군구명,
+				a.읍면동명,
+				ROW_NUMBER() OVER (PARTITION BY id ORDER BY distance) AS rownum
+			FROM
+			(
+			SELECT
+				a.id,
+				a.geom.STAsText() AS geom,
+				b.시도명,
+				b.시군구명,
+				b.읍면동명,
+				b.X좌표,
+				b.Y좌표,
+				POWER(CAST(a.GEOM_C_X AS FLOAT) - CAST(b.X좌표 AS FLOAT), 2) +
+				POWER(CAST(a.GEOM_C_Y AS FLOAT) - CAST(b.Y좌표 AS FLOAT), 2) AS distance
+			FROM modu.sqr_100 a
+			LEFT OUTER JOIN
+			modu.kikcd_b b
+			ON
+			(CAST(b.X좌표 AS FLOAT) BETWEEN CAST(#{swLng} AS FLOAT) - 0.01 AND CAST(#{neLng} AS FLOAT) + 0.01)
+			AND (CAST(b.Y좌표 AS FLOAT) BETWEEN CAST(#{swLat} AS FLOAT) - 0.01 AND CAST(#{neLat} AS FLOAT) + 0.01)
+			WHERE
+			1 = 1
+			AND (CAST(a.GEOM_C_X AS FLOAT) BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+			AND (CAST(a.GEOM_C_Y AS FLOAT) BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+			AND a.geom.STContains(geometry::STGeomFromText('POINT(' + #{lng} + ' ' + #{lat} + ')', 4326)) = 1
+			) a
+		) a
+		WHERE a.rownum = 1
+	</select>
+
+	<select id="GisDao.selectOutputAreaLineList" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.std_yyyy,
+			a.block_cd,
+			a.sido_nm,
+			a.sgng_nm,
+			a.ldong_nm,
+			a.x_coord,
+			a.y_coord,
+			a.geom.STAsText() AS geom
+		FROM
+		modu.block a
+		WHERE
+		1 = 1
+		AND (a.x_coord BETWEEN CAST(#{swLng} AS FLOAT) - 1500 AND CAST(#{neLng} AS FLOAT))
+		AND (a.y_coord BETWEEN CAST(#{swLat} AS FLOAT) - 200 AND CAST(#{neLat} AS FLOAT))
+<!--		SELECT-->
+<!--			a.std_yyyy,-->
+<!--			a.block_cd,-->
+<!--			a.geom.ToString() AS geom-->
+<!--		FROM  modu.block a-->
+<!--		WHERE BLOCK_CD IN (-->
+<!--			select BLOCK_CD-->
+<!--			from modu.block a-->
+<!--			where  (geom.STContains(geometry::STPointFromText('POINT(' + #{swLng} + ' ' + #{swLat} + ')', 4326)) = 1-->
+<!--			or geom.STContains(geometry::STPointFromText('POINT(' + #{neLng} + ' ' + #{neLat} + ')', 4326)) = 1)-->
+<!--		)-->
+<!--			AND (a.x_coord BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))-->
+<!--			AND (a.y_coord BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))-->
+	</select>
+
+	<select id="GisDao.selectOutputAreaDetail" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			TOP 1
+			a.*
+		FROM
+		(
+			SELECT
+				a.std_yyyy,
+				a.block_cd,
+				a.sido_nm,
+				a.sgng_nm,
+				a.ldong_nm,
+				a.x_coord,
+				a.y_coord,
+				a.geom.STAsText() AS geom,
+				POWER(a.x_coord - CAST(#{lngTrs} AS FLOAT), 2) + POWER(a.y_coord - CAST(#{latTrs} AS FLOAT), 2) AS distance
+			FROM modu.block a
+			WHERE
+				1 = 1
+				AND (a.x_coord BETWEEN CAST(#{swLng} AS FLOAT) AND CAST(#{neLng} AS FLOAT))
+				AND (a.y_coord BETWEEN CAST(#{swLat} AS FLOAT) AND CAST(#{neLat} AS FLOAT))
+				AND a.geom.STContains(geometry::STGeomFromText('POINT(' + CAST(#{lng} AS VARCHAR) + ' ' + CAST(#{lat} AS VARCHAR) + ')', 4326)) = 1
+		) a
+		ORDER BY distance ASC
+	</select>
+
+	<!-- 위치정보로 주소 조회 -->
+	<select id="GisDao.selectAddressByGps" parameterType="CmMap" resultType="CmResMap">
+		SELECT TOP 1
+			'' AS adm_nm,
+			b.시도명 AS sidonm,
+			b.시군구명 AS sggnm,
+			b.읍면동명 AS dongnm,
+			b.법정동코드 AS adm_cd
+		FROM
+			(
+				SELECT a.emd_cd
+				FROM [modu].[emd] a with (NOLOCK)
+				where a.geom.MakeValid().STContains(geometry::STGeomFromText('POINT(' + #{lng} + ' ' + #{lat} + ')', 4326)) = 1
+			) A
+			INNER join
+			(
+				SELECT
+					b.시도명,
+					b.시군구명,
+					b.읍면동명,
+					b.법정동코드
+				FROM modu.kikcd_b b with (NOLOCK)
+			) b
+			on a.EMD_CD + '00' = b.법정동코드
+	</select>
+
+	<select id="GisDao.selectAddressListByText" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.adm_cd,
+			a.sidonm,
+		<if test="null != sidonm and '' != sidonm">
+			a.sggnm,
+			<if test="null != sggnm and '' != sggnm">
+				a.dongnm,
+			</if>
+		</if>
+			a.x좌표,
+			a.y좌표
+		FROM
+		(
+			SELECT
+				a.adm_nm,
+				a.adm_cd,
+				a.sidonm,
+			<if test="null == sidonm or '' == sidonm">
+				ROW_NUMBER() OVER (PARTITION BY sidonm ORDER BY adm_cd) AS rownum,
+			</if>
+			<if test="null != sidonm and '' != sidonm">
+				a.sggnm,
+				<if test="null == sggnm or '' == sggnm">
+					ROW_NUMBER() OVER (PARTITION BY sggnm ORDER BY adm_cd) AS rownum,
+				</if>
+				<if test="null != sggnm and '' != sggnm">
+					dongnm,
+					ROW_NUMBER() OVER (PARTITION BY dongnm ORDER BY adm_cd) AS rownum,
+				</if>
+			</if>
+				a.x좌표,
+				a.y좌표
+			FROM
+				(
+					SELECT
+						'' AS adm_nm,
+						a.시도명 AS sidonm,
+						a.시군구명 AS sggnm,
+						a.읍면동명 AS dongnm,
+						a.법정동코드 AS adm_cd,
+						a.x좌표,
+						a.y좌표
+					FROM
+						modu.kikcd_b a
+					WHERE
+						1 = 1
+				<if test="null != sidonm and '' != sidonm and '전국' != sidonm">
+					AND a.시도명 = #{sidonm}
+					<if test="null != sggnm and '' != sggnm">
+						AND a.시군구명 = #{sggnm}
+					</if>
+				</if>
+				) a
+		) a
+		WHERE
+			rownum = 1
+		ORDER BY
+		<if test="null == sidonm or '' == sidonm">
+			a.adm_cd ASC
+		</if>
+		<if test="null != sidonm and '' != sidonm">
+			sidonm ASC, sggnm ASC
+			<if test="null != sggnm and '' != sggnm">
+				, dongnm ASC
+			</if>
+		</if>
+	</select>
+
+
+	<select id="GisDao.주소_검색_시군구.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.sidonm,
+			a.sggnm,
+			a.adm_cd,
+			a.x좌표,
+			a.y좌표
+		FROM
+		(
+			SELECT
+				a.adm_nm,
+				a.adm_cd,
+				a.sidonm,
+				a.sggnm,
+				ROW_NUMBER() OVER (PARTITION BY sggnm, sidonm ORDER BY adm_cd) AS rownum,
+				a.x좌표,
+				a.y좌표
+			FROM
+			(
+				SELECT
+					'' AS adm_nm,
+					a.시도명 AS sidonm,
+					a.시군구명 AS sggnm,
+					a.읍면동명 AS dongnm,
+					a.법정동코드 AS adm_cd,
+					a.x좌표,
+					a.y좌표
+				FROM
+					modu.kikcd_b a
+				WHERE
+					1 = 1
+					AND (a.시도명 LIKE '%' + #{sggnm} + '%' OR a.시군구명 LIKE '%' + #{sggnm} + '%')
+			) a
+		) a
+		WHERE
+			1 = 1
+			AND	rownum = 1
+		ORDER BY
+			sidonm ASC, sggnm ASC
+	</select>
+
+	<select id="GisDao.상권영역.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.순번,
+			a.상권,
+			a.법정동코드,
+			a.geom.STAsText() AS geom,
+			b.시도명 AS sidonm,
+			b.시군구명 AS sggnm,
+			b.읍면동명 AS dongnm,
+			a.geom.STCentroid().STX X좌표,
+			a.geom.STCentroid().STY Y좌표
+		FROM
+			modu.bizdist a
+		left outer join
+		(
+			select
+				substring(법정동코드, 1, 8) 법정동코드,
+				시도명,
+				시군구명,
+				읍면동명,
+				생성일자,
+				X좌표,
+				Y좌표
+			from modu.kikcd_b a
+			where a.법정동코드 =
+					(
+						select
+							min(법정동코드)
+						from modu.kikcd_b z
+						where a.시도명 = z.시도명
+						and a.시군구명 = z.시군구명
+						and a.읍면동명 = z.읍면동명
+					)
+		) b
+		on a.법정동코드 = b.법정동코드
+		WHERE
+			1 = 1
+		ORDER BY
+			a.순번 ASC
+	</select>
+
+	<select id="GisDao.주소_검색_상권명.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.adm_cd,
+			a.bizdist_nm,
+			a.geom,
+			a.sidonm,
+			a.sggnm,
+			a.dongnm,
+			a.순번
+		FROM
+		(
+			SELECT
+				a.adm_cd,
+				a.bizdist_nm,
+				a.geom,
+				a.sidonm,
+				a.sggnm,
+				a.dongnm,
+				ROW_NUMBER() OVER (PARTITION BY a.bizdist_nm ORDER BY adm_cd) AS rownum,
+				a.순번
+			FROM
+			(
+				SELECT
+					a.상권 AS bizdist_nm,
+					a.법정동코드 AS adm_cd,
+					a.geom.STAsText() AS geom,
+					b.시도명 AS sidonm,
+					b.시군구명 AS sggnm,
+					b.읍면동명 AS dongnm,
+					a.순번
+				FROM
+					modu.bizdist a
+				left outer join
+				(
+					select
+						substring(법정동코드, 1, 8) 법정동코드,
+						시도명,
+						시군구명,
+						읍면동명,
+						생성일자,
+						X좌표,
+						Y좌표
+					from modu.kikcd_b a
+					where a.법정동코드 =
+						(
+							select
+								min(법정동코드)
+							from modu.kikcd_b z
+							where a.시도명 = z.시도명
+							and a.시군구명 = z.시군구명
+							and a.읍면동명 = z.읍면동명
+						)
+				) b
+				on a.법정동코드 = b.법정동코드
+				WHERE
+				1 = 1
+				<if test="null != bizdist and '' != bizdist">
+					AND (a.상권 LIKE '%' + #{bizdist} + '%')
+				</if>
+				<if test="null != admCd and '' != admCd">
+					AND (a.법정동코드 LIKE #{admCd} + '%')
+				</if>
+			) a
+		) a
+		WHERE
+			1 = 1
+			AND	rownum = 1
+		ORDER BY
+			bizdist_nm ASC
+	</select>
+
+
+	<select id="GisDao.주소_검색_상권_연관_읍면동.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.sidonm,
+			a.sggnm,
+			a.dongnm,
+			a.donglinm,
+			a.adm_cd
+		FROM
+		(
+			SELECT
+				a.adm_nm,
+				a.adm_cd,
+				a.sidonm,
+				a.sggnm,
+				a.dongnm,
+				a.donglinm,
+				ROW_NUMBER() OVER (PARTITION BY sggnm, sidonm, dongnm, donglinm ORDER BY adm_cd) AS rownum
+		FROM
+			(
+				SELECT
+					'' AS adm_nm,
+					a.시도명 AS sidonm,
+					a.시군구명 AS sggnm,
+					a.읍면동명 AS dongnm,
+					a.동리명 AS donglinm,
+					a.법정동코드 AS adm_cd
+				FROM
+					modu.kikcd_b a
+				WHERE
+					1 = 1
+					AND (a.법정동코드 LIKE #{admCd} + '%')
+			) a
+		) a
+		WHERE
+			1 = 1
+			AND	rownum = 1
+		ORDER BY
+				sidonm ASC,
+				sggnm ASC,
+				dongnm ASC,
+				donglinm ASC
+	</select>
+
+
+	<select id="GisDao.statSupplyList.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			s.id AS blockId,
+			SUM(ISNULL(a.총점포수, 0)) AS 총점포수
+		from
+			modu.sqr_100 s
+		left outer join
+			modu.P_SANGGA a
+		on
+			s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+			and (a.X between #{west} and #{east})
+			and (a.Y between #{south} and #{north})
+		<if test='groupCode != null and groupCode.equals("41")'>
+			and	isnull(a.도시, '') = #{demoSidonm}
+			and	isnull(a.구시군, '') = #{demoSggnm}
+		</if>
+		left outer join
+			modu.P_SANGGAHO h
+		on
+			a.상가코드 = h.상가코드
+		where
+			s.id in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		and a.분양일 != ''
+		<if test="null != sanggaArr and ! sanggaArr.isEmpty()">
+			and a.상가유형 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		group by
+			s.id
+		order by
+			s.id
+	</select>
+
+	<select id="GisDao.statPList.select" parameterType="CmMap" resultType="CmResMap">
+		select
+			s.id AS blockId,
+			SUM(ISNULL(h.분양가, 0)) AS 분양가,
+			SUM(ISNULL(h.분양면적, 0)) AS 분양면적,
+			SUM(ISNULL(h.전용면적, 0)) AS 전용면적
+		from
+			modu.sqr_100 s
+		left outer join
+			modu.P_SANGGA a
+		on
+			s.geom.STContains(geometry::STPointFromText('POINT(' + a.X + ' ' + a.Y + ')', 4326)) = 1
+			and (a.X between #{west} and #{east})
+			and (a.Y between #{south} and #{north})
+		<if test='groupCode != null and groupCode.equals("41")'>
+			and	isnull(a.도시, '') = #{demoSidonm}
+			and	isnull(a.구시군, '') = #{demoSggnm}
+		</if>
+		left outer join
+			modu.P_SANGGAHO h
+		on
+			a.상가코드 = h.상가코드
+		where
+			s.id in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		<if test="null != sanggaArr and ! sanggaArr.isEmpty()">
+			and a.상가코드 in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		group by
+			s.id
+		order by
+			s.id
+	</select>
+
+	<select id="GisDao.statRentList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.id AS blockId,
+			SUM(ISNULL(a.rent, 0)) AS 임대료,
+			SUM(ISNULL(a.cont_area, 0)) AS 계약면적,
+			SUM(ISNULL(a.usage_area, 0)) AS 전용면적
+		FROM
+			modu.SHOP_RENT_100M a
+		WHERE
+			a.id IN
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.std_yyyymm in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		<if test="null != sanggaArr and ! sanggaArr.isEmpty()">
+			and a.sangga_type in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		GROUP BY
+			a.id
+		ORDER BY
+			a.id
+	</select>
+
+	<select id="GisDao.statTradingList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.id AS blockId,
+			SUM(ISNULL(a.deal, 0)) AS 매매가,
+			SUM(ISNULL(a.cont_area, 0)) AS 계약면적,
+			SUM(ISNULL(a.usage_area, 0)) AS 전용면적
+		FROM
+			modu.SHOP_DEAL_100M a
+		WHERE
+			a.id IN
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.std_yyyymm in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		<if test="null != sanggaArr and ! sanggaArr.isEmpty()">
+			and a.sangga_type in
+			<foreach collection="sanggaArr" item="sangga" open="(" close=")" separator=",">
+				#{sangga}
+			</foreach>
+		</if>
+		GROUP BY
+			a.id
+		ORDER BY
+			a.id
+	</select>
+
+	<select id="GisDao.statPopList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.block_cd AS blockCd,
+			a.std_ym as '기준월',
+			ISNULL(a.dwl_pop_tot_cnt , 0) as '거주_전체',
+			ISNULL(a.wk_plc_pop_tot_cnt, 0) as '직장_전체',
+
+			ISNULL(a.man_dwl_pop_cnt_10gl, 0) AS '거주_남성_10l',
+			ISNULL(a.man_dwl_pop_cnt_10g, 0) AS '거주_남성_10',
+			ISNULL(a.man_dwl_pop_cnt_20g, 0) AS '거주_남성_20',
+			ISNULL(a.man_dwl_pop_cnt_30g, 0) AS '거주_남성_30',
+			ISNULL(a.man_dwl_pop_cnt_40g, 0) AS '거주_남성_40',
+			ISNULL(a.man_dwl_pop_cnt_50g, 0) AS '거주_남성_50',
+			ISNULL(a.man_dwl_pop_cnt_60gu, 0) AS '거주_남성_60u',
+
+			ISNULL(a.wman_dwl_pop_cnt_10gl, 0) AS '거주_여성_10l',
+			ISNULL(a.wman_dwl_pop_cnt_10g, 0) AS '거주_여성_10',
+			ISNULL(a.wman_dwl_pop_cnt_20g, 0) AS '거주_여성_20',
+			ISNULL(a.wman_dwl_pop_cnt_30g, 0) AS '거주_여성_30',
+			ISNULL(a.wman_dwl_pop_cnt_40g, 0) AS '거주_여성_40',
+			ISNULL(a.wman_dwl_pop_cnt_50g, 0) AS '거주_여성_50',
+			ISNULL(a.wman_dwl_pop_cnt_60gu, 0) AS '거주_여성_60u',
+
+			ISNULL(a.man_wk_plc_pop_cnt_20g, 0) AS '직장_남성_20',
+			ISNULL(a.man_wk_plc_pop_cnt_30g, 0) AS '직장_남성_30',
+			ISNULL(a.man_wk_plc_pop_cnt_40g, 0) AS '직장_남성_40',
+			ISNULL(a.man_wk_plc_pop_cnt_50g, 0) AS '직장_남성_50',
+			ISNULL(a.man_wk_plc_pop_cnt_60gu, 0) AS '직장_남성_60u',
+
+			ISNULL(a.wman_wk_plc_pop_cnt_20g, 0) AS '직장_여성_20',
+			ISNULL(a.wman_wk_plc_pop_cnt_30g, 0) AS '직장_여성_30',
+			ISNULL(a.wman_wk_plc_pop_cnt_40g, 0) AS '직장_여성_40',
+			ISNULL(a.wman_wk_plc_pop_cnt_50g, 0) AS '직장_여성_50',
+			ISNULL(a.wman_wk_plc_pop_cnt_60gu, 0) AS '직장_여성_60u'
+		FROM
+			modu.MMB_MAIN_BLOCK a
+		WHERE
+		<foreach collection="blockCdArr" item="blockCd" open="(" close=")" separator=" or ">
+			a.block_cd_S = #{blockCd}
+		</foreach>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.std_ym in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		<if test='groupCode != null and groupCode.equals("41")'>
+			and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%'
+		</if>
+		ORDER BY
+			a.block_cd
+	</select>
+
+
+	<select id="GisDao.statPopFlowList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.block_cd AS blockCd,
+			a.std_yyyy as '기준월',
+			a.wkdy_cd AS '요일',
+			a.time_cd AS '시간',
+			ISNULL(a.man, 0) AS '남성',
+			ISNULL(a.woman, 0) AS '여성'
+		FROM
+			modu.MMB_R114_FLOW_POP a
+		WHERE
+		<foreach collection="blockCdArr" item="blockCd" open="(" close=")" separator=" or ">
+			a.block_cd LIKE #{blockCd} + '%'
+		</foreach>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.std_yyyy in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		<if test='groupCode != null and groupCode.equals("41")'>
+			and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%'
+		</if>
+		ORDER BY
+			a.block_cd
+	</select>
+
+	<select id="GisDao.statLobzList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.block_cd AS blockCd,
+			SUM(
+				ISNULL(a.sale_amt_spring, 0)
+				+ ISNULL(a.sale_amt_summer, 0)
+				+ ISNULL(a.sale_amt_autumn, 0)
+				+ ISNULL(a.sale_amt_winter, 0)
+			) AS stat
+		FROM
+			modu.MMB_LOBZ_SCLS_BLOCK a
+		left outer join
+			modu.MMC_BZ_CATE_S b
+		on
+			a.bz_lobz_scls_cd = b.bz_lobz_scls_cd
+		WHERE
+			1 = 1
+		<if test="null != blockCdArr and ! blockCdArr.isEmpty()">
+			and
+			<foreach collection="blockCdArr" item="blockCd" open="(" close=")" separator="or">
+				a.block_cd_S = #{blockCd}
+			</foreach>
+		</if>
+		and b.bz_lobz_lcls_cd is not null
+		<if test="null != industryArr and ! industryArr.isEmpty()">
+			and b.bz_lobz_lcls_cd in
+			<foreach collection="industryArr" item="industry" open="(" close=")" separator=",">
+				#{industry}
+			</foreach>
+		</if>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.std_ym + '' in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		<if test='groupCode != null and groupCode.equals("41")'>
+			and isnull(a.ldong_cd, '') LIKE #{demoLdongcd} + '%'
+		</if>
+		GROUP BY
+		a.block_cd
+		ORDER BY
+		a.block_cd
+	</select>
+
+
+	<select id="GisDao.statIndustryList.select" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.id AS blockId,
+			a.sdt_yyyymm as 기준월,
+			a.소매,
+			a.숙박,
+			a.음식,
+			a.부동산,
+			a.과학기술 as [과학·기술],
+			a.시설관리임대 as [시설관리·임대],
+			a.교육,
+			a.보건의료,
+			a.예술스포츠 as [예술·스포츠],
+			a.수리개인 as [수리·개인]
+		FROM
+			modu.sqr_100_store_10_cnt a
+		WHERE
+			a.id in
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator=",">
+			#{blockId}
+		</foreach>
+		<if test="null != yyyymmArr and ! yyyymmArr.isEmpty()">
+			and a.sdt_yyyymm in
+			<foreach collection="yyyymmArr" item="yyyymm" open="(" close=")" separator=",">
+				#{yyyymm}
+			</foreach>
+		</if>
+		ORDER BY
+			a.id
+	</select>
+
+	<insert id="GisDao.사용자검색지역로그.insert" parameterType="CmMap" useGeneratedKeys="true" keyProperty="순번">
+		INSERT INTO modu.r114_사용자검색지역로그
+		(
+			아이디,
+			세션ID,
+			메뉴코드,
+			지역명_시,
+			지역명_구,
+			지역명_동,
+			검색구분,
+			발생일시,
+			아이피
+		) VALUES (
+			#{userId},
+			#{sessionId},
+			#{menuCd},
+			#{sido},
+			#{sgg},
+			#{dong},
+			#{emdType},
+			GETDATE(),
+			#{userIp}
+		)
+	</insert>
+
+	<insert id="GisDao.사용자다운로드메뉴로그.insert" parameterType="CmMap" useGeneratedKeys="true" keyProperty="순번">
+		INSERT INTO modu.r114_사용자다운로드메뉴로그
+		(
+			아이디,
+			세션ID,
+			메뉴코드,
+			다운로드명,
+			다운로드구분,
+			등록일자,
+			아이피
+		) VALUES (
+			#{userId},
+			#{sessionId},
+			#{menuCd},
+			#{downNm},
+			COALESCE(#{downType}, 'excel'),
+			GETDATE(),
+			#{userIp}
+		)
+	</insert>
+
+
+	<insert id="GisDao.updateFavorite" parameterType="CmMap" useGeneratedKeys="true" keyProperty="순번">
+		INSERT INTO modu.r114_사용자_즐겨찾기
+		(
+			아이디,
+			저장유형,
+			제목,
+			설명,
+			좌표X,
+			좌표Y,
+			대표아이디,
+			상태,
+			사용여부,
+			등록자아이디,
+			등록자아이피,
+			등록시간
+		) VALUES (
+			#{admin_userId},
+			#{저장유형},
+			#{제목},
+			#{설명},
+			#{좌표X},
+			#{좌표Y},
+			#{대표아이디},
+			#{상태},
+			'Y',
+			#{admin_userId},
+			#{ipAddr},
+			GETDATE()
+		)
+	</insert>
+
+	<update id="GisDao.deleteFavorite" parameterType="CmMap">
+		UPDATE modu.r114_사용자_즐겨찾기
+		SET
+			사용여부 = 'N',
+			수정자아이디 = #{admin_userId},
+			수정자아이피 = #{ipAddr},
+			수정시간 = GETDATE()
+		WHERE
+			순번 = #{순번}
+		<if test="null == isAdmin or '' == isAdmin">
+			AND 아이디 = #{admin_userId}
+		</if>
+	</update>
+
+	<delete id="GisDao.deleteFavoriteDtl" parameterType="CmMap">
+		DELETE
+		FROM
+			modu.r114_사용자_즐겨찾기_상세
+		WHERE
+			순번 = #{순번}
+	</delete>
+
+	<insert id="GisDao.insertFavoriteDtl" parameterType="CmMap">
+		INSERT INTO modu.r114_사용자_즐겨찾기_상세
+		(
+			순번_즐겨찾기,
+			상세아이디
+		) VALUES
+		<foreach collection="blockIdArr" item="blockId" open="(" close=")" separator="),(">
+			#{순번}, #{blockId}
+		</foreach>
+	</insert>
+
+</mapper>

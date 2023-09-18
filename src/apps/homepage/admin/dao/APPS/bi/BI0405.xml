@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0405Dao">
+
+	<select id="BI0405Dao.ha_recipient_info.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	a.company_code
+		,		to_char(to_timestamp(d.send_date, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') as send_date
+		,		case when a.recpnt_div	=	'C'	then '참조'
+					 when a.recpnt_div	=	'S'	then '발신인'
+					 when a.recpnt_div	=	'R'	then '수신인'
+					 when a.recpnt_div	=	'D'	then '대리인' end as recpnt_div
+		,		e.paper_name
+		,		a.user_id
+		,		a.user_name		as	decrypt_user_name
+		,		a.user_email	as decrypt_toemail
+		,		a.user_email
+		,		a.signature_detail_seq
+		,		a.signature_seq
+		,		a.recipient_seq
+		,		c.awrt_anth_img_path
+		,		a.user_id 	as 	fromemail
+		,		d.title as title
+		,		d.contents
+		,		d.email_result
+		,		c.pdf_save_path || c.pdf_save_name as email_file
+		,		c.service_no
+		,		b.receipt_seq
+		from ha_recipient_info a	inner join	ha_signature_master b
+											on	a.company_code			=	b.company_code
+											and	a.signature_seq			=	b.signature_seq
+									inner join	ha_signature_detail	c
+											on	a.company_code			=	c.company_code
+											and	a.signature_seq			=	c.signature_seq
+											and	a.signature_detail_seq	=	c.signature_detail_seq
+									inner join	(	select	email_seq
+													,		signature_detail_seq
+													,		unnest(string_to_array(recv_email, ','))	as	fromemail
+													,		email_title as title
+													,		contents
+													,		email_result
+													,		email_seq
+													,		send_date
+													,		email_form_id
+													from	ha_email_send_info
+													where	signature_detail_seq is not null
+													union all
+													select	email_seq
+													,		signature_detail_seq
+													,		unnest(string_to_array(cc_email, ','))		as	fromemail
+													,		email_title as title
+													,		contents
+													,		email_result
+													,		email_seq
+													,		send_date
+													,		email_form_id
+													from	ha_email_send_info
+													where	signature_detail_seq is not null
+												)	d
+											on	a.signature_detail_seq	=	d.signature_detail_seq
+											and	a.user_email			=	d.fromemail
+									inner join	ha_paper_info e
+											on	a.company_code			=	e.company_code
+											and	d.email_form_id			=	e.paper_seq
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		and		search(#{main_search_key_word},send_date, user_id, user_name,user_email)
+		</if>		
+		and		a.company_code	=	#{company_code}
+	   order by d.send_date desc
+	</select>
+
+	<select id="BI0405Dao.ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code	as	code
+		,		company_name	as	label
+		from ha_code_company
+	</select>	
+
+	
+</mapper>

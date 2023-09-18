@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminLoginDao">
+	<select id="AdminLoginDao.adminActionLogin" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+			<![CDATA[
+				select a.아이디	AS USER_ID
+				     , a.사용자이름 AS USER_NAME 
+					 , a.비고 AS USER_DESC
+					 , a.비밀번호 AS USER_PASSWORD
+					 , a.사용여부 AS USE_YESNO
+					 , GETDATE() AS LOGIN_TIME 
+					 , GETDATE() AS LOGOUT_TIME
+					 , A.접속오류수 AS LOGIN_COUNT
+					 , A.로그인락 AS LOGIN_LOCK_YESNO
+					 , A.그룹코드 AS GROUP_CODE
+					 , A.기능권한 AS USER_TAG
+					 , A.계약시작일 AS CONT_SDATE 
+					 , A.계약종료일 AS CONT_EDATE
+					 , A.비밀번호변경일 AS PASSWORD_UPDATE 
+					 , A.비밀번호만료일 AS PASSWORD_EXPIRE
+					 , a.비밀번호 AS PASSWORD
+					 , a.아이디	AS AA_USER_ID
+					 , CASE WHEN CONVERT(date,GETDATE()) BETWEEN A.계약시작일 AND A.계약종료일 THEN 'Y' ELSE 'N' END AS CONT_YN
+					 , DATEDIFF ( day , CONVERT(date,GETDATE()) ,  A.비밀번호만료일 ) AS PASS_REMAIN_DAYCNT
+					 , DATEDIFF ( day , CONVERT(date,GETDATE()) ,  A.계약종료일 ) + 1 AS CONT_REMAIN_DAYCNT
+					 , g.엑셀다운 AS EXCEL_YESNO
+					 , ISNULL(g.아이피확인, 'Y') AS IPCHK
+				  from modu.r114_사용자 a left outer join modu.r114_그룹 g on a.그룹코드 = g.그룹코드
+				 where a.아이디 = #{userId}
+			]]>
+	</select>
+
+	<select id="AdminLoginDao.adminCheckPcCount" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+			<![CDATA[
+				select case when count(*) > 0 then 'Y' else 'N' end checkYN
+ 				  from modu.r114_PC정보 a
+				 where a.아이디 = #{userId}
+				   and a.아이피 = #{ipAddr}
+				   and a.사용여부 = 'Y';
+			]]>
+	</select>
+	
+	
+	<select id="AdminLoginDao.oraclecheck" parameterType="CmMap" resultType="CmResMap" flushCache="false">			
+				select sysdate as time from dual
+	</select>	
+	
+	<insert id="AdminLoginDao.insertLoginHistory" parameterType="CmMap">
+		<![CDATA[
+			insert into modu.r114_사용자접속로그
+           		(구분,
+           		  아이디,
+           		  아이피,
+                                      발생일시,
+                                      세션ID,
+                                      브라우저구분,
+                                      비고,
+                                      등록일자)
+     		 values 
+     		    (#{loginYn},
+     		     #{userId},
+     		     #{ipAddr},
+     		     CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':',''),
+     		     #{session_id},
+     		     #{browser_gub},
+     		     #{loginMsg},
+     		     GETDATE()) 
+		]]>
+	</insert>
+	
+
+		<!-- COUNT정보 UPDATE -->
+	<update id="AdminLoginDao.updateCountTag" parameterType="CmMap">
+		<![CDATA[
+		UPDATE modu.r114_사용자 a
+		   SET a.접속오류수  = #{account}
+		 WHERE a.아이디 = #{userId}
+		]]>
+	</update>
+
+		<!-- LOCK정보 UPDATE -->
+	<update id="AdminLoginDao.updateLockTag" parameterType="CmMap">
+		<![CDATA[
+		UPDATE modu.r114_사용자 a
+		   SET a.로그인락 = #{loginLockYesNo}
+		 WHERE a.아이디 = #{userId}
+		]]>
+	</update>
+	
+		<!-- 접속정보  저장 -->
+	<update id="AdminLoginDao.updateLogin" parameterType="CmMap">
+		<![CDATA[
+		UPDATE modu.r114_사용자
+		   SET 최종로그인일시 = CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':',''),
+		   	   로그인락 = 'N'
+		 WHERE 아이디 = #{userId}
+		]]>
+	</update>
+	
+	<!-- 접속정보  저장 -->
+	<update id="AdminLoginDao.updateLogout" parameterType="CmMap">		
+		UPDATE modu.r114_사용자 
+		   SET 최종로그아웃일시 = CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':','')
+		 WHERE 아이디 = #{userId}		
+	</update>
+	
+	<!-- 접속로그  저장 -->
+	<update id="AdminLoginDao.updateUserLoginHistorySessionKey" parameterType="CmMap">
+		UPDATE modu.r114_사용자접속로그
+		   SET 종료일시  = CONVERT(CHAR(8),GETDATE(),112)+REPLACE(CONVERT(CHAR(8),GETDATE(),108),':','')
+		     , 수정일자 = GETDATE()
+		 WHERE 세션ID = #{session_id}
+		   AND 아이디 = #{userId}
+	</update>	
+	
+	<!-- 변경된 비밀번호를 저장 -->
+	<update id="AdminLoginDao.updatePassword" parameterType="CmMap">
+		<![CDATA[
+		UPDATE 	modu.r114_사용자
+		   SET 	비밀번호 =  #{userPassword},
+		   	   	로그인락 = 'N',
+		   	   	비밀번호변경일 = getdate(),
+		   	 	비밀번호만료일 = dateadd(day, 90, getdate())
+		 WHERE 아이디 = #{userId}		
+		]]>
+	</update>
+	
+	<update id="AdminLoginDao.updatePasswordNext" parameterType="CmMap">
+		<![CDATA[
+		UPDATE modu.r114_사용자 a
+		   SET a.로그인락 = 'N',
+		   	   a.비밀번호변경일 = GETDATE()	 
+		 WHERE a.아이디 = #{userId}		
+		]]>
+	</update>
+
+
+	<insert id="AdminLoginDao.insertUserLoginHistory" parameterType="CmMap">
+		INSERT INTO HP_ADMIN.HA_AUTH_USER_LOGIN_HISTORY(
+		 USER_ID,
+		 SESSION_ID,
+		 BROWSER_GUB,
+		 LOGIN_TIME,
+		 IP_ADDR
+		) VALUES(
+			#{userId},
+			#{session_id},
+			#{browser_gub},
+			NOW(),
+			#{ipAddr}
+		)	
+	</insert>  
+	
+	<update id="AdminLoginDao.updateUserLoginHistory" parameterType="CmMap">
+		
+		UPDATE HP_ADMIN.HA_AUTH_USER_LOGIN_HISTORY
+		   SET logout_time =   NOW()
+		 WHERE 1=1
+		 <if test="userId != null and userId != ''">
+			AND USER_ID = #{userId}
+		</if>		 
+		 AND  SESSION_ID = #{session_id}
+		 
+	</update>
+
+	
+	<!-- 3개월 미로그인 계정 잠금 처리 -->
+	<update id="AdminLoginDao.updateThreeMonthNoLoginUser">
+		<![CDATA[
+		UPDATE HP_ADMIN.HA_AUTH_USER
+		   SET LOGIN_LOCK_YESNO = 'Y'
+		 WHERE (COALESCE(LOGIN_TIME, ROW_INPUT_DATE) <= NOW() - INTERVAL '3 MONTH'
+		        or password_update <= NOW() - INTERVAL '3 MONTH')
+		]]>
+	</update>
+	
+</mapper>

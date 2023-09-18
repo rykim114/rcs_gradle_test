@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ApiCommonDao">	
+	<select id="ApiCommonDao.selectApiUser" parameterType="CmMap" resultType="java.lang.Integer" flushCache="false">
+		SELECT
+			  addr1 as z_api_id
+			, addr1 as z_api_key
+		 FROM hp_admin.ha_code_company
+		WHERE company_code = #{company_code}
+		  AND use_yn = 'Y'
+	</select>
+	
+	<select id="ApiCommonDao.selectCompCnt" parameterType="CmMap" resultType="java.lang.Integer" flushCache="false">
+		select count(*)
+	      from hp_admin.ha_code_company a
+	     where a.company_code = #{company_code}
+		   and a.use_yn = 'Y'
+	</select>
+	
+	<select id="ApiCommonDao.selectDataCnt" parameterType="CmMap" resultType="java.lang.Integer" flushCache="false">
+		select count(*)
+	      from hp_admin.ha_receipt_info a
+	     where a.company_code = #{company_code}
+	       and a.service_seq = #{service_seq}
+		   and a.use_yn = 'Y'
+	</select>	
+	
+	<select id="ApiCommonDao.selectPaperCnt" parameterType="CmMap" resultType="java.lang.Integer" flushCache="false">
+		select count(*)
+  		  from hp_admin.ha_paper_info a
+	     where a.company_code = #{company_code}
+	       and a.paper_seq = #{paper_seq}::bigint
+	       and a.use_yn = 'Y'
+	</select>	
+	
+	<insert id="ApiCommonDao.insertApiHistory" parameterType="CmMap">
+		INSERT INTO hp_admin.ha_receipt_info(
+            company_code
+          , receipt_seq
+          , receipt_date
+          , service_seq
+          , receipt_data
+          , remark
+          , use_yn
+          , row_input_id
+          , row_input_date
+          , row_input_ip
+		) VALUES(
+			#{company_code}
+			,#{receipt_seq}
+			,#{receipt_date}
+			,#{service_seq}
+			,#{receipt_data}
+			,#{remark}
+			, 'Y'
+			,'api'
+			,NOW()			
+			,#{ipAddr}
+		)				
+	</insert>
+	
+	<insert id="ApiCommonDao.insertSignMasterInfo" parameterType="CmMap">
+		<selectKey keyProperty="signature_seq" order="BEFORE" resultType="java.lang.Integer">
+			SELECT	nextval('ha_signature_master_signature_seq_seq')
+		</selectKey>
+		INSERT INTO hp_admin.ha_signature_master(
+            company_code
+          , user_id
+          , signature_seq
+          , receipt_seq
+          , service_seq
+          , receipt_date
+          , remark
+          , use_yn
+          , row_input_id
+          , row_input_date
+          , row_input_ip
+        )
+		VALUES(
+			 #{company_code}
+			,#{user_id}
+			,#{signature_seq}::bigint
+			,#{receipt_seq}
+			,#{service_seq}
+			,#{receipt_date}
+			,#{remark}
+			, 'Y'
+			,'api'
+			,NOW()			
+			,#{ipAddr}
+		)	
+	</insert>
+	
+	<insert id="ApiCommonDao.insertSignDetailInfo" parameterType="CmMap">
+		<selectKey keyProperty="signature_detail_seq" order="BEFORE" resultType="java.lang.Integer">
+			SELECT	nextval('ha_signature_detail_signature_detail_seq_seq')
+		</selectKey>
+		INSERT INTO hp_admin.ha_signature_detail(
+            company_code
+          , user_id
+          , signature_seq
+          , signature_detail_seq
+          , paper_seq
+          , report_param
+          , service_no
+          , send_date
+          , sign_possible_s
+          , sign_possible_e
+          , remark
+          , use_yn
+          , row_input_id
+          , row_input_date
+          , row_input_ip
+        )
+		VALUES(
+			 #{company_code}
+			,#{user_id}
+			,#{signature_seq}::bigint
+			,#{signature_detail_seq}
+			,#{paper_seq}::bigint
+			,#{report_param} 
+			,#{service_no}
+			,to_date(#{send_date}, 'YYYY년MM월DD일')::date
+			,#{sign_possible_s}
+			,#{sign_possible_e}
+			,#{remark}
+			, 'Y'
+			,'api'
+			,NOW()			 
+			,#{ipAddr}
+		)				
+	</insert>
+	
+	<insert id="ApiCommonDao.insertRecipientInfo" parameterType="CmMap">
+		<selectKey keyProperty="recipient_seq" order="BEFORE" resultType="java.lang.Integer">
+			SELECT	nextval('ha_recipient_info_recipient_seq_seq')
+		</selectKey>
+		INSERT INTO hp_admin.ha_recipient_info(
+              company_code  
+            , user_id
+            , signature_detail_seq
+            , signature_seq
+            , recipient_seq
+            , recpnt_div
+            , user_name
+            , user_phon
+            , user_email
+            , agree_yn
+            , remark
+            , use_yn
+            , row_input_id
+            , row_input_date
+            , row_input_ip
+        )
+		VALUES(
+			 #{company_code}
+			,#{user_id}
+			,#{signature_detail_seq}
+			,#{signature_seq}
+			,#{recipient_seq}
+			,#{recpnt_div}
+			,#{encrypt_user_name}
+			,#{encrypt_user_phon}
+			,#{encrypt_user_email}
+			,#{agree_yn}
+			,#{remark}
+			, 'Y'
+			,'api'
+			,NOW()			
+			,#{ipAddr}
+		)				
+	</insert>	
+	
+	<select id="ApiCommonDao.selectReceipientInfo" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		  select distinct user_name AS decrypt_user_name, user_phon AS decrypt_user_phon 
+		       , recpnt_div
+		    from hp_admin.ha_recipient_info a
+		   where a.company_code = #{company_code}
+		     and a.user_id = #{user_id}
+		     and a.signature_seq = #{signature_seq}
+		     and length(a.user_phon) > 10
+		     and a.use_yn = 'Y'
+	</select>	
+	<update id="ApiCommonDao.updateRecipientD" parameterType="CmMap">
+		UPDATE
+			ha_signature_master a
+		SET
+			recipient_d_yn = 'Y'
+
+		WHERE
+			company_code = #{company_code}
+		and user_id = #{user_id}
+		and signature_seq = #{signature_seq}::bigint
+		and service_seq = #{service_seq}
+	</update> 
+
+
+
+	<select id="ApiCommonDao.selectSignResultByServiceSeq" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.signature_seq,
+			a.signature_detail_seq,
+			a.pdf_save_path,
+			a.pdf_save_name,
+			a.awrt_anth_img_path
+		FROM
+			ha_signature_detail a
+		LEFT OUTER JOIN
+			ha_signature_master b
+		ON
+			a.company_code = b.company_code
+		AND a.signature_seq = b.signature_seq
+		WHERE
+			b.company_code = #{company_code}
+		AND b.service_seq = #{service_seq}
+		AND a.pdf_save_name IS NOT NULL
+	</select>
+
+
+	<select id="ApiCommonDao.selectSignResultBySignatureSeq" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.signature_seq,
+			a.signature_detail_seq,
+			a.pdf_save_path,
+			a.pdf_save_name,
+			a.awrt_anth_img_path
+		FROM
+			ha_signature_detail a
+		WHERE
+			a.company_code = #{company_code}
+		AND a.signature_seq = #{signature_seq}::bigint
+		AND a.signature_detail_seq = #{signature_detail_seq}::bigint
+		AND a.pdf_save_name IS NOT NULL
+	</select>
+		     
+</mapper>

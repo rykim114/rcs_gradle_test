@@ -1,0 +1,283 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.springframework.boot' version '2.1.12.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+//group = 'com.rcs.test'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '8'
+
+apply plugin: 'java'
+mainClassName = 'apps.framework.boot'
+//jar {
+//    enabled = false
+//}
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+}
+sourceSets {
+    main {
+//        compileClasspath += main.getCompileClasspath()
+        java {
+            srcDirs("src")
+        }
+    }
+}
+
+dependencies {
+//    implementation project(':src')
+    compileOnly 'javax.servlet:javax.servlet-api:3.0.1'
+    compileOnly 'javax.servlet:jsp-api:2.0'
+    compileOnly 'net.jcip:jcip-annotations:1.0'
+    runtimeOnly 'org.aspectj:aspectjrt:1.8.5'
+    runtimeOnly 'org.aspectj:aspectjweaver:1.9.2'
+//    compileOnly (sourceSets.src.output)
+//    runtimeOnly (sourceSets.src.output)
+
+// dependency
+    implementation 'javax.activation:activation:1.1.1'
+
+    // AIReport
+    implementation files('lib/aireport-chartdirector-6.0.1.1.jar')
+    implementation files('lib/aireport-common-6.0.1.2.jar')
+    implementation files('lib/aireport-manager-6.0.2.04.jar')
+    implementation files('lib/aireport-poi-6.0.1.3.jar')
+    implementation files('lib/aireport-uds-6.0.1.2.jar')
+    implementation files('lib/avalon-framework-4.2.0.jar')
+
+    implementation files('lib/botdetect-4.0.beta1.jar')
+    implementation files('lib/botdetect-jsf20-4.0.beta1.jar')
+    implementation files('lib/botdetect-jsp20-4.0.beta1.jar')
+    implementation files('lib/botdetect-servlet-4.0.beta1.jar')
+    implementation files('lib/ChartDirector-5.1.1.jar')
+    implementation files('lib/ConnectionKCP.jar')
+    implementation files('lib/core-2.3.0.jar')
+    implementation files('lib/encryptor.jar')
+    implementation files('lib/ExecureCrypto_v1.0_jdk14.jar')
+
+    implementation files('lib/INICrypto_v3.1.7_signed.jar')
+    implementation files('lib/INIpay50.jar')
+    implementation files('lib/INIpayJAVA-1.0.jar')
+    implementation files('lib/ipg_adaptor-0.1.0.jar')
+    implementation files('lib/IPIN2Client-1.0.jar')
+    implementation files('lib/IPINClient-1.0.jar')
+    implementation files('lib/jai_core-1.1.3.jar')
+    implementation files('lib/jai_codec-1.1.3.jar')
+    implementation files('lib/jasperreports-6.3.0.jar')
+    implementation files('lib/jPpcliE.jar')
+    implementation files('lib/json-1.6.jar')
+    implementation files('lib/json-lib-2.4.jar')
+    implementation files('lib/json-lib-2.4-jdk15.jar')
+    implementation files('lib/libMarkanyMaSaferJava.jar')
+    implementation files('lib/log4j-1.2.15.jar')
+    implementation files('lib/log4j-1.3alpha-8.jar')
+    implementation files('lib/log4sql.jar')
+    implementation files('lib/NiceID-1.0.jar')
+    implementation files('lib/ojdbc6-11.2.0.3.jar')
+    implementation files('lib/olap4j-0.9.7.309-JS-3.jar')
+    implementation files('lib/rt-2.2.8.jar')
+    implementation files('lib/sapjco3.jar')
+    implementation files('lib/solbitech.common-17.07.V03.jar')
+    implementation files('lib/spring-modules-validation-0.9.jar')
+    implementation files('lib/ufo-1.0.jar')
+    implementation files('lib/zipit_jdk14-1.0.jar')
+
+    implementation 'org.antlr:antlr:3.0.1'
+    implementation 'aopalliance:aopalliance:1.0'
+    implementation 'org.apache.james:apache-mime4j-core:0.7.2'
+    implementation 'org.apache.james:apache-mime4j-dom:0.7.2'
+    implementation 'org.ow2.asm:asm:5.0.4'
+    implementation 'com.amazonaws:aws-java-sdk:1.11.235'
+    implementation 'org.apache.axis:axis:1.4'
+    implementation 'org.bouncycastle:bcmail-jdk15on:1.58'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.58'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.58'
+    implementation 'org.bouncycastle:bctsp-jdk15on:1.46'
+    implementation 'de.l3s.boilerpipe:boilerpipe:1.1.0'
+    implementation 'org.itadaki:bzip2:0.9.1'
+    implementation 'cglib:cglib:2.2'
+    implementation 'cglib:cglib-nodep:2.2'
+
+    implementation 'commons-beanutils:commons-beanutils:1.7.0'
+    implementation 'commons-codec:commons-codec:1.12'
+    implementation 'org.apache.commons:commons-collections4:4.1'
+    implementation 'commons-collections:commons-collections:3.2.2'
+    implementation 'org.apache.commons:commons-configuration2:2.4'
+    implementation 'org.apache.commons:commons-dbcp2:2.6.0'
+    implementation 'commons-fileupload:commons-fileupload:1.4'
+    implementation 'commons-httpclient:commons-httpclient:3.1'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'commons-lang:commons-lang:2.4'
+    implementation 'commons-net:commons-net:3.6'
+    implementation 'org.apache.commons:commons-pool2:2.6.2'
+    implementation 'commons-pool:commons-pool:1.6'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'org.apache.commons:commons-text:1.6'
+    implementation 'org.dom4j:dom4j:2.1.3'
+    implementation 'net.sf.ehcache:ehcache:2.10.0'
+    implementation 'net.sf.ehcache:ehcache-core:2.4.5'
+    implementation 'com.googlecode.ehcache-spring-annotations:ehcache-spring-annotations:1.2.0'
+    implementation 'net.sf.ezmorph:ezmorph:1.0.6'
+    implementation 'com.jhlabs:filters:2.0.235-1'
+    implementation 'org.apache.pdfbox:fontbox:2.0.16'
+    implementation 'com.google.gcm:gcm-server:1.0.0'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.zaxxer:HikariCP:3.4.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.7'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.11'
+    implementation 'org.apache.httpcomponents:httpmime:4.5.3'
+    implementation 'edu.ucar:httpservices:4.5.5'
+    implementation 'org.apache.ibatis:ibatis-sqlmap:2.3.4.726'
+
+    implementation 'com.healthmarketscience.jackcess:jackcess:2.1.2'
+    implementation 'com.healthmarketscience.jackcess:jackcess-encrypt:2.1.1'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.8'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+    implementation 'javax.media:jai_core:1.1.3:javadoc'
+    implementation 'jakarta-regexp:jakarta-regexp:1.4'
+    implementation 'org.jasypt:jasypt:1.9.2'
+    implementation 'org.jasypt:jasypt-spring31:1.9.2'
+    implementation 'org.jasypt:jasypt-springsecurity3:1.9.2'
+    implementation 'com.mortennobel:java-image-scaling:0.8.5'
+    implementation 'com.pff:java-libpst:0.8.1'
+    implementation 'com.github.fernandospr:javapns-jdk16:2.4.0'
+    implementation 'javax.annotation:javax.annotation-api:1.2'
+    implementation 'javax.inject:javax.inject:1'
+
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'javax.mail:javax.mail-api:1.6.2'
+    implementation 'javax.ws.rs:javax.ws.rs-api:2.0.1'
+    implementation 'javax.xml.soap:javax.xml.soap-api:1.3.5'
+    implementation 'javax.xml:jaxrpc:1.1'
+    implementation 'javax.xml:jaxrpc-api:1.1'
+    implementation 'javax.xml.ws:jaxws-api:2.2.9'
+    implementation 'org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Final'
+    implementation 'org.jboss.logging:jboss-logging:3.1.0.GA'
+    implementation 'org.slf4j:jcl-over-slf4j:1.7.5'
+    implementation 'com.beust:jcommander:1.35'
+    implementation 'org.jfree:jcommon:1.0.23'
+    implementation 'org.jboss.jdeparser:jdeparser:1.0.0.Final'
+    implementation 'org.jdom:jdom2:2.0.4'
+    implementation 'org.jdom:jdom:1.1.3'
+    implementation 'org.apache.pdfbox:jempbox:1.8.10'
+    implementation 'org.mortbay.jetty:jetty-util:6.1.4'
+    implementation 'org.jfree:jfreechart:1.0.19'
+    implementation 'net.java.dev.jna:jna:4.1.0'
+    implementation 'net.java.dev.jna:jna-platform:4.1.0'
+    implementation 'joda-time:joda-time:2.2'
+    implementation 'com.jcraft:jsch:0.1.49'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'net.minidev:json-smart:1.3.1'
+    implementation 'org.jsoup:jsoup:1.7.2'
+    implementation 'javax.xml.bind:jsr173_api:1.0'
+    implementation 'javax.jws:jsr181-api:1.0-MR1'
+    implementation 'javax.annotation:jsr250-api:1.0'
+    implementation 'javax.measure:jsr-275:0.9.3'
+    implementation 'javax.servlet:jstl:1.2'
+    implementation 'javax.transaction:jta:1.1'
+    implementation 'net.sourceforge.jexcelapi:jxl:2.6.3'
+    implementation 'net.sf.jxls:jxls-core:1.0.2'
+    implementation 'net.sf.jxls:jxls-reader:1.0.2'
+    implementation 'org.apache.logging.log4j:log4j-api:2.8.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
+    implementation 'org.slf4j:log4j-over-slf4j:1.7.18'
+
+    implementation 'org.apache.maven.scm:maven-scm-api:1.4'
+    implementation 'org.apache.maven.scm:maven-scm-provider-svn-commons:1.4'
+    implementation 'org.apache.maven.scm:maven-scm-provider-svnexe:1.4'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:8.4.1.jre8'
+    implementation 'org.mybatis:mybatis:3.5.1'
+    implementation 'org.mybatis:mybatis-spring:1.3.1'
+    implementation 'io.netty:netty-all:4.1.45.Final'
+    implementation 'org.olap4j:olap4j:1.2.0'
+    implementation 'org.apache.poi:ooxml-schemas:1.1'
+    implementation 'org.apache.pdfbox:pdfbox:2.0.16'
+    implementation 'org.apache.pdfbox:pdfbox-app:2.0.16'
+    implementation 'org.apache.pdfbox:pdfbox-tools:2.0.16'
+    implementation 'org.apache.poi:poi:3.8'
+    implementation 'org.apache.poi:poi-contrib:3.2-FINAL'
+    implementation 'org.apache.poi:poi-examples:3.8'
+    implementation 'org.apache.poi:poi-ooxml:3.8'
+    implementation 'org.apache.poi:poi-ooxml-schemas:3.8'
+    implementation 'org.apache.poi:poi-scratchpad:3.8'
+    implementation 'com.sun.xml.ws:policy:2.3.1'
+    implementation 'org.postgresql:postgresql:9.4.1212.jre7'
+    implementation 'org.postgresql:postgresql:9.4-1200-jdbc41'
+    implementation 'org.postgresql:postgresql:42.2.10'
+    implementation 'org.reactivestreams:reactive-streams:1.0.3'
+    implementation 'io.projectreactor.addons:reactor-extra:3.3.1.RELEASE'
+    implementation 'xalan:serializer:2.7.2'
+    implementation 'fr.opensagres.xdocreport.sfntly:sfntly:1.0.0'
+    implementation 'opensymphony:sitemesh:2.4.2'
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+    implementation 'org.yaml:snakeyaml:1.25'
+
+    implementation 'org.springframework:spring-context:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-context-support:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-aop:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-aspects:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-beans:5.1.4.RELEASE'
+    implementation 'org.springframework.boot:spring-boot:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-actuator:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-actuator-autoconfigure:2.1.12.RELEASE'
+    implementation 'de.codecentric:spring-boot-admin-starter-client:2.1.6'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-devtools:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-security:2.1.12.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.1.12.RELEASE'
+
+    implementation 'org.springframework:spring-core:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-expression:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-instrument:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-jcl:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-jdbc:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-jms:5.1.4.RELEASE'
+    implementation 'org.springframework.ldap:spring-ldap-core:2.2.0.RELEASE'
+    implementation 'org.springframework.ldap:spring-ldap-core:2.3.2.RELEASE'
+    implementation 'org.springframework:spring-messaging:5.1.4.RELEASE'
+    implementation 'org.springframework.mobile:spring-mobile-device:1.1.5.RELEASE'
+    implementation 'org.springframework:spring-orm:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-oxm:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-acl:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-cas:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-config:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-core:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-crypto:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-ldap:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-taglibs:5.1.4.RELEASE'
+    implementation 'org.springframework.security:spring-security-web:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-tx:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-web:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-web:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-webflux:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-webmvc:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-websocket:5.1.4.RELEASE'
+    implementation 'taglibs:standard:1.1.2'
+    implementation 'net.coobird:thumbnailator:0.4.8'
+    implementation 'org.apache.tomcat:tomcat-dbcp:7.0.62'
+    implementation 'org.apache.tomcat:tomcat-jdbc:7.0.62'
+    implementation 'org.apache.tomcat:tomcat-juli:7.0.62'
+    implementation 'edu.ucar:udunits:4.5.5'
+    implementation 'xalan:xalan:2.7.2'
+    implementation 'org.apache.xmlbeans:xmlbeans:2.6.0'
+    implementation 'org.apache.ws.xmlschema:xmlschema-core:2.1.0'
+    implementation 'com.adobe.xmp:xmpcore:5.1.2'
+    implementation 'org.tukaani:xz:1.5'
+
+//  test dependency
+    testImplementation 'junit:junit:4.13'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testImplementation 'org.slf4j:slf4j-simple:1.7.26'
+    testImplementation 'org.jboss.logmanager:jboss-logmanager:1.2.2.GA'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
+    testImplementation 'org.springframework:spring-test:5.1.4.RELEASE'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}

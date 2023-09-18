@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+    
+	<description>common tag library</description>
+	<display-name>common tag</display-name>
+	<tlib-version>1.0</tlib-version>
+	<short-name>CmTagLib</short-name>
+	<uri>CmTagLib</uri>
+
+	 <tag>
+			<name>mobilePaging</name>	  
+			<tag-class>apps.framework.taglib.CmMobilePagingTagLib</tag-class>
+			<body-content>empty</body-content>
+			<attribute>
+				<description>cmMap</description>
+				<name>cmMap</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<description>form name</description>
+				<name>formName</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<description>must have call javascript function name</description>
+				<name>callFuncName</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+		</tag>
+		<tag>
+			<name>paging</name>	  
+			<tag-class>apps.framework.taglib.CmPagingTagLib</tag-class>
+			<body-content>empty</body-content>
+			<attribute>
+				<description>CmMap</description>
+				<name>cmMap</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<description>form name</description>
+				<name>formName</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<description>must have call javascript function name</description>
+				<name>callFuncName</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+			<attribute>
+				<description>page size</description>
+				<name>pageSizeYn</name>
+				<required>true</required>
+				<rtexprvalue>true</rtexprvalue>
+			</attribute>
+		</tag>
+</taglib>

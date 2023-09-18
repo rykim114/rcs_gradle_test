@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminAuthDao">
+
+
+
+	<select id="AdminAuthDao.selectAuthCompanyCode" parameterType="CmMap" resultType="CmResMap">
+		select getdate()
+	</select>
+	
+	<insert id="AdminAuthDao.insertAuthSend" parameterType="CmMap">
+		INSERT INTO
+			ha_msg_auth_user_log
+		(
+			company_code,
+			send_num,
+			recv_num,
+			otp_num,
+			row_input_id,
+			row_input_ip,
+			row_input_date
+		)
+		VALUES
+		(
+			#{company_code},
+			#{send_num},
+			#{recv_num},
+			#{otp_num},
+			#{userId},
+			#{ipAddr},
+			NOW()
+		)
+	</insert>
+
+	<select id="AdminAuthDao.selectAuthSend" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.seq,
+			a.otp_num,
+			a.row_input_date,
+			a.recv_num
+		FROM
+			ha_msg_auth_user_log a
+		WHERE
+			auth_yn = 'N'
+		AND a.recv_num = #{recv_num}
+		AND a.row_input_date <![CDATA[ > ]]> (NOW() - INTERVAL '5 minutes')
+		UNION all
+		SELECT
+			0,
+			b.otp_num,
+			b.row_input_date,
+			b.mobile_no as decrypt_recv_num
+		FROM
+			ha_msg_send_master b 
+		WHERE 
+			b.use_yesno = 'Y'
+		and b.mobile_no = #{encrypt_recv_num} 
+		ORDER BY seq DESC
+		limit 1
+
+	</select>
+
+
+	<update id="AdminAuthDao.updateAuthYN" parameterType="CmMap">
+		UPDATE
+			ha_msg_auth_user_log a
+		SET
+			auth_yn = 'Y',
+			row_update_date = NOW(),
+			row_update_id = #{userId},
+			row_update_ip = #{ipAddr}
+		WHERE
+			a.seq = #{seq}::bigint
+	</update>
+	<select id="AdminAuthDao.selectUserEmail" parameterType="CmMap" resultType="CmResMap">
+	select a.user_email as decrypt_user_email
+	 from ha_recipient_info a 
+	 left join ha_signature_detail b
+	   on a.company_code = b.company_code and a.signature_detail_seq = b.signature_detail_seq
+		where 
+	CASE
+	WHEN a.sign_img IS NOT NULL OR b.sign_possible_e <![CDATA[ < ]]> NOW() THEN 'N'
+	ELSE 'Y'
+	END = 'Y'
+	and a.user_phon = #{encrypt_recv_num}
+	and coalesce(a.user_email, '') <![CDATA[ <> ]]> ''
+	limit 1
+	</select>
+
+	<select id="AdminAuthDao.selectAuthUserByPhone" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.user_id
+		FROM
+			ha_auth_user a
+		WHERE
+			  a.mobile_no = #{encrypt_recv_num}
+		  and a.user_name = #{encrypt_cust_name}
+		 
+		ORDER BY
+			row_input_date DESC
+		LIMIT 1
+	</select>
+
+	<select id="AdminAuthDao.selectRecipientByPhone" parameterType="CmMap" resultType="CmResMap">
+		SELECT
+			a.user_email AS decrypt_user_email
+		FROM
+			ha_recipient_info a
+		WHERE
+		   	  a.user_phon = #{encrypt_recv_num}
+		  and a.user_name = #{encrypt_cust_name}
+		ORDER BY
+			signature_seq DESC
+		LIMIT 1
+	</select>
+	
+	<insert id="AdminAuthDao.insertAuthUser" parameterType="CmMap">
+		INSERT INTO
+			ha_auth_user
+		(
+			company_code,
+			user_id,
+			user_name,
+			user_desc,
+			user_password,
+			mobile_no,
+			auth_group_seq,
+			use_yesno,
+			row_input_id,
+			row_input_ip,
+			row_input_date
+		)
+		VALUES
+		(
+			#{company_code},
+			#{user_id},
+			#{encrypt_cust_name},
+			#{cust_name},
+			#{user_password},
+			#{encrypt_recv_num},
+			3,
+			'Y',
+			#{user_id},
+			#{ipAddr},
+			NOW()
+		)
+	</insert>
+
+	<select id="AdminAuthDao.selectNewUserId" parameterType="CmMap" resultType="CmResMap">
+		select 'SignOn-' || to_char(NOW(), 'yyyymmdd') || lpad(nextval('ha_auth_user_user_id_seq')::varchar, 8, '0') as new_user_id
+	</select>
+
+</mapper>

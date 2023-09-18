@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BI0201Dao">
+
+	<select id="BI0201Dao.ha_auth_user.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select company_code
+             , user_id
+             , user_name as decrypt_user_name 
+             , user_desc
+             , user_tag
+             , user_password
+             , old_password
+             , password_update
+             , mobile_no  as decrypt_mobile_no
+             , remark
+             , use_yesno
+             , login_time
+             , logout_time
+             , login_count
+             , login_lock_yesno
+             , auth_group_seq
+             , row_input_date
+             , row_input_ip
+             , row_input_id
+             , row_update_date
+             , row_update_ip
+             , row_update_id
+         from ha_auth_user
+		where	company_code	=		#{companyCode}
+		<if test='user_id != null and user_id != ""'>
+		and		user_id like #{user_id}
+		</if>		
+		<if test='main_search_key_word != null and main_search_key_word != ""'>
+		and		search(#{main_search_key_word}, user_name, user_desc)
+		</if>
+		order by	company_code, user_id               
+	</select>
+	
+	<select id="BI0201Dao.ha_auth_user.insert" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		insert	into	ha_auth_user	(
+			company_code
+		,	user_id
+		,	user_name
+		,	user_desc
+		,	user_tag
+		,	user_password
+		,	old_password
+		,	password_update		
+		,	mobile_no
+		,	remark
+		,	use_yesno
+		,	login_lock_yesno
+		,	auth_group_seq							
+		,	row_input_date
+		,	row_input_ip
+		,	row_input_id
+		)
+		values	(
+			#{company_code}
+		,	#{user_id}
+		,	#{encrypt_user_name}
+		,	#{user_desc}
+		,	#{user_tag}
+		,	#{user_password}
+		,	#{old_password}
+		, 	to_date(#{password_update}, 'YYYY-MM-DD')		
+		,	#{encrypt_mobile_no}												
+		,	#{remark}
+		,	'Y'
+		,	#{login_lock_yesno}
+		,	#{auth_group_seq}::bigint
+		,	now()
+		,	#{userIp}
+		,	#{userId}		
+		)
+	</select>
+	
+	<select id="BI0201Dao.ha_auth_user.delete" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		delete
+		from	ha_auth_user
+		where	company_code	=	#{companyCode}
+		and		user_id			=	#{user_id}
+	</select>
+	
+	<select id="BI0201Dao.ha_auth_user.update" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		update	ha_auth_user
+		set	user_name			=	#{encrypt_user_name}
+		,	user_desc			=	#{user_desc}		
+		,	mobile_no			=	#{encrypt_mobile_no}														
+		,	remark				=	#{remark}
+		,	use_yesno			=	#{use_yesno}
+		,	login_lock_yesno	=	#{login_lock_yesno}
+		,	auth_group_seq		=	#{auth_group_seq}::bigint				
+		, 	row_update_date 	= 	NOW()
+		, 	row_update_id	 	= 	#{userId}
+		, 	row_update_ip 		= 	#{userIp}
+		where	company_code	=	#{companyCode}
+		and		user_id			=	#{user_id}
+	</select>
+	
+
+	<select id="BI0201Dao.ha_code_company.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	company_code		as	code
+			,	company_name		as	label
+		from	ha_code_company
+		order by	company_code
+	</select>
+	
+	<select id="BI0201Dao.ha_auth_group.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	auth_group_seq		as	code
+			,	auth_group_name		as	label
+		from	ha_auth_group
+		order by	auth_group_seq
+	</select>	
+	
+	<select id="BI0201Dao.select_ha_auth_user.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+		select	user_id		as	code
+			,	user_id		as	label
+		from	ha_auth_user
+		order by	company_code
+	</select>
+	
+	<select id="BI0201Dao.select_ha_auth_user_Pass.select" parameterType="CmMap" resultType="CmResMap" flushCache="false">
+	     select detail_code AS code
+	    	  , detail_name AS label
+	       from ha_comm_detail	  
+		  where company_code = #{data1}
+			and comm_code    = #{data2}
+			and detail_code  = #{data3}
+	</select>	
+	
+</mapper>

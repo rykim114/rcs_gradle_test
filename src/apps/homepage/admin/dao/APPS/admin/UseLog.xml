@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="UseLogDao">
+
+	<select id="UseLogDao.zeons_사용자접속로그.select" parameterType="CmMap" resultType="CmResMap">
+	     select 순번
+	    ,		ROW_NUMBER() OVER(order by 순번 asc) as 번호
+	    ,		아이피
+	    ,		아이디
+	    ,		브라우저구분
+	    ,		CONVERT(CHAR(19), 등록일자, 120) as 발생일시
+	    from	modu.r114_사용자접속로그
+	    where 	CONVERT(CHAR(10), 등록일자, 23) between #{dateStart} and #{dateEnd}
+	    order by 번호 desc
+	</select>	
+	
+	<select id="UseLogDao.zeons_메뉴별접속로그.select" parameterType="CmMap" resultType="CmResMap">
+		select 	convert(char, round((convert(float, c.합계)/c.클릭수),2)) 평균체류시간
+	    , 		c.클릭수
+	    , 		c.메뉴명
+	    from(
+		    	select 		sum(convert(int, a.체류시간)) 합계 
+		    	, 			count(a.순번) as 클릭수
+		    	, 			b.메뉴명 as 메뉴명
+		    	from 		modu.r114_사용자메뉴로그 a
+		    	join 		modu.r114_메뉴 b
+		    	on			a.메뉴코드 = b.메뉴코드
+		  		where 		a.체류시간 is not null
+		  		and
+		  		<if test="null == menuCdArr or menuCdArr.isEmpty()">
+		  					a.메뉴코드 NOT LIKE 'MA06%'
+		  		</if>
+		  		<if test="null != menuCdArr and ! menuCdArr.isEmpty()">
+					<foreach item="menuCd" index="index" collection="menuCdArr" open="(" separator=" or " close=")">
+						a.메뉴코드 LIKE #{menuCd}
+					</foreach>
+				</if>	
+		  		and 		CONVERT(CHAR(10), a.등록일자, 23) between #{dateStart} and #{dateEnd}
+		    	group by 	b.메뉴명
+	    	) c
+	    order by c.클릭수	desc
+	</select>  
+	 
+	<select id="UseLogDao.zeons_주요검색지역.select" parameterType="CmMap" resultType="CmResMap">
+		select 		a.검색지역 
+	    , 			count(a.순번) 클릭수
+	    ,           AP
+	    ,           검색구분
+	  	from 	(
+	  				select (지역명_시 + ' ' + 지역명_구 + ' ' + 지역명_동) as 검색지역 
+	  				,		순번
+	  				,       CASE WHEN DATEPART(hour, 발생일시) BETWEEN 0 AND 11 THEN 'AM' ELSE 'PM' END AS AP
+	  				,       검색구분
+	  				from 	modu.r114_사용자검색지역로그 
+	  				where 		CONVERT(CHAR(10), 발생일시, 23) between #{dateStart} and #{dateEnd}
+	  			) a
+		group by 	a.검색지역, a.AP, a.검색구분
+	    order by    클릭수	desc
+	</select>  
+   	
+	<select id="UseLogDao.zeons_주요다운로드메뉴.select" parameterType="CmMap" resultType="CmResMap">
+		
+	    select a.주요다운로드
+	    ,		count(a.순번) 클릭수
+	    ,      a.다운로드구분
+	    from	(
+	    		select (c.메뉴명 + '_' + b.다운로드명) as 주요다운로드
+	    		,		b.순번
+	    		,       b.다운로드구분
+	    		from	modu.r114_사용자다운로드메뉴로그 b
+	    		join	modu.r114_메뉴 c
+	    		on		b.메뉴코드 = c.메뉴코드
+	    		where	CONVERT(CHAR(10), b.등록일자, 23) between #{dateStart} and #{dateEnd} 
+	    )	a
+	    group by a.주요다운로드, a.다운로드구분
+	    order by 클릭수 desc
+	    
+	    
+	</select>  
+
+</mapper>

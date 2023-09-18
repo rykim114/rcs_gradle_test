@@ -1,0 +1,22 @@
+
+debug: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+spring:
+  main:
+    allow-bean-definition-overriding: true
+#  aop:
+#    proxy-target-class: true
+  boot:
+    admin:
+      client:    
+        url: "http://localhost:9005"
+  application:
+    name: CNCITY_APP

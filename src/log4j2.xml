@@ -17,6 +17,7 @@
     <Logger name="org.springframework.context" level="info"/>
     
     <Logger name="java.sql" level="info"/>
+
     
     <Logger name="apps.framework.interceptor.MybatisLogInterceptor" level="debug"/>
     

@@ -9,6 +9,7 @@
 		<setting name="callSettersOnNulls"  value="true"/>
 		<setting name="cacheEnabled" 		value="false" />
         <setting name="jdbcTypeForNull" 	value="NULL" />
+		<setting name="logImpl" 			value="LOG4J2"/>  <!-- log4j log setting  -->
 	</settings>
 
 	<typeAliases>

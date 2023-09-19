@@ -1,37 +1,20 @@
 package apps.framework.interceptor;
 
-import java.net.URLEncoder;
+import apps.framework.utils.CmFunction;
+import apps.framework.utils.CmUAgentInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.ModelAndViewDefiningException;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
-import apps.framework.object.CmMap;
-import apps.framework.utils.CmFunction;
-import apps.framework.utils.CmPathInfo;
-import apps.framework.utils.CmUAgentInfo;
-/*import com.amorepacific.ithair.service.user.UserInfoService;*/
-import com.ufo.common.UFORequest;
-import com.ufo.common.utility.JSPHelper;
-
 public class CmLoginInterceptor extends HandlerInterceptorAdapter {
-	
-	/*@Autowired
-	private UserInfoService userInfoService;*/
-	/** The logger. */
-	private Log	logger	= LogFactory.getLog(this.getClass());
-	
+
 	public boolean preHandle (HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		String	url	= request.getRequestURI();
-		//logger.info("CmLoginInterceptor");
-		
+
 		String[]	urlFilter	= {				
 				 "ajax.do"
 				, "_save.do"

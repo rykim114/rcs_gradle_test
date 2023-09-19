@@ -1,29 +1,23 @@
 package apps.framework.dao;
 
+import apps.framework.object.CmMap;
+import apps.framework.object.CmResMap;
+import apps.framework.utils.CmFunction;
+import org.apache.ibatis.session.RowBounds;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.mybatis.spring.support.SqlSessionDaoSupport;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ibatis.session.RowBounds;
-import org.mybatis.spring.support.SqlSessionDaoSupport;
-
-import apps.framework.object.CmMap;
-import apps.framework.object.CmResMap;
-import apps.framework.utils.CmFunction;
-
 @SuppressWarnings("rawtypes")
 public class CmParentDao extends SqlSessionDaoSupport{
-	
-	protected Log logger = LogFactory.getLog(this.getClass());
-	
-	/*protected SqlSessionTemplate sqlSessionTemplate;
-	
-	public void setSqlSessionTemplate(SqlSessionTemplate sqlSession) {
-		this.sqlSessionTemplate = sqlSession;
-	}*/
-	
+
+	protected Logger logger = LogManager.getLogger(this.getClass());
+
+
 	private void printstatementName(String sql_id) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("$$$$ SQL ID : " + sql_id);
@@ -253,14 +247,11 @@ public class CmParentDao extends SqlSessionDaoSupport{
 	public List<CmResMap> getList(String statementName) {
 		return (List<CmResMap>)this.selectList(statementName);
 	}
-	
 
 	/**
-	 * 
+	 *
 	 * @param statementName
-	 * @param parameterObject
-	 * @param skipResults
-	 * @param maxResults
+	 * @param rowBounds
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -283,8 +274,7 @@ public class CmParentDao extends SqlSessionDaoSupport{
 	 * 
 	 * @param statementName
 	 * @param parameterObject
-	 * @param skipResults
-	 * @param maxResults
+	 * @param rowBounds
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -315,11 +305,8 @@ public class CmParentDao extends SqlSessionDaoSupport{
 	
 
 	/**
-	 * 
 	 * @param statementName
-	 * @param parameterObject
-	 * @param skipResults
-	 * @param maxResults
+	 * @param rowBounds
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -342,8 +329,7 @@ public class CmParentDao extends SqlSessionDaoSupport{
 	 * 
 	 * @param statementName
 	 * @param parameterObject
-	 * @param skipResults
-	 * @param maxResults
+	 * @param rowBounds
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")

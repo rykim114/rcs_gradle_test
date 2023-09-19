@@ -2,15 +2,13 @@ package apps.homepage.admin.controller.member;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
+import ai.org.apache.commons.logging.Log;
+import ai.org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.http.HttpStatus;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
-
 import apps.framework.annotation.SslOn;
 import apps.framework.controller.CmController;
 import apps.framework.object.CmMap;
@@ -35,9 +32,8 @@ import apps.homepage.common.service.custom.log.LogService;
 public class AdminAuthController extends CmController {
 	
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
-	
+	protected final Log logger = LogFactory.getLog(this.getClass());
+
 	@Autowired
 	AdminAuthService adminAuthService;
 

@@ -14,7 +14,7 @@ mainClassName = 'apps.framework.boot'
 repositories {
     mavenCentral()
     maven { url 'https://repo.spring.io/milestone' }
-    maven { url 'https://repo.spring.io/snapshot' }
+    maven { url 'https://repo.spring.io/snapshot'  }
 }
 sourceSets {
     main {
@@ -33,49 +33,6 @@ dependencies {
 
 // dependency
     implementation fileTree(dir: 'lib', include: ['*.jar'])
-//    implementation files('lib/aireport-chartdirector-6.0.1.1.jar')
-//    implementation files('lib/aireport-common-6.0.1.2.jar')
-//    implementation files('lib/aireport-manager-6.0.2.04.jar')
-//    implementation files('lib/aireport-poi-6.0.1.3.jar')
-//    implementation files('lib/aireport-uds-6.0.1.2.jar')
-//    implementation files('lib/avalon-framework-4.2.0.jar')
-//
-//    implementation files('lib/botdetect-4.0.beta1.jar')
-//    implementation files('lib/botdetect-jsf20-4.0.beta1.jar')
-//    implementation files('lib/botdetect-jsp20-4.0.beta1.jar')
-//    implementation files('lib/botdetect-servlet-4.0.beta1.jar')
-//    implementation files('lib/ChartDirector-5.1.1.jar')
-//    implementation files('lib/ConnectionKCP.jar')
-//    implementation files('lib/core-2.3.0.jar')
-//    implementation files('lib/encryptor.jar')
-//    implementation files('lib/ExecureCrypto_v1.0_jdk14.jar')
-//
-//    implementation files('lib/INICrypto_v3.1.7_signed.jar')
-//    implementation files('lib/INIpay50.jar')
-//    implementation files('lib/INIpayJAVA-1.0.jar')
-//    implementation files('lib/ipg_adaptor-0.1.0.jar')
-//    implementation files('lib/IPIN2Client-1.0.jar')
-//    implementation files('lib/IPINClient-1.0.jar')
-//    implementation files('lib/jai_core-1.1.3.jar')
-//    implementation files('lib/jai_codec-1.1.3.jar')
-//    implementation files('lib/jasperreports-6.3.0.jar')
-//    implementation files('lib/jPpcliE.jar')
-//    implementation files('lib/json-1.6.jar')
-//    implementation files('lib/json-lib-2.4.jar')
-//    implementation files('lib/json-lib-2.4-jdk15.jar')
-//    implementation files('lib/libMarkanyMaSaferJava.jar')
-//    implementation files('lib/log4j-1.2.15.jar')
-//    implementation files('lib/log4j-1.3alpha-8.jar')
-//    implementation files('lib/log4sql.jar')
-//    implementation files('lib/NiceID-1.0.jar')
-//    implementation files('lib/ojdbc6-11.2.0.3.jar')
-//    implementation files('lib/olap4j-0.9.7.309-JS-3.jar')
-//    implementation files('lib/rt-2.2.8.jar')
-//    implementation files('lib/sapjco3.jar')
-//    implementation files('lib/solbitech.common-17.07.V03.jar')
-//    implementation files('lib/spring-modules-validation-0.9.jar')
-//    implementation files('lib/ufo-1.0.jar')
-//    implementation files('lib/zipit_jdk14-1.0.jar')
 
     implementation 'javax.activation:activation:1.1.1'
     implementation 'org.antlr:antlr:3.0.1'
@@ -83,7 +40,6 @@ dependencies {
     implementation 'org.apache.james:apache-mime4j-core:0.7.2'
     implementation 'org.apache.james:apache-mime4j-dom:0.7.2'
     implementation 'org.ow2.asm:asm:5.0.4'
-    implementation 'com.amazonaws:aws-java-sdk:1.11.235'
     implementation 'org.apache.axis:axis:1.4'
     implementation 'org.bouncycastle:bcmail-jdk15on:1.58'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.58'
@@ -124,7 +80,6 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpcore:4.4.11'
     implementation 'org.apache.httpcomponents:httpmime:4.5.3'
     implementation 'edu.ucar:httpservices:4.5.5'
-    implementation 'org.apache.ibatis:ibatis-sqlmap:2.3.4.726'
 
     implementation 'com.healthmarketscience.jackcess:jackcess:2.1.2'
     implementation 'com.healthmarketscience.jackcess:jackcess-encrypt:2.1.1'
@@ -151,7 +106,6 @@ dependencies {
     implementation 'javax.xml.ws:jaxws-api:2.2.9'
     implementation 'org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Final'
     implementation 'org.jboss.logging:jboss-logging:3.1.0.GA'
-    implementation 'org.slf4j:jcl-over-slf4j:1.7.5'
     implementation 'com.beust:jcommander:1.35'
     implementation 'org.jfree:jcommon:1.0.23'
     implementation 'org.jboss.jdeparser:jdeparser:1.0.0.Final'
@@ -178,7 +132,6 @@ dependencies {
     implementation 'net.sf.jxls:jxls-reader:1.0.2'
     implementation 'org.apache.logging.log4j:log4j-api:2.8.2'
     implementation 'org.apache.logging.log4j:log4j-core:2.8.2'
-    implementation 'org.slf4j:log4j-over-slf4j:1.7.18'
 
     implementation 'org.apache.maven.scm:maven-scm-api:1.4'
     implementation 'org.apache.maven.scm:maven-scm-provider-svn-commons:1.4'
@@ -207,7 +160,6 @@ dependencies {
     implementation 'xalan:serializer:2.7.2'
     implementation 'fr.opensagres.xdocreport.sfntly:sfntly:1.0.0'
     implementation 'opensymphony:sitemesh:2.4.2'
-    implementation 'org.slf4j:slf4j-api:1.7.26'
     implementation 'org.yaml:snakeyaml:1.25'
 
     implementation 'org.springframework:spring-context:5.1.4.RELEASE'
@@ -218,8 +170,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot:2.1.12.RELEASE'
     implementation 'org.springframework.boot:spring-boot-actuator:2.1.12.RELEASE'
     implementation 'org.springframework.boot:spring-boot-actuator-autoconfigure:2.1.12.RELEASE'
-//    implementation 'de.codecentric:spring-boot-admin-starter-client:2.1.6'
-//    implementation 'de.codecentric:spring-boot-admin-starter-server:2.1.6'
     implementation 'org.springframework.boot:spring-boot-autoconfigure:2.1.12.RELEASE'
     implementation 'org.springframework.boot:spring-boot-devtools:2.1.12.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter:2.1.12.RELEASE'
@@ -268,9 +218,7 @@ dependencies {
 //  test dependency
     testImplementation 'junit:junit:4.13'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testImplementation 'org.slf4j:slf4j-simple:1.7.26'
     testImplementation 'org.jboss.logmanager:jboss-logmanager:1.2.2.GA'
-    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
     testImplementation 'org.springframework:spring-test:5.1.4.RELEASE'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }

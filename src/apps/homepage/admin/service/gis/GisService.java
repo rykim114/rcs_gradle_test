@@ -2,10 +2,11 @@ package apps.homepage.admin.service.gis;
 
 import java.util.List;
 import java.util.Map;
+
+import ai.org.apache.commons.logging.Log;
+import ai.org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import apps.homepage.admin.dao.APPS.gis.GisDao;
 @SuppressWarnings({"rawtypes"})
 public class GisService extends CmService {
 
-	protected final Log	logger = LogFactory.getLog(this.getClass());
+	protected final Log logger = LogFactory.getLog(this.getClass());
 
 	@Autowired
 	private GisDao gisDao;

@@ -9,7 +9,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import apps.framework.object.CmMap;
 import apps.framework.object.CmResMap;
 import apps.framework.service.CmService;
@@ -20,7 +19,7 @@ import apps.homepage.admin.dao.member.AdminAuthDao;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class AdminAuthService extends CmService {
 
-	protected final Log	logger = LogFactory.getLog(this.getClass());
+	protected final Log logger = LogFactory.getLog(this.getClass());
 
 	@Autowired
 	AdminAuthDao adminAuthDao;

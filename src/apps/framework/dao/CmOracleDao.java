@@ -1,11 +1,11 @@
 package apps.framework.dao;
 
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.stereotype.Repository;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 @Repository
 public class CmOracleDao extends CmParentDao {

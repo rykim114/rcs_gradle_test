@@ -1,28 +1,17 @@
 package apps.framework.service;
 
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
+import apps.framework.object.CmMap;
+import apps.framework.object.CmResMap;
+import apps.framework.utils.CmPathInfo;
+import apps.homepage.common.dao.core.CommDao;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 
-import apps.framework.object.CmMap;
-import apps.framework.object.CmResMap;
-import apps.framework.utils.CmPathInfo;
-import apps.framework.utils.CmSecretUtil;
-import apps.framework.utils.eForm;
-import apps.homepage.common.dao.core.CommDao;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 
 @Service
@@ -34,15 +23,14 @@ public class CommonExtsService  extends CmService  {
 
 	@Autowired
 	private CommDao commDao;
+
 	/**
-	 * 휴대폰인증 
-	 *
-	 * @param p the p
-	 * @param rmap the rmap
-	 * @return true, if successful
-	 * @throws Exception the exception
+	 * 휴대폰인증
+	 * @param reqVo
+	 * @param rmap
+	 * @param request
+	 * @return
 	 */
-	
 	public boolean requestNplus(CmMap reqVo, ModelAndView rmap, HttpServletRequest request) {	
 		CmMap dbparams = new CmMap();
 		

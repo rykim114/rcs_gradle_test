@@ -4,14 +4,10 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
-//import org.postgresql.Driver;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Registers and unregisters the Oracle JDBC driver.
@@ -21,8 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OjdbcDriverRegistrationListener implements ServletContextListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(OjdbcDriverRegistrationListener.class);
-
+    private static final Logger LOG = LogManager.getLogger(OjdbcDriverRegistrationListener.class);
     private Driver driver = null;
 
     /**

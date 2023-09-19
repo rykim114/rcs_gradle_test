@@ -125,7 +125,7 @@ public class CmFrontPagingTagLib extends TagSupport{
 
 			this.release();
 		} catch(Exception e) {
-			logger.error(e); //e.printStackTrace();
+			logger.error(e);
 		}
 		
 		return EVAL_PAGE;

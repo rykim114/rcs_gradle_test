@@ -14,7 +14,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -24,7 +23,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -33,9 +31,8 @@ import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 
 interface AESManagable {
-	
-	public static final Log	logger = LogFactory.getLog(AESManagable.class);
-	
+	Log logger = LogFactory.getLog(AESManagable.class);
+
     byte[] encryptionBytes(byte[] bytePlain);
     byte[] encryptionBytesFromFile (String fileName) throws FileNotFoundException;
     boolean decryptionBytesToFile(byte[] byteEncryption, String outFileName);

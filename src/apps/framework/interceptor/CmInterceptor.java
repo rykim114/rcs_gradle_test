@@ -1,13 +1,10 @@
 package apps.framework.interceptor;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
+import apps.framework.annotation.CheckSSL;
+import apps.framework.annotation.SslOn;
+import apps.framework.annotation.SslPass;
+import apps.framework.utils.CmFunction;
+import apps.framework.utils.CmPathInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.method.HandlerMethod;
@@ -15,29 +12,22 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.ModelAndViewDefiningException;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
-import apps.framework.annotation.CheckSSL;
-import apps.framework.annotation.SslOn;
-import apps.framework.annotation.SslPass;
-import apps.framework.utils.CmFunction;
-import apps.framework.utils.CmPathInfo;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
 
 public class CmInterceptor extends HandlerInterceptorAdapter {
 	
-	private Log	logger	= LogFactory.getLog(this.getClass());
-	
-	
-
-	/*@Autowired
-	private CommonService	commonService;*/
+	private final Log logger = LogFactory.getLog(this.getClass());
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		String	uri	= request.getRequestURI();
 		String	url	= request.getRequestURL().toString();
 		
-		/*SslPass sslPass = ((HandlerMethod) handler).getMethodAnnotation(SslPass.class);
-		CheckSSL checkSSL = ((HandlerMethod) handler).getMethodAnnotation(CheckSSL.class);*/
-		
-		SslPass sslPass = null; 
+		SslPass sslPass = null;
 		CheckSSL checkSSL = null;
 		
 		boolean isHandlerMethod = handler instanceof HandlerMethod;
@@ -372,7 +362,7 @@ public class CmInterceptor extends HandlerInterceptorAdapter {
 	}
 	
 
-/**
+	/**
      * 공사중 페이지로 이동
      * @param request
      * @return

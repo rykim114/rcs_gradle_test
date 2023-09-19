@@ -1,9 +1,9 @@
 package apps.framework.utils.fileupload;
 
+import org.apache.commons.fileupload.ProgressListener;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-import org.apache.commons.fileupload.ProgressListener;
 
 public class AjaxProgressListener implements ProgressListener {
 

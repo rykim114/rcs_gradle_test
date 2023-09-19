@@ -1,8 +1,5 @@
 package apps.framework.utils.filter;
 
-import java.text.Normalizer;
-import java.util.regex.Pattern;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 

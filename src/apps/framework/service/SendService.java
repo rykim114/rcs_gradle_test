@@ -1,24 +1,23 @@
 package apps.framework.service;
 
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import apps.framework.object.CmMap;
 import apps.framework.object.CmResMap;
 import apps.framework.utils.CmPathInfo;
 import apps.framework.utils.CmSecretUtil;
 import apps.framework.utils.eForm;
 import apps.homepage.common.dao.core.SendDao;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 
 @Service
@@ -31,16 +30,11 @@ public class SendService  extends CmService  {
 
 	@Autowired
 	private SendDao sendDao;
-	
+
+
 	/**
-	 * 메일발송건수 pms 전송 
-	 *
-	 * @param p the p
-	 * @param rmap the rmap
-	 * @return true, if successful
-	 * @throws Exception the exception
+	 * 메일발송건수 pms 전송
 	 */
-	
 	public void sendMailCountToPms() {
 		
 		//메일 발송 건수 전송 
@@ -115,12 +109,7 @@ public class SendService  extends CmService  {
 	/**
 	 * 문자건수 pms 전송 
 	 *
-	 * @param p the p
-	 * @param rmap the rmap
-	 * @return true, if successful
-	 * @throws Exception the exception
 	 */
-	
 	public void sendSmSCountToPms() {
 		
 		//메일 발송 건수 전송 

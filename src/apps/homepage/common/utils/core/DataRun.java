@@ -5,17 +5,13 @@ import java.text.DecimalFormatSymbols;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
+import apps.framework.object.CmResMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import apps.framework.object.CmResMap;
-
-
-
 @SuppressWarnings("rawtypes")
 public class DataRun {
-	private static final Log	logger = LogFactory.getLog(DataRun.class);
+	private static final Log logger = LogFactory.getLog(DataRun.class);
 	
 	public static String getResult(String returnType, List<CmResMap> datalist, String rowSepa, String colSepa, int maxrow)
     {

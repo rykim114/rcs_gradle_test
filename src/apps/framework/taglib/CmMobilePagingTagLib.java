@@ -1,15 +1,13 @@
 package apps.framework.taglib;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.tagext.TagSupport;
-
+import apps.framework.object.CmMap;
+import apps.framework.utils.CmFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import apps.framework.object.CmMap;
-import apps.framework.utils.CmFunction;
-import apps.framework.utils.CmPathInfo;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.tagext.TagSupport;
 
 
 public class CmMobilePagingTagLib extends TagSupport{

@@ -1,8 +1,6 @@
 package apps.homepage.batch;
 
-
 import java.net.InetAddress;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
 import apps.framework.service.CmService;
 import apps.framework.service.SendService;
 import apps.framework.utils.CmFunction;
@@ -22,8 +19,7 @@ import apps.framework.utils.CmPathInfo;
 @SuppressWarnings("rawtypes")
 public class TaskBatch extends CmService {
 	
-	private static final Log	logger = LogFactory.getLog(TaskBatch.class);
-
+	private static final Log logger = LogFactory.getLog(TaskBatch.class);
 
 	@Autowired
 	private SendService sendService;

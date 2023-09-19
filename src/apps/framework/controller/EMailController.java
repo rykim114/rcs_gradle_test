@@ -1,51 +1,22 @@
 package apps.framework.controller;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import apps.framework.object.CmMap;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.mobile.device.Device;
-
-
-import apps.framework.annotation.CheckSSL;
-import apps.framework.annotation.SslOn;
-import apps.framework.object.CmMap;
-import apps.framework.object.CmResMap;
-import apps.framework.controller.CmController;
-
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/email")
 @SuppressWarnings("rawtypes")
 public class EMailController extends CmController{
-	
-	
-	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
-	//@Autowired
-	//private MemberService memberService;
-	
-	@RequestMapping(value="/billEmailSend")	
+
+	@RequestMapping(value="/billEmailSend")
 	public ModelAndView BillEmailSend(@ModelAttribute("reqMap") CmMap reqVo, HttpServletRequest request, HttpServletResponse response) {		
 		ModelAndView mav = new ModelAndView("jsonView");
 		

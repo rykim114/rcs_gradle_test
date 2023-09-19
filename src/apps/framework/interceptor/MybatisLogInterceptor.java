@@ -1,31 +1,23 @@
 package apps.framework.interceptor;
 
+import apps.framework.utils.CmPathInfo;
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.plugin.*;
+import org.apache.ibatis.session.ResultHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.BoundSql;
-import org.apache.ibatis.mapping.ParameterMapping;
-import org.apache.ibatis.plugin.Interceptor;
-import org.apache.ibatis.plugin.Intercepts;
-import org.apache.ibatis.plugin.Invocation;
-import org.apache.ibatis.plugin.Plugin;
-import org.apache.ibatis.plugin.Signature;
-import org.apache.ibatis.session.ResultHandler;
-
-import apps.framework.object.CmMap;
-import apps.framework.utils.CmPathInfo;
 
 @Intercepts({
     @Signature(type=StatementHandler.class, method="update", args={Statement.class})
@@ -33,8 +25,8 @@ import apps.framework.utils.CmPathInfo;
 })
 public class MybatisLogInterceptor implements Interceptor {
 
-	protected Log	logger	= LogFactory.getLog(this.getClass());
-    
+	protected Logger logger = LogManager.getLogger(this.getClass());
+
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
 	// TODO Auto-generated method stub
@@ -182,10 +174,9 @@ public class MybatisLogInterceptor implements Interceptor {
 	            bufLogMsg.append(log);
 	                     
 	        try{
-	
-	                objfile = new FileWriter(bufLogPath.toString(), true);
-	                objfile.write(bufLogMsg.toString());
-	                objfile.write("\r\n");
+				objfile = new FileWriter(bufLogPath.toString(), true);
+				objfile.write(bufLogMsg.toString());
+				objfile.write("\r\n");
 	        }catch(IOException e){
 	            
 	        }

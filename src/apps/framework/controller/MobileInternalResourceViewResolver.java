@@ -1,12 +1,8 @@
 package apps.framework.controller;
 
-
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import apps.framework.utils.CmFunction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.mobile.device.Device;
 import org.springframework.mobile.device.DeviceUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -14,10 +10,11 @@ import org.springframework.web.servlet.view.AbstractUrlBasedView;
 import org.springframework.web.servlet.view.InternalResourceView;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import apps.framework.utils.CmFunction;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 public class MobileInternalResourceViewResolver extends InternalResourceViewResolver {
-	private Logger logger = LoggerFactory.getLogger(MobileInternalResourceViewResolver.class);
+	private final Logger logger = LogManager.getLogger(MobileInternalResourceViewResolver.class);
 
 	@Override
 	protected AbstractUrlBasedView buildView(String viewName) throws Exception {

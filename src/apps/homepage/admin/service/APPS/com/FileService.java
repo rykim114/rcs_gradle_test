@@ -4,12 +4,10 @@ package apps.homepage.admin.service.APPS.com;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import ai.org.apache.commons.logging.Log;
+import ai.org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import apps.framework.object.CmMap;
 import apps.framework.object.CmResMap;
 import apps.framework.service.CmService;
@@ -24,9 +22,8 @@ import apps.homepage.common.dao.core.FileDao;
 public class FileService extends CmService {
 
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
-	
+	protected final Log logger = LogFactory.getLog(this.getClass());
+
 	@Autowired
 	private FileDao fileDao;
 

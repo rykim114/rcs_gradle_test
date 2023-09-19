@@ -1,22 +1,15 @@
 package apps.framework.utils;
 
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.util.Collection;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
 
 public class JsonUtils {
 	
-	private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
-	
+//	private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+
+    private static final Logger logger = LogManager.getLogger(JsonUtils.class);
 	public JsonUtils()
     {
     }
@@ -55,7 +48,7 @@ public class JsonUtils {
         }
         catch(Exception e)
         {
-            logger.error("Error : {} \n {} ", new String[] { e.getMessage(), jsonStr });
+            logger.error("Error : {} \n {} ", new Object[] { e.getMessage(), jsonStr });
         }
         return natural;
     }

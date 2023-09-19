@@ -35,8 +35,7 @@ import apps.homepage.admin.service.gis.GisService;
 public class GisRestController extends CmController {
 	
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
+	protected final Log logger = LogFactory.getLog(this.getClass());
 
 	@Resource
 	MappingJackson2JsonView ajaxMainView;

@@ -6,10 +6,10 @@
 		<setting name="cacheEnabled"        value="false" />
 		<setting name="useGeneratedKeys"    value="false" />
 		<setting name="defaultExecutorType" value="REUSE" />
-		<setting name="callSettersOnNulls"  value="true"/>
+		<setting name="callSettersOnNulls"  value="true"  />
 		<setting name="cacheEnabled" 		value="false" />
-        <setting name="jdbcTypeForNull" 	value="NULL" />
-		<setting name="logImpl" 			value="LOG4J2"/>  <!-- log4j log setting  -->
+        <setting name="jdbcTypeForNull" 	value="NULL"  />
+		<setting name="logImpl" 			value="LOG4J2" />  <!-- log4j log setting  -->
 	</settings>
 
 	<typeAliases>
@@ -23,7 +23,6 @@
       
      <plugins>
     	<plugin interceptor="apps.framework.interceptor.MybatisLogInterceptor"/>
-    	
 	</plugins>
-	
+
 </configuration>

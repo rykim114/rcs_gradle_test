@@ -1,71 +1,10 @@
 package apps.framework.utils;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.Proxy;
-import java.net.SocketException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.channels.FileChannel;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.imageio.ImageIO;
-import javax.media.jai.JAI;
-import javax.media.jai.RenderedOp;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
+import apps.framework.object.CmMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mortennobel.imagescaling.AdvancedResizeOp;
+import com.mortennobel.imagescaling.ResampleOp;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -83,34 +22,43 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONObject;
 import org.json.XML;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mortennobel.imagescaling.AdvancedResizeOp;
-import com.mortennobel.imagescaling.ResampleOp;
-
-import apps.framework.object.CmMap;
-import net.coobird.thumbnailator.Thumbnails;
+import javax.imageio.ImageIO;
+import javax.media.jai.JAI;
+import javax.media.jai.RenderedOp;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.awt.Color;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.*;
+import java.nio.channels.FileChannel;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.*;
+import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("rawtypes")
 public class CmFunction {
@@ -175,7 +123,7 @@ public class CmFunction {
 		= {"Janurary", "Feburary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 	/**
 	 * 
-	 * @param i_oSource
+	 * @param obj
 	 * @return
 	 */
 	public static String getStrVal(Object obj) {
@@ -197,7 +145,7 @@ public class CmFunction {
 
     /**
      * Object => int 형으로 변환
-     * @param str
+     * @param i_oSource
      * @return
      */
     public static int getIntVal(Object i_oSource) {
@@ -243,7 +191,7 @@ public class CmFunction {
 	
 	/**
 	 * 
-	 * @param i_sSource
+	 * @param str
 	 * @return
 	 */
 	public static long getLongValue(String str) {
@@ -313,7 +261,7 @@ public class CmFunction {
 	
 	/**
 	 * 
-	 * @param i_sSource
+	 * @param str
 	 * @return
 	 */
 	public static String getOnlyDouble(String str) {
@@ -449,9 +397,8 @@ public class CmFunction {
 
 	/**
 	 * 입력한 날짜 기준 [년|월|일|] 차이를 구한다.
-	 * @param paramInt
+	 * @param date
 	 * @param gapInt
-	 * @param format
 	 * @return
 	 */
 	public static String getDateGapToString(String date, int gapInt){
@@ -524,7 +471,7 @@ public class CmFunction {
 	
 	/**
 	 * strDate => String
-	 * @param date
+	 * @param strDate
 	 * @param format
 	 * @return
 	 */
@@ -636,7 +583,7 @@ public class CmFunction {
 	
 	/**
 	 * 
-	 * @param i_sSource
+	 * @param strDate
 	 * @return
 	 */
 	public static String getUsDateTime(String strDate) {
@@ -1682,7 +1629,7 @@ public class CmFunction {
 	
 	/**
 	 * strDate => String
-	 * @param date
+	 * @param strDate
 	 * @return
 	 */
 	public static String getStrWeekToString(String strDate) {
@@ -1884,7 +1831,7 @@ public class CmFunction {
 	 * @param response
 	 * @param cookieName
 	 * @param cookieValue
-	 * @param minute
+	 * @param day
 	 */
 	public static void setCookie(HttpServletResponse response, String cookieName, String cookieValue, int day) {
 		try {
@@ -2048,7 +1995,8 @@ public class CmFunction {
 	
 	/**
 	 * 해당 url의 html을 가져온다.
-	 * @param i_sUrl
+	 * @param pUrl
+	 * @param pTimeOut
 	 * @return
 	 */
 	public static String urlToString(String pUrl, int pTimeOut) throws Exception {
@@ -2338,7 +2286,7 @@ public class CmFunction {
 	 * ex ) getPhoneNumber("02-1234-5678", 1) => return "1234"
 	 * ex ) getPhoneNumber("02-1234-5678", 2) => return "5678"
 	 * @param i_sPhone
-	 * @param index
+	 * @param sIndex
 	 * @return
 	 */
 	public static String cutPhone(String i_sPhone, String sIndex) {
@@ -3053,7 +3001,7 @@ public class CmFunction {
 	
 	/**
 	 * List<CmMap> => xml
-	 * @param list
+	 * @param obj
 	 * @param nodeName
 	 * @return
 	 */
@@ -3082,8 +3030,7 @@ public class CmFunction {
 	
 	/**
 	 * xml ==> CmMap
-	 * @param list
-	 * @param nodeName
+	 * @param xmlStr
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -3981,7 +3928,7 @@ public class CmFunction {
 	
     /**
      * 이미지 원본과 썸내일 이동
-     * @param filePath, uploadMovePath, fileId, fileExt
+     * @param uploadMovePath, fileId, fileExt
      * @return
      */	
 	public static boolean fileMove(String uploadTempPath,String uploadMovePath,String fileId,String fileExt){
@@ -4686,8 +4633,6 @@ public class CmFunction {
 	    
 	    /**
 	     * millisecond TimeStamp 
-	     * @param yyyymmdd
-	     * @param seperator
 	     * @return String
 	     */
 	public static String getDateTimeStamp() {
@@ -5045,8 +4990,6 @@ public class CmFunction {
 	
 	/**
 	 * YHCHOI : PC HOSTNAME 가지고 오기 
-	 * @param date
-	 * @param sChar
 	 * @returns {String}
 	 */	
 	 public static String getHostName() {

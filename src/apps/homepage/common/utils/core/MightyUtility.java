@@ -1,6 +1,5 @@
 package apps.homepage.common.utils.core;
 
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,9 +19,7 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Element;
@@ -31,8 +28,7 @@ import org.w3c.dom.NodeList;
 
 
 public final class MightyUtility {
-
-	private static final Log	logger = LogFactory.getLog(MightyUtility.class);
+    private static final Log logger = LogFactory.getLog(MightyUtility.class);
 	
 	private MightyUtility()
     {

@@ -1,13 +1,9 @@
 package apps.framework.dao.exts;
 
 
-import java.util.List;
-
-import org.springframework.stereotype.Repository;
-
 import apps.framework.dao.CmDaoExt;
 import apps.framework.object.CmMap;
-import apps.framework.object.CmResMap;
+import org.springframework.stereotype.Repository;
 
 
 @Repository

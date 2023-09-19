@@ -4,12 +4,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
-
 import apps.framework.annotation.SslOn;
 import apps.framework.controller.CmController;
 import apps.framework.object.CmMap;
@@ -45,9 +42,8 @@ import apps.homepage.common.service.custom.sign.SignService;
 public class SignController extends CmController {
 	
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
-	
+	protected final Log logger = LogFactory.getLog(this.getClass());
+
 	@Autowired
 	SignService adminSignService;
 

@@ -1,12 +1,8 @@
 package apps.framework.interceptor;
 
-import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
+import apps.framework.object.CmMap;
+import apps.framework.utils.CmFunction;
+import apps.framework.utils.CmPathInfo;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
@@ -15,9 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import apps.framework.object.CmMap;
-import apps.framework.utils.CmFunction;
-import apps.framework.utils.CmPathInfo;
+import javax.servlet.http.HttpServletRequest;
+import java.net.URLEncoder;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class RequestValueInterceptor implements MethodInterceptor {

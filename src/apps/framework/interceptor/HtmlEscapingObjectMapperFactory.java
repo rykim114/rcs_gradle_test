@@ -1,13 +1,12 @@
 package apps.framework.interceptor;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.springframework.beans.factory.FactoryBean;
-
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.springframework.beans.factory.FactoryBean;
 
 public class HtmlEscapingObjectMapperFactory implements FactoryBean<ObjectMapper> {
 

@@ -3,30 +3,23 @@ package apps.homepage.common.service.core;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import apps.framework.object.CmMap;
 import apps.framework.object.CmResMap;
 import apps.framework.service.CmService;
 import apps.homepage.common.dao.core.PushDao;
-
-
-
-
 
 @Service
 @SuppressWarnings("rawtypes")
 public class PushService extends CmService {
 	
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
+	protected final Logger logger = LogManager.getLogger(this.getClass());
 	
 	@Autowired
 	private PushDao pushDao;

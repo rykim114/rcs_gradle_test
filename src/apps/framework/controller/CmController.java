@@ -1,44 +1,42 @@
 package apps.framework.controller;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.ModelAndViewDefiningException;
-import org.springframework.mobile.device.Device;
-
 import apps.framework.object.CmMap;
 import apps.framework.object.CmResMap;
 import apps.framework.utils.CmFunction;
 import apps.framework.utils.CmPathInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.context.MessageSource;
+import org.springframework.mobile.device.Device;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @SuppressWarnings("rawtypes")
 public class CmController {
 	
 	protected final Log	logger = LogFactory.getLog(this.getClass());
-	
-	
+
 	protected MessageSource messageSource;
-	
+
 	/**
-	 * paging
-	 * @param dataMap
+	 *
+	 * @param recordCnt
+	 * @param reqVo
+	 * @param i_iPageSize
+	 * @param i_iNowPageNo
+	 * @return
 	 */
 	protected CmMap  setListPaging (int recordCnt, CmMap reqVo, int i_iPageSize, int i_iNowPageNo) {
 		
@@ -164,34 +162,7 @@ public class CmController {
 	 * @param e
 	 */
 	protected void errorLogger(Exception e) {
-		
-		logger.error(e); //e.printStackTrace();
-		/*
-		if (!logger.isErrorEnabled()) {
-			return;
-		}
-		
-		StackTraceElement[]	ste = e.getStackTrace();
-		
-		String	className	= "";
-		String	className2	= "";
-		String	methodName	= "";
-		int		lineNumber	= 0;
-		
-		logger.error("============ [Start] Exception =======================");
-		for (int i = 0; i < ste.length; i++) {
-            className      = ste[i].getClassName();
-            className2     = className.substring(className.lastIndexOf(".") + 1, className.length()); 
-            methodName     = ste[i].getMethodName();
-            lineNumber     = ste[i].getLineNumber();
-            
-            if (lineNumber > -1)
-            	logger.error(className + "." + methodName + "(" + className2 + ".java:" + lineNumber + ")");
-            else
-            	logger.error(className + "." + methodName + "(Unknown Source)");
-        }
-		logger.error("============ [end] Exception =======================");
-		*/
+		logger.error(e);
 	}
 	
 	/**
@@ -301,13 +272,11 @@ public class CmController {
 		
 		return mav;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mav
-	 * @param status	[succ(성공) | fail(필수 인자값 오류 등) | error(작업중 오류)]
-	 * @param message
-	 * @param object
+	 * @param html
 	 * @return
 	 */
 	protected ModelAndView makeHtmlResult (ModelAndView mav, String html) {
@@ -363,13 +332,13 @@ public class CmController {
 		
 		return mav;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param mav
 	 * @param reqVo
-	 * @param returnUrl
-	 * @param returnPars
+	 * @param i_sReturnUrl
+	 * @param i_sReturnParam
 	 * @param message
 	 * @param script
 	 * @return
@@ -475,8 +444,7 @@ public class CmController {
 		str = str.replaceAll("\\[\\(ps\\)\\]","%");
 		str = str.replaceAll("\\[\\(Sh\\)\\]","#");
 		str = str.replaceAll("\\[\\(pl\\)\\]","+");
-		
-		
+
 	    return str;
 	}
  	

@@ -1,23 +1,20 @@
 package apps.framework.controller;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URLEncoder;
+import apps.framework.annotation.SslOn;
+import apps.framework.utils.CmPathInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
-
-import apps.framework.annotation.SslOn;
-import apps.framework.utils.CmPathInfo;
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URLEncoder;
 
 @Controller
 @RequestMapping("/file")

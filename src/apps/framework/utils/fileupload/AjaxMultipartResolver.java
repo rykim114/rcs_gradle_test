@@ -1,13 +1,12 @@
 package apps.framework.utils.fileupload;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUpload;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class AjaxMultipartResolver extends CommonsMultipartResolver {
 	

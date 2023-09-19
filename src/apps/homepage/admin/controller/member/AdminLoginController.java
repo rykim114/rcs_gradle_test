@@ -1,23 +1,23 @@
 package apps.homepage.admin.controller.member;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import apps.framework.annotation.CheckSSL;
+import apps.framework.annotation.SslOn;
+import apps.framework.controller.CmController;
+import apps.framework.object.CmMap;
+import apps.framework.object.CmResMap;
+import apps.framework.object.CustomUserDetails;
+import apps.framework.utils.CmPathInfo;
+import apps.framework.utils.CmSecretUtil;
+import apps.framework.utils.listener.ezREMSHttpSessionListener;
+import apps.homepage.admin.dao.member.AdminAuthDao;
+import apps.homepage.admin.dao.member.AdminLoginDao;
+import apps.homepage.admin.service.member.AdminLoginService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,22 +27,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import apps.framework.annotation.CheckSSL;
-import apps.framework.annotation.SslOn;
-import apps.framework.controller.CmController;
-import apps.framework.object.CmMap;
-import apps.framework.object.CmResMap;
-import apps.framework.object.CustomUserDetails;
-import apps.framework.utils.CmFunction;
-import apps.framework.utils.CmPathInfo;
-import apps.framework.utils.CmSecretUtil;
-import apps.framework.utils.listener.ezREMSHttpSessionListener;
-
-import apps.homepage.admin.dao.member.AdminAuthDao;
-import apps.homepage.admin.dao.member.AdminLoginDao;
-import apps.homepage.admin.service.member.AdminLoginService;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Controller
@@ -51,7 +41,7 @@ import apps.homepage.admin.service.member.AdminLoginService;
 public class AdminLoginController extends CmController {
 	
 	/** The Constant logger. */
-	protected final Log	logger = LogFactory.getLog(this.getClass());
+	protected final Logger logger = LogManager.getLogger(this.getClass());
 	
 	@Autowired
 	private AdminLoginService adminLoginService;
@@ -98,7 +88,7 @@ public class AdminLoginController extends CmController {
 		try {
 			CustomUserDetails userDetails = (CustomUserDetails)SecurityContextHolder.getContext().getAuthentication().getDetails();
 			
-			String userId         = (String)userDetails.getUsername();		
+			String userId         = (String)userDetails.getUsername();
 			String userPassword   = (String)userDetails.getPassword();
 			String in_captchaCode = (String)userDetails.getCaptchaCode();
 			String companyCode    = reqVo.getString("companyCode");

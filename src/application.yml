@@ -11,12 +11,5 @@ management:
 spring:
   main:
     allow-bean-definition-overriding: true
-#  aop:
-#    proxy-target-class: true
-#  boot:
-#    admin:
-#      client:
-#        instance:
-#          service-base-url: "http://localhost:8005"
   application:
     name: CNCITY_APP

@@ -4,11 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
-
 import javapns.Push;
 import javapns.communication.exceptions.KeystoreException;
 import javapns.notification.PushNotificationBigPayload;
@@ -19,7 +17,7 @@ import javapns.notification.transmission.PushQueue;
 
 public class ApnsSender {
 	
-	private static final Log	logger = LogFactory.getLog(ApnsSender.class);
+	private static final Logger logger = LogManager.getLogger(ApnsSender.class);
 	
 	private PushQueue pushQueue;
 	
